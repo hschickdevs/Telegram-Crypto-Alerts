@@ -1,5 +1,5 @@
 <br/>
-<p align="center">
+<p align="left">
 <img src="img/telegram-binance.png" width="250" alt="logo">
 </p>
 <br/>
