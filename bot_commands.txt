@@ -1,0 +1,7 @@
+help - Returns all of the available commands and their detailed descriptions.
+newalert - Usage: /newalert TOKEN/TOKEN INDICATOR TARGET ENTRY_PRICE
+cancelalert - Usage: /cancelalert TOKEN/TOKEN alert_index
+indicators - Usage: /indicators
+viewalerts - Usage: /viewalerts optional_TOKEN/TOKEN
+getprice - Usage: /getprice TOKEN/TOKEN
+priceall - Usage: /priceall
