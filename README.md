@@ -1,15 +1,15 @@
 <br/>
 <p align="center">
 <img src="img/binance-logo.png" width="200" alt="Binance logo">
-<img src="img/telegram-logo.png" width="200" alt="Telegram logo">
+<img src="img/telegram-logo.png" width="195" alt="Telegram logo">
 </p>
 <br/>
 
 <div id="top"></div>
 
-# telegram-crypto-alerts
+# Telegram-Crypto-Alerts
 
-telegram-crypto-alerts is a Python script that allows you to receive alerts on cryptocurrency price movements through [Telegram](https://telegram.org/) using their open-source API.
+Telegram-Crypto-Alerts is a Python script that allows you to receive alerts on cryptocurrency price movements through [Telegram](https://telegram.org/) using their open-source API.
 - Prices are fetched using the Binance API
 - Alerts are stored in a local JSON database.
 
