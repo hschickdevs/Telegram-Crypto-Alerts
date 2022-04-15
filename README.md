@@ -1,11 +1,8 @@
 <br/>
 <p align="center">
-<img src="img/binance-logo.png" width="200" alt="Binance logo">
-<img src="img/telegram-logo.png" width="195" alt="Telegram logo">
+<img src="img/telegram-binance.png" width="250" alt="logo">
 </p>
 <br/>
-
-<div id="top"></div>
 
 # Telegram-Crypto-Alerts
 
