@@ -12,10 +12,6 @@ TELEGRAM_ADMIN_IDS: list = os.environ.get("TELEGRAM_ADMIN_IDS", 'admin-id,admin-
 # Telegram bot token string (see https://core.telegram.org/bots/api#authorizing-your-bot):
 TELEGRAM_BOT_TOKEN: str = os.environ.get("TELEGRAM_BOT_TOKEN", 'your-bot-token-here')
 
-"""Alerts Preferences:"""
-DELETE_ALL_ALERTS = True  # Delete alerts from the database after they have been fulfilled
-PRICES_POLLING_PERIOD = 10  # Polling period in seconds to check the pair prices
-PERCENT_CHG_ALERT_RESET = 5  # (AS A % ie 5% = 5) Percent change of the ticker to reset the PCTCHG alert
 
 """CHECKS"""
 if TELEGRAM_ADMIN_IDS == ['admin-id', 'admin-id']:

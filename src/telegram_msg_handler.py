@@ -3,8 +3,8 @@ import time
 from datetime import datetime
 
 from ._config import *
-from .custom_logger import CustomLogger
-from .db_handler import load_db, update_db
+from .custom_logger import logger
+from io_handler import get_administrators, load_db, update_db
 
 from telebot import TeleBot
 
@@ -14,7 +14,6 @@ TESTING = False
 class TelegramBot(TeleBot):
     def __init__(self):
         super().__init__(token=TELEGRAM_BOT_TOKEN)
-        self._logger = CustomLogger("telegram_bot")
 
         if not TESTING:
             for admin_id in TELEGRAM_ADMIN_IDS:
@@ -99,7 +98,7 @@ class TelegramBot(TeleBot):
                 pair, alert_index = self.split_message(message.text)
                 pair = pair.upper()
                 alert_index = int(alert_index)
-            except Exception:
+            except Exception as exc:
                 self.reply_to(message,
                               f'Invalid message formatting. Please ensure that your message follows this format:\n'
                               f'/cancelalert TOKEN1/TOKEN2 alert_index')
@@ -175,6 +174,23 @@ class TelegramBot(TeleBot):
             return [convert_type(chunk.strip()) for chunk in message.split(" ")[1:] if
                     not all(char == " " for char in chunk) and len(chunk) > 0]
 
+    def user_is_administrator(self, func):
+        """
+        (Decorator) Checks if the user is an administrator before proceeding with the function
+
+        :param func: Expects the function to be a message handler, with the 'message' class as the first argument
+        """
+        def wrapper(*args, **kw):
+            message = args[0]
+            user_id = str(message.from_user.id)
+            if user_id in get_administrators():
+                return func(*args, **kw)
+            else:
+                self.reply_to(message, f"{message.from_user.username} ({message.from_user.id}) is not an administrator.")
+                return False
+
+        return wrapper
+
     def get_binance_price(self, pair):
         try:
             return round(float(
@@ -184,12 +200,13 @@ class TelegramBot(TeleBot):
             raise ValueError(f'{pair} is not a valid pair.\n'
                              f'Please make sure to use this formatting: TOKEN1/TOKEN2')
         except Exception as exc:
-            self._logger.log(str(exc))
+            logger.exception(f"An unexpected error occurred when trying to fetch the binance price of {pair}",
+                             exc_info=exc)
             raise Exception(
                 f'An unexpected error has occurred when trying to fetch the price of {pair} on Binance - {exc}')
 
     def run(self):
-        self._logger.log(f'Telegram Message Handler started.')
+        logger.info(f'Telegram Message Handler started.')
         while True:
             try:
                 self.polling()
@@ -202,5 +219,6 @@ class TelegramBot(TeleBot):
                                       params={'chat_id': admin_id,
                                               'text': f'CRITICAL ERROR:\n{exc}\nRetrying in 30 seconds...'})
                 else:
-                    self._logger.log(f'CRITICAL ERROR: {exc} - Retrying in 30 seconds...')
+                    logger.critical(f'Unexpected error has occurred while polling - Retrying in 30 seconds...',
+                                    exc_info=exc)
                 time.sleep(30)

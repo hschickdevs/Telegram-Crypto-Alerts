@@ -3,8 +3,8 @@ import time
 import traceback
 
 from ._config import *
-from .db_handler import load_db, update_db
-from .custom_logger import CustomLogger
+from .io_handler import load_db, update_db
+from .custom_logger import logger
 
 import requests
 
@@ -13,7 +13,6 @@ BINANCE_CALL_URL = 'https://api.binance.com/api/v3/ticker/price?symbol={}'  # fo
 
 class AlertHandler:
     def __init__(self):
-        self._logger = CustomLogger(identifier='alert_handler')
         self.polling = False  # Temporary variable to manage alerts
 
     def binance_request(self, token_pair, _try: int = 1, retry_delay: int = 2, maximum_retries: int = 5) -> float:
@@ -39,7 +38,7 @@ class AlertHandler:
                 return self.binance_request(token_pair, _try + 1)
 
     def mainloop(self):
-        self._logger.log('Alert handler started.')
+        logger.info('Alert handler started.')
         while True:
             alerts_database = load_db()
 
@@ -90,22 +89,48 @@ class AlertHandler:
             if len(post_queue) > 0:
                 self.polling = False
                 for post in post_queue:
-                    self._logger.log(f"\n> {post}")
-                    for group_id in TELEGRAM_GROUP_IDS:
-                        requests.post(url=f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',
-                                      params={'chat_id': group_id, 'text': post})
+                    logger.info(post)
+                    status = self.tg_alert(post=post)
+                    if len(status[1]) > 0:
+                        logger.warn(f"Failed to send alert ({post}) to the following IDs: {status[1]}")
 
             if not self.polling:
                 self.polling = True
-                self._logger.log(f'Bot polling for next alert...')
+                logger.info(f'Bot polling for next alert...')
             time.sleep(PRICES_POLLING_PERIOD)
+
+    def tg_alert(self, post: str) -> tuple:
+        """
+        Sends the post (price alert) to each registered user of the Telegram bot
+
+        :param post: A message to send to each registered bot user
+        :return: Tuple = ([successful group ids], [unsuccessful group ids])
+        """
+        output = ([], [])
+        for group_id in TELEGRAM_GROUP_IDS:
+            try:
+                requests.post(url=f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',
+                              params={'chat_id': group_id, 'text': post})
+                output[0].append(group_id)
+            except:
+                output[1].append(group_id)
+
+        return output
+
+    def email_alert(self, post: str):
+        """
+        Dynamically builds the email by formatting the string in email_template.txt with the post
+
+        :param post: The post (price alert) to add to the email template and send to all registered emails
+        :return:
+        """
 
     def run(self):
         try:
             self.mainloop()
         except Exception as exc:
             post = f"An error has occurred in the mainloop\nError Code: {exc}\nTrying again in 15 seconds..."
-            self._logger.log(post)
+            logger.exception("An error has occurred in the mainloop. Trying again in 15 seconds...", exc_info=exc)
             for admin_id in TELEGRAM_ADMIN_IDS:
                 requests.post(url=f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',
                               params={'chat_id': admin_id, 'text': post})

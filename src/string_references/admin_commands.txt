@@ -1,0 +1,11 @@
+/viewconfig
+Loads the dynamic config and returns the current settings
+
+/setconfig setting_name=new_value
+Set a specific configuration setting
+
+/addemail
+Add an email to the email alerts list
+
+/rmemail
+Remove an email from the email alerts list

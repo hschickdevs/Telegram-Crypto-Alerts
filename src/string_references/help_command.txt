@@ -1,0 +1,18 @@
+Available Commands for Telegram Crypto Alerts Bot:
+
+/newalert PAIR/PAIR INDICATOR TARGET ENTRY_PRICE
+Adds a new alert to the database for the pair (eg. ETH/USDT).
+The "ENTRY_PRICE" parameter is only used for the "PCTCHG" indicator.
+You can leave ENTRY_PRICE blank if you are using other indicators, or if you just want to use market price as entry price.
+
+/cancelalert PAIR/PAIR alert_index
+Cancels an active alert. Get the alert indexes by using the /viewalerts command.
+
+/indicators
+Returns the available indicators to use with alerts.
+
+/viewalerts optional_PAIR/PAIR
+Returns all active alerts, or all active alerts for the optional passed pair.
+
+/getprice PAIR/PAIR
+Simply returns the live binance price of the pair (eg. ETH/USDT).
