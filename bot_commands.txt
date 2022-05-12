@@ -1,12 +1,12 @@
 help - Returns a link to the documentation
-newalert - TOKEN/TOKEN INDICATOR TARGET ENTRY_PRICE
-cancelalert - TOKEN/TOKEN alert_index
-indicators -
-viewalerts - TOKEN/TOKEN
-getprice - TOKEN/TOKEN
-priceall -
-viewconfig -
-setconfig - SETTING=VALUE SETTING=VALUE
-emails - VIEW/ADD/REMOVE email@email.com,email@email.com
-channels - VIEW/ADD/REMOVE ID,ID,ID
-admins - VIEW/ADD/REMOVE ID,ID,ID
+newalert - Usage: /newalert TOKEN/TOKEN INDICATOR TARGET ENTRY_PRICE
+cancelalert - Usage: /cancelalert TOKEN/TOKEN alert_index
+indicators - Usage: /indicators
+viewalerts - Usage: /viewalerts TOKEN/TOKEN (or leave blank for all)
+getprice - Usage: /getprice TOKEN/TOKEN
+priceall - Usage: /priceall
+viewconfig - Usage: /viewconfig
+setconfig - Usage: /setconfig SETTING=VALUE SETTING=VALUE
+emails - Usage: /emails VIEW/ADD/REMOVE email@email.com,email@email.com
+channels - Usage: /channels VIEW/ADD/REMOVE ID,ID,ID
+admins - Usage: /admins VIEW/ADD/REMOVE ID,ID,ID

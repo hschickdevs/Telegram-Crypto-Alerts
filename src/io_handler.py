@@ -56,6 +56,7 @@ class ConfigHandler:
                 config['administrators'].remove(tg_id)
             else:
                 fail.append(tg_id)
+        self.update_config(config)
         return fail
 
     def get_emails(self) -> list[str]:
@@ -77,6 +78,7 @@ class ConfigHandler:
                 config['emails'].remove(email)
             else:
                 fail.append(email)
+        self.update_config(config)
         return fail
 
     def get_channels(self) -> list[str]:
@@ -98,6 +100,7 @@ class ConfigHandler:
                 config['channels'].remove(channel)
             else:
                 fail.append(channel)
+        self.update_config(config)
         return fail
 
     def get_help_command(self) -> str:

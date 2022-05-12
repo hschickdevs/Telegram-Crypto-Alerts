@@ -13,7 +13,7 @@ user_id = parser.parse_args().id
 # Set up required json files:
 try:
     logger.info('Setting up configuration database...')
-    dump_config()
+    dump_config(default_id=user_id)
 
     logger.info('Setting up alerts database...')
     dump_alerts_db_config()
