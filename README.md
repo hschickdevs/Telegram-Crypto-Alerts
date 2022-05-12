@@ -33,14 +33,27 @@ pip install -r requirements.txt
      TELEGRAM_BOT_TOKEN=123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Your telegram bot token
     ```
 4. Run the script using the run.py entry point script:
-   ```bash
+   ```sh
+   # Windows:
    python run.py
+   # or
+   py run.py
+   
+   # Mac/Linux:
+   python3 run.py
    ```
    You can either run this script on your local machine, or use a cloud computing service like Google Cloud Platform, Heroku, or PythonAnywhere.
 
 ## Usage
 
 Once the bot is running, you can type `/help` in any telegram chat that the bot is in to see the available commands.
+
+## Roadmap
+
+* Integrate technical indicators from [taapi.io](https://taapi.io/)
+* Scale to multiple unique user configurations
+* Create a web interface
+* Create twitter alerts integration
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)

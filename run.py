@@ -1,17 +1,18 @@
-import json
-import subprocess
-import os
 import threading
+from os import getenv
 
 from src.alert_handler import AlertHandler
 from src.telegram_msg_handler import TelegramBot
+from src.io_handler import handle_env
 
-"""IF THE SCRIPT WITH RUN BOTH HANDLERS IN PARALLEL USING THREADING"""
 if __name__ == "__main__":
-    threading.Thread(target=AlertHandler().run).start()
-    threading.Thread(target=TelegramBot().run).start()
+    # Process environment variables
+    handle_env()
 
+    # Run the AlertHandler() in a daemon thread
+    threading.Thread(target=AlertHandler(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN'),
+                                         alert_email_user=getenv('ALERTS_EMAIL_USER'),
+                                         alert_email_pass=getenv('ALERTS_EMAIL_PASS')).run, daemon=True).start()
 
-"""IF THIS SCRIPT WILL RUN BOTH HANDLER SCRIPTS IN PARALLEL IN THE SAME SHELL"""
-# if __name__ == "__main__":
-#     subprocess.run("python3 src/alert_handler.py & python3 src/telegram_msg_handler.py", shell=True)
+    # Run the TG bot in the main thread:
+    TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN')).run()
