@@ -1,19 +1,23 @@
-import json
+import os
 import time
-import traceback
+from datetime import datetime
 
-from ._config import *
-from .io_handler import load_db, update_db
+from .io_handler import ConfigHandler
 from .custom_logger import logger
 
 import requests
+import yagmail
 
 BINANCE_CALL_URL = 'https://api.binance.com/api/v3/ticker/price?symbol={}'  # format to token pair (ex: BTCUSDT)
 
 
 class AlertHandler:
-    def __init__(self):
+    def __init__(self, telegram_bot_token: str, alert_email_user: str = None, alert_email_pass: str = None):
         self.polling = False  # Temporary variable to manage alerts
+        self.config_handler = ConfigHandler()
+        self.tg_bot_token = telegram_bot_token
+        self.alert_email_user = alert_email_user
+        self.alert_email_pass = alert_email_pass
 
     def binance_request(self, token_pair, _try: int = 1, retry_delay: int = 2, maximum_retries: int = 5) -> float:
         """
@@ -38,9 +42,10 @@ class AlertHandler:
                 return self.binance_request(token_pair, _try + 1)
 
     def mainloop(self):
-        logger.info('Alert handler started.')
+        logger.warn(f'{type(self).__name__} started at {datetime.utcnow()} UTC+0')
         while True:
-            alerts_database = load_db()
+            alerts_database = self.config_handler.load_alerts()
+            config = self.config_handler.load_config()
 
             post_queue = []
             for pair in alerts_database.keys():
@@ -68,48 +73,52 @@ class AlertHandler:
                         if pair_price > target and not alerted:
                             post_queue.append(f"{pair} ABOVE {target} TARGET AT {pair_price}")
                             alert['alerted'] = True
-                        elif pair_price < target * (1 - PERCENT_CHG_ALERT_RESET) and alerted:
+                        elif pair_price < target * (1 - config['settings']['pct_chg_alert_reset']) and alerted:
                             alert['alerted'] = False
-                        elif alerted and DELETE_ALL_ALERTS:
+                        elif alerted and config['settings']['delete_pushed_alerts']:
                             remove_queue.append(alert)
                     elif indicator == 'BELOW':
                         if pair_price < target and not alerted:
                             post_queue.append(f"{pair} BELOW {target} TARGET AT {pair_price}")
                             alert['alerted'] = True
-                        elif pair_price > target * (1 + PERCENT_CHG_ALERT_RESET) and alerted:
+                        elif pair_price > target * (1 + config['settings']['pct_chg_alert_reset']) and alerted:
                             alert['alerted'] = False
-                        elif alerted and DELETE_ALL_ALERTS:
+                        elif alerted and config['settings']['delete_pushed_alerts']:
                             remove_queue.append(alert)
 
                 for item in remove_queue:
                     alerts_database[pair].remove(item)
 
-            update_db(alerts_database)
+            self.config_handler.update_alerts(alerts_database)
 
             if len(post_queue) > 0:
                 self.polling = False
                 for post in post_queue:
                     logger.info(post)
-                    status = self.tg_alert(post=post)
+                    status = self.tg_alert(post=post, channel_ids=config['channels'])
                     if len(status[1]) > 0:
-                        logger.warn(f"Failed to send alert ({post}) to the following IDs: {status[1]}")
+                        logger.warn(f"Failed to send Telegram alert ({post}) to the following IDs: {status[1]}")
+
+                    if config['settings']['send_email_alerts']:
+                        self.email_alert(post)
 
             if not self.polling:
                 self.polling = True
                 logger.info(f'Bot polling for next alert...')
-            time.sleep(PRICES_POLLING_PERIOD)
+            time.sleep(config['settings']['price_polling_period'])
 
-    def tg_alert(self, post: str) -> tuple:
+    def tg_alert(self, post: str, channel_ids: list[str]) -> tuple:
         """
         Sends the post (price alert) to each registered user of the Telegram bot
 
         :param post: A message to send to each registered bot user
+        :param channel_ids: All group ids to send the alert to (self.config_client.load_config()['channels'])
         :return: Tuple = ([successful group ids], [unsuccessful group ids])
         """
         output = ([], [])
-        for group_id in TELEGRAM_GROUP_IDS:
+        for group_id in channel_ids:
             try:
-                requests.post(url=f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',
+                requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
                               params={'chat_id': group_id, 'text': post})
                 output[0].append(group_id)
             except:
@@ -119,19 +128,35 @@ class AlertHandler:
 
     def email_alert(self, post: str):
         """
-        Dynamically builds the email by formatting the string in email_template.txt with the post
+        Dynamically builds the email by formatting the string in email_template.html with the post
 
         :param post: The post (price alert) to add to the email template and send to all registered emails
         :return:
         """
 
+        if self.alert_email_pass is None or self.alert_email_user is None:
+            raise NotImplementedError(f"Email alerts are enabled, "
+                                      f"but the required environment variables are missing for login.")
+
+        logger.info(f"Sending email alert to registered users: {post}")
+
+        emails = self.config_handler.load_config()['emails']
+        with yagmail.SMTP(user=self.alert_email_user, password=self.alert_email_pass) as smtp:
+            for recipient in emails:
+                smtp.send(to=recipient, subject="Crypto Indicator Alert",
+                          contents=self.config_handler.get_email_template().format(post=post))
+
+        logger.info(f"Emails sent to: {emails}")
+
+    def alert_admins(self, message: str):
+        pass
+
     def run(self):
         try:
             self.mainloop()
+        except NotImplementedError as exc:
+            logger.critical(exc_info=exc)
+            self.alert_admins(str(exc))
         except Exception as exc:
-            post = f"An error has occurred in the mainloop\nError Code: {exc}\nTrying again in 15 seconds..."
             logger.exception("An error has occurred in the mainloop. Trying again in 15 seconds...", exc_info=exc)
-            for admin_id in TELEGRAM_ADMIN_IDS:
-                requests.post(url=f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',
-                              params={'chat_id': admin_id, 'text': post})
             time.sleep(15)

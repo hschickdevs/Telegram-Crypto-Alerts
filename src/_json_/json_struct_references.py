@@ -5,7 +5,7 @@ from os.path import join, dirname
 
 def dump_alerts_db_config():
     """Dumps the default alerts database with 3 sample alerts included"""
-    indicators = ['PCTCHG', 'ABOVE', 'BELOW']
+    # indicators = ['PCTCHG', 'ABOVE', 'BELOW']
 
     above_alert_struct = {'indicator': 'ABOVE',
                           'target': 999999,
@@ -26,7 +26,7 @@ def dump_alerts_db_config():
         outfile.write(json.dumps(default_alerts_db, indent=2))
 
 
-def dump_config():
+def dump_config(default_id: str = None):
     """Used if the user does not have a config yet created"""
     default_config = {
         "settings": {
@@ -36,13 +36,8 @@ def dump_config():
             "send_email_alerts": False,  # Send email alerts alongside of TG alerts
         },
         "emails": [],  # List of emails to receive indicator alerts (if send_email_alerts is True)
-        "tg_groups": []  # List of Telegram group IDs (e.g. [-123456789, -123456789]) to receive indicator alerts
+        "channels": [],  # List of Telegram channel IDs (e.g. [-123456789, -123456789]) to receive indicator alerts (can be a group or user ID)
+        "administrators": [] if default_id is None else [default_id]
     }
     with open(join(dirname(__file__), 'config.json'), 'w') as outfile:
         outfile.write(json.dumps(default_config, indent=2))
-
-
-def dump_administrators_config(default_id: str = None):
-    default_admin_config = {"administrators": [] if default_id is None else [default_id]}
-    with open(join(dirname(__file__), 'administrators.json'), 'w') as outfile:
-        outfile.write(json.dumps(default_admin_config, indent=2))

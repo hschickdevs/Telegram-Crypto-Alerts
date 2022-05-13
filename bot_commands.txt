@@ -1,7 +1,12 @@
-help - Returns all of the available commands and their detailed descriptions.
+help - Returns a link to the documentation
 newalert - Usage: /newalert TOKEN/TOKEN INDICATOR TARGET ENTRY_PRICE
 cancelalert - Usage: /cancelalert TOKEN/TOKEN alert_index
 indicators - Usage: /indicators
-viewalerts - Usage: /viewalerts optional_TOKEN/TOKEN
+viewalerts - Usage: /viewalerts TOKEN/TOKEN (or leave blank for all)
 getprice - Usage: /getprice TOKEN/TOKEN
 priceall - Usage: /priceall
+viewconfig - Usage: /viewconfig
+setconfig - Usage: /setconfig SETTING=VALUE SETTING=VALUE
+emails - Usage: /emails VIEW/ADD/REMOVE email@email.com,email@email.com
+channels - Usage: /channels VIEW/ADD/REMOVE ID,ID,ID
+admins - Usage: /admins VIEW/ADD/REMOVE ID,ID,ID

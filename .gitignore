@@ -158,3 +158,4 @@ testing.py
 src/_json_/administrators.json
 src/_json_/alerts_db.json
 src/_json_/config.json
+logs/log.txt
