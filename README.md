@@ -5,7 +5,7 @@
 # Telegram-Crypto-Alerts
 
 Telegram-Crypto-Alerts is a software written in Python that allows you to receive alerts on cryptocurrency price movements through [Telegram](https://telegram.org/) using their open-source API, and optionally email as well.
-- Controlled with a simple Telegram command interface
+- Simple Telegram command interface
 - Prices are fetched using the Binance API
 - State and configuration data are stored in a local JSON database.
 
