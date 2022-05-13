@@ -206,7 +206,7 @@ class TelegramBot(TeleBot):
                             raise KeyError(f"{conf} does not match any available config settings in database.")
 
                         # Attempt to push the config update to the database:
-                        config[conf] = val
+                        config[conf] = var_type(val)
 
                         msg += f"{conf} set to {val}\n"
                         logger.info(f"{user_id}: {conf} set to {val} ({var_type})\n")
