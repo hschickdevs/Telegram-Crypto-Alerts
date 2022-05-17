@@ -128,7 +128,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 
 ## Roadmap
 
-1. Scale to multiple unique user configurations
+1. Scale to multiple unique user configurations using MySQL
 2. Integrate technical indicators from [taapi.io](https://taapi.io/)
 3. Create twitter alerts integration
 4. Create a web interface
