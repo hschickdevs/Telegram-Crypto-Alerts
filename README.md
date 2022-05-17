@@ -1,13 +1,20 @@
-<p align="left">
-  <img src="img/telegram-binance.png" width="270" alt="logo">
-</p>
-
-# Telegram-Crypto-Alerts
-
-Telegram-Crypto-Alerts is a software written in Python that allows you to receive alerts on cryptocurrency price movements through [Telegram](https://telegram.org/) using their open-source API, and optionally email as well.
-- Simple Telegram command interface
-- Prices are fetched using the Binance API
-- State and configuration data are stored in a local JSON database.
+<!-- PROJECT HEADER -->
+<div align="center">
+  <img src="img/telegram-binance.png" alt="Logo" width="270">
+  <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2>
+  <p align="center">
+    A software written in Python that allows you to receive alerts on cryptocurrency price movements through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
+    <br>
+  </p>
+  <p align="center">
+    <h3><strong>Features Include:</strong></h3>
+    Simple Telegram command interface<br>
+    Live cryptocurrency pair prices from Binance<br>
+    Dynamic HTML styled email alerts using <a href="https://github.com/kootenpv/yagmail">yagmail</a><br>
+    State and configuration data all stored in a local JSON database
+  </p>
+</div>
+<br>
 
 ## Installation
 
