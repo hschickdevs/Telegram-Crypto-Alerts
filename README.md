@@ -3,7 +3,7 @@
   <img src="img/telegram-binance.png" alt="Logo" width="270">
   <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2>
   <p align="center">
-    A software written in Python that allows you to receive alerts on cryptocurrency price movements through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
+    Software written in Python that allows you to receive alerts on cryptocurrency price movements through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
     <br>
   </p>
   <p align="center">
