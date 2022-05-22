@@ -11,10 +11,11 @@
     Simple Telegram command interface<br>
     Live cryptocurrency pair prices from Binance<br>
     Dynamic HTML styled email alerts using <a href="https://github.com/kootenpv/yagmail">yagmail</a><br>
-    State and configuration data all stored in a local JSON database
-  </p>
+    State and configuration data stored in a local JSON database
 </div>
 <br>
+
+___
 
 ## Installation
 
@@ -137,7 +138,10 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 
 1. Scale to multiple unique user configurations using MySQL & SQLAlchemy
 2. Integrate technical indicators from [taapi.io](https://taapi.io/)
-3. Create twitter alerts integration
-4. Create a web interface
+3. Implement concurrency if needed
+4. Create twitter alerts integration
+5. Create a web interface
+
 ## License
+
 [MIT](https://choosealicense.com/licenses/mit/)
