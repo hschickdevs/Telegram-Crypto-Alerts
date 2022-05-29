@@ -15,7 +15,6 @@
 </div>
 <br>
 
-
 ## Installation
 
 Clone the repository and run the following command:

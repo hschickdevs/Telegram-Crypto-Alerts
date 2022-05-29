@@ -1,0 +1,20 @@
+{
+  "ETH/USDT": [
+    {
+      "indicator": "ABOVE",
+      "target": 999999,
+      "alerted": false
+    },
+    {
+      "indicator": "BELOW",
+      "target": 1,
+      "alerted": false
+    },
+    {
+      "indicator": "PCTCHG",
+      "entry": 2000,
+      "target": 1000.0,
+      "alerted": false
+    }
+  ]
+}

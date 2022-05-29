@@ -1,0 +1,34 @@
+{
+  "ETH/USDT": [
+    {
+      "indicator": "ABOVE",
+      "target": 999999,
+      "alerted": false
+    },
+    {
+      "indicator": "BELOW",
+      "target": 1,
+      "alerted": false
+    },
+    {
+      "indicator": "PCTCHG",
+      "entry": 2000,
+      "target": 1000.0,
+      "alerted": false
+    }
+  ],
+  "BTC/USDT": [
+    {
+      "indicator": "ABOVE",
+      "entry": 30410.0,
+      "target": 50000.0,
+      "alerted": false
+    },
+    {
+      "indicator": "PCTCHG",
+      "entry": 30410.71,
+      "target": 0.1,
+      "alerted": false
+    }
+  ]
+}

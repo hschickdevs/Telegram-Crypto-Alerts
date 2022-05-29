@@ -1,20 +1,19 @@
-import os
 import time
 from datetime import datetime
 
-from .io_handler import ConfigHandler
+from .io_client import UserConfiguration
 from .custom_logger import logger
 
 import requests
 import yagmail
+from ratelimit import limits, sleep_and_retry
 
-BINANCE_CALL_URL = 'https://api.binance.com/api/v3/ticker/price?symbol={}'  # format to token pair (ex: BTCUSDT)
+POLLING_PERIOD = 10  # Delay for the alert handler to pull prices and check alert conditions (in seconds)
 
 
 class AlertHandler:
     def __init__(self, telegram_bot_token: str, alert_email_user: str = None, alert_email_pass: str = None):
         self.polling = False  # Temporary variable to manage alerts
-        self.config_handler = ConfigHandler()
         self.tg_bot_token = telegram_bot_token
         self.alert_email_user = alert_email_user
         self.alert_email_pass = alert_email_pass
@@ -41,71 +40,90 @@ class AlertHandler:
                 time.sleep(retry_delay)
                 return self.binance_request(token_pair, _try + 1)
 
-    def mainloop(self):
-        logger.warn(f'{type(self).__name__} started at {datetime.utcnow()} UTC+0')
-        while True:
-            alerts_database = self.config_handler.load_alerts()
-            config = self.config_handler.load_config()
+    def poll_user_alerts(self, tg_user_id: str) -> None:
+        """
+        1. Load the user's configuration
+        2. poll all alerts and create posts
+        3. Remove alert condtions
+        4. Send alerts if found
 
-            post_queue = []
-            for pair in alerts_database.keys():
-                pair_price = self.binance_request(pair.replace("/", ""))
+        :param tg_user_id: The Telegram user ID from the database
+        """
+        alerts_database = self.config_handler.load_alerts()
+        config = self.config_handler.load_config()
 
-                remove_queue = []
-                for alert in alerts_database[pair]:
-                    # do_alert = False
-                    alerted = alert['alerted']
-                    target = alert['target']
-                    indicator = alert['indicator']
-                    if indicator == 'PCTCHG':
-                        entry = alert['entry']
-                        if pair_price > entry * (1 + target) and not alerted:
-                            pct_chg = ((pair_price - entry) / entry) * 100
-                            post_queue.append(f"{pair} UP {pct_chg:.1f}% AT {pair_price}")
-                            alert['alerted'] = True
-                        elif pair_price < entry * (1 - target) and not alerted:
-                            pct_chg = ((entry - pair_price) / entry) * 100
-                            post_queue.append(f"{pair} DOWN {pct_chg:.1f}% AT {pair_price}")
-                            alert['alerted'] = True
-                        elif alerted:
-                            remove_queue.append(alert)
-                    elif indicator == 'ABOVE':
-                        if pair_price > target and not alerted:
-                            post_queue.append(f"{pair} ABOVE {target} TARGET AT {pair_price}")
-                            alert['alerted'] = True
-                        elif pair_price < target * (1 - config['settings']['pct_chg_alert_reset']) and alerted:
-                            alert['alerted'] = False
-                        elif alerted and config['settings']['delete_pushed_alerts']:
-                            remove_queue.append(alert)
-                    elif indicator == 'BELOW':
-                        if pair_price < target and not alerted:
-                            post_queue.append(f"{pair} BELOW {target} TARGET AT {pair_price}")
-                            alert['alerted'] = True
-                        elif pair_price > target * (1 + config['settings']['pct_chg_alert_reset']) and alerted:
-                            alert['alerted'] = False
-                        elif alerted and config['settings']['delete_pushed_alerts']:
-                            remove_queue.append(alert)
+        # Load user configuration from the config_handler
 
-                for item in remove_queue:
-                    alerts_database[pair].remove(item)
+        post_queue = []
+        for pair in alerts_database.keys():
+            pair_price = self.binance_request(pair.replace("/", ""))
 
-            self.config_handler.update_alerts(alerts_database)
+            remove_queue = []
+            for alert in alerts_database[pair]:
+                alerted = alert['alerted']
+                target = alert['target']
+                indicator = alert['indicator']
+                if indicator == 'PCTCHG':
+                    entry = alert['entry']
+                    if pair_price > entry * (1 + target) and not alerted:
+                        pct_chg = ((pair_price - entry) / entry) * 100
+                        post_queue.append(f"{pair} UP {pct_chg:.1f}% AT {pair_price}")
+                        alert['alerted'] = True
+                    elif pair_price < entry * (1 - target) and not alerted:
+                        pct_chg = ((entry - pair_price) / entry) * 100
+                        post_queue.append(f"{pair} DOWN {pct_chg:.1f}% AT {pair_price}")
+                        alert['alerted'] = True
+                    elif alerted:
+                        remove_queue.append(alert)
+                elif indicator == 'ABOVE':
+                    if pair_price > target and not alerted:
+                        post_queue.append(f"{pair} ABOVE {target} TARGET AT {pair_price}")
+                        alert['alerted'] = True
+                    elif pair_price < target * (1 - config['settings']['pct_chg_alert_reset']) and alerted:
+                        alert['alerted'] = False
+                    elif alerted and config['settings']['delete_pushed_alerts']:
+                        remove_queue.append(alert)
+                elif indicator == 'BELOW':
+                    if pair_price < target and not alerted:
+                        post_queue.append(f"{pair} BELOW {target} TARGET AT {pair_price}")
+                        alert['alerted'] = True
+                    elif pair_price > target * (1 + config['settings']['pct_chg_alert_reset']) and alerted:
+                        alert['alerted'] = False
+                    elif alerted and config['settings']['delete_pushed_alerts']:
+                        remove_queue.append(alert)
 
-            if len(post_queue) > 0:
-                self.polling = False
-                for post in post_queue:
-                    logger.info(post)
-                    status = self.tg_alert(post=post, channel_ids=config['channels'])
-                    if len(status[1]) > 0:
-                        logger.warn(f"Failed to send Telegram alert ({post}) to the following IDs: {status[1]}")
+            for item in remove_queue:
+                alerts_database[pair].remove(item)
 
-                    if config['settings']['send_email_alerts']:
-                        self.email_alert(post)
+        self.config_handler.update_alerts(alerts_database)
 
-            if not self.polling:
-                self.polling = True
-                logger.info(f'Bot polling for next alert...')
-            time.sleep(config['settings']['price_polling_period'])
+        if len(post_queue) > 0:
+            self.polling = False
+            for post in post_queue:
+                logger.info(post)
+                status = self.tg_alert(post=post, channel_ids=config['channels'])
+                if len(status[1]) > 0:
+                    logger.warn(f"Failed to send Telegram alert ({post}) to the following IDs: {status[1]}")
+
+                if config['settings']['send_email_alerts']:
+                    self.email_alert(post)
+
+        if not self.polling:
+            self.polling = True
+            logger.info(f'Bot polling for next alert...')
+
+    def format_post_string(self, alert: dict):
+        pass
+
+    @sleep_and_retry
+    @limits(calls=1, period=POLLING_PERIOD)
+    def poll_all_alerts(self) -> None:
+        """
+        1. Aggregate pairs across all users
+        2. Fetch all pair prices
+        3. Log individual user failures
+        """
+        pass
 
     def tg_alert(self, post: str, channel_ids: list[str]) -> tuple:
         """
@@ -153,7 +171,9 @@ class AlertHandler:
 
     def run(self):
         try:
-            self.mainloop()
+            logger.warn(f'{type(self).__name__} started at {datetime.utcnow()} UTC+0')
+            while True:
+                self.poll_all_alerts()
         except NotImplementedError as exc:
             logger.critical(exc_info=exc)
             self.alert_admins(str(exc))
