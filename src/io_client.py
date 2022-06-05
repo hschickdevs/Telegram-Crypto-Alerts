@@ -4,6 +4,9 @@ import json
 from dotenv import find_dotenv, load_dotenv
 import shutil
 
+WHITELIST_ROOT = join(dirname(abspath(__file__)), 'whitelist')
+RESOURCES_ROOT = join(dirname(abspath(__file__)), 'resources')
+
 
 class UserConfiguration:
     """Simplifies interaction with the json database system"""
@@ -13,22 +16,22 @@ class UserConfiguration:
         :param tg_user_id: The Telegram user ID of the bot user to locate their configuration
         """
         self.user_id = tg_user_id
-        self.user_config_root = join(dirname(abspath(__file__)), f'whitelist/{self.user_id}')
-        self.config_path = join(dirname(abspath(__file__)), f'whitelist/{self.user_id}/config.json')
-        self.alerts_path = join(dirname(__file__), f'whitelist/{self.user_id}/alerts.json')
+        self.user_config_root = join(WHITELIST_ROOT, f'{self.user_id}')
+        self.config_path = join(WHITELIST_ROOT, f'{self.user_id}', 'config.json')
+        self.alerts_path = join(WHITELIST_ROOT, f'{self.user_id}', 'alerts.json')
 
         # Should be changed to allow user to use new alert template later
-        self.email_template_path = join(dirname(abspath(__file__)), 'resources/email_template.html')
+        self.email_template_path = join(RESOURCES_ROOT, 'email_template.html')
 
         # Utility Paths:
-        self.default_alerts_path = join(dirname(abspath(__file__)), 'resources/default_alerts.json')
-        self.default_config_path = join(dirname(abspath(__file__)), 'resources/default_config.json')
+        self.default_alerts_path = join(RESOURCES_ROOT, 'default_alerts.json')
+        self.default_config_path = join(RESOURCES_ROOT, 'default_config.json')
 
     def whitelist_user(self, is_admin: bool = False):
         """Add necessary files and directories to database for TG user ID"""
 
         # Return if user data directory already exists
-        if exists(self.user_config_root):
+        if self.user_id in get_whitelist():
             return
 
         # Make root dir
@@ -145,8 +148,10 @@ def get_help_command() -> str:
 
 
 def get_whitelist() -> list:
-    root = join(dirname(abspath(__file__)), f'whitelist')
-    return [_id for _id in listdir(root) if isdir(join(root, _id))]
+    if not isdir(WHITELIST_ROOT):
+        mkdir(WHITELIST_ROOT)
+
+    return [_id for _id in listdir(WHITELIST_ROOT) if isdir(join(WHITELIST_ROOT, _id))]
 
 
 def handle_env():
