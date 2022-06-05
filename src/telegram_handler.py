@@ -3,12 +3,11 @@ from datetime import datetime
 
 from .custom_logger import logger
 from .io_client import UserConfiguration, get_logfile, get_help_command, get_whitelist
+from .static_config import MAX_ALERTS_PER_USER
 
 from telebot import TeleBot
 import requests
 from requests.exceptions import ReadTimeout
-
-MAX_ALERTS_PER_USER = 10  # Integer or None (Should be set in a static configuration file)
 
 
 class TelegramBot(TeleBot):

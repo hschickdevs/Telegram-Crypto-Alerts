@@ -1,8 +1,5 @@
 {
   "settings": {
-    "delete_pushed_alerts": true,
-    "price_polling_period": 5,
-    "pct_chg_alert_reset": 5,
     "send_email_alerts": true
   },
   "emails": [],
