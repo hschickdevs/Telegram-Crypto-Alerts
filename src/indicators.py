@@ -46,7 +46,7 @@ def get_simple_indicator(pair: str, alert: dict) -> tuple[bool, float, str]:
     """
     target = alert['target']
     indicator = alert["indicator"]
-    pair_price = get_pair_price(token_pair=pair)
+    pair_price = get_pair_price(token_pair=pair.replace("/", ""))
 
     if indicator == 'PCTCHG':
         entry = alert['entry']
@@ -62,15 +62,15 @@ def get_simple_indicator(pair: str, alert: dict) -> tuple[bool, float, str]:
     elif indicator == 'BELOW':
         if pair_price < target:
             return True, pair_price, f"{pair} BELOW {target} TARGET AT {pair_price}"
-    else:
-        return False, 0, ""
+
+    return False, 0, ""
 
 
 def get_pair_price(token_pair, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
     """
     Make a request to Binance API and return the response
 
-    :param token_pair: token pair (e.g. BTCUSDT)
+    :param token_pair: token pair without the slash (e.g. BTCUSDT)
     :param _try: The current try for recursive retries
     :param retry_delay: seconds delay between retries
     :param maximum_retries: Maxiumum number of retries
