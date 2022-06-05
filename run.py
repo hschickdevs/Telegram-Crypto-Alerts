@@ -2,8 +2,8 @@ import threading
 from os import getenv
 
 from src.alert_handler import AlertHandler
-from src.telegram_msg_handler import TelegramBot
-from src.io_handler import handle_env
+from src.telegram_handler import TelegramBot
+from src.io_client import handle_env
 
 if __name__ == "__main__":
     # Process environment variables

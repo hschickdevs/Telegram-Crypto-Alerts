@@ -15,7 +15,6 @@
 </div>
 <br>
 
-
 ## Installation
 
 Clone the repository and run the following command:
@@ -126,11 +125,29 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    # REMOVE - Removes each of the telegram channel ids (separated by a comma) from the channel registry
    # e.g. /channels ADD 123456789,987654321
 
-   /emails VIEW/ADD/REMOVE <emal@email.com>,<email@email.com>
+   /emails VIEW/ADD/REMOVE <email@email.com>,<email@email.com>
    # VIEW - Returns the current list of emails in which to send price alerts. If the send_email_alerts config is set to False, emails will not be sent.
    # ADD - Adds each of the emails (separated by a comma) to the email registry. 
    # REMOVE - Removes each of the emails (separated by a comma) from the channel registry
    # e.g. /channels ADD 123456789,987654321
+   ```
+- ### Administrator Only:
+
+   ```sh
+   /admins VIEW/ADD/REMOVE <telegram_user_id>,<telegram_user_id>
+   # VIEW - Returns the current list of admins from the registry
+   # ADD - Adds each of the telegram user ids (separated by a comma) to the admin registry
+   # REMOVE - Removes each of the telegram user ids (separated by a comma) from the admin registry
+   # e.g. /admins ADD -123456789,-987654321
+
+   /whitelist VIEW/ADD/REMOVE <telegram_user_id>,<telegram_user_id>
+   # VIEW - Returns the current whitelist
+   # ADD - Adds each of the telegram user ids (separated by a comma) to the whitelist
+   # REMOVE - Removes each of the telegram user ids (separated by a comma) from the whitelist
+   # e.g. /whitelist ADD -123456789,-987654321
+
+   /getlogs
+   # Returns the current logs
    ```
 
 ## Roadmap

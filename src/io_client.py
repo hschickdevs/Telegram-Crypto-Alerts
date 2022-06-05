@@ -1,26 +1,64 @@
-from os import mkdir, getcwd, getenv
-from os.path import isdir, join, dirname, abspath, isfile
+from os import mkdir, getcwd, getenv, listdir
+from os.path import isdir, join, dirname, abspath, isfile, exists
 import json
 from dotenv import find_dotenv, load_dotenv
+import shutil
 
 
-class ConfigHandler:
-    """Creates functionality to simplify interaction with the json database system"""
+class UserConfiguration:
+    """Simplifies interaction with the json database system"""
 
-    def __init__(self):
-        self.alerts_path = join(dirname(__file__), '_json_/alerts_db.json')
-        self.config_path = join(dirname(abspath(__file__)), '_json_/config.json')
-        self.help_path = join(dirname(abspath(__file__)), 'templates/help_command.txt')
-        self.email_template_path = join(dirname(abspath(__file__)), 'templates/email_template.html')
+    def __init__(self, tg_user_id: str):
+        """
+        :param tg_user_id: The Telegram user ID of the bot user to locate their configuration
+        """
+        self.user_id = tg_user_id
+        self.user_config_root = join(dirname(abspath(__file__)), f'whitelist/{self.user_id}')
+        self.config_path = join(dirname(abspath(__file__)), f'whitelist/{self.user_id}/config.json')
+        self.alerts_path = join(dirname(__file__), f'whitelist/{self.user_id}/alerts.json')
+
+        # Should be changed to allow user to use new alert template later
+        self.email_template_path = join(dirname(abspath(__file__)), 'resources/email_template.html')
+
+        # Utility Paths:
+        self.default_alerts_path = join(dirname(abspath(__file__)), 'resources/default_alerts.json')
+        self.default_config_path = join(dirname(abspath(__file__)), 'resources/default_config.json')
+
+    def whitelist_user(self, is_admin: bool = False):
+        """Add necessary files and directories to database for TG user ID"""
+
+        # Return if user data directory already exists
+        if exists(self.user_config_root):
+            return
+
+        # Make root dir
+        mkdir(self.user_config_root)
+
+        try:
+            # Make default configuration:
+            with open(self.default_config_path, 'r') as _in:
+                default_config = json.load(_in)
+            default_config["channels"].append(self.user_id)
+            if is_admin:
+                default_config["is_admin"] = True
+            with open(self.config_path, 'w') as _out:
+                _out.write(json.dumps(default_config, indent=2))
+
+            # Make default alerts configuration
+            shutil.copy(self.default_alerts_path, self.alerts_path)
+        except Exception as exc:
+            self.blacklist_user()
+            raise exc
+
+    def blacklist_user(self):
+        """Remove TG user configuration from database"""
+
+        # Removes user configuration recursively
+        if exists(self.user_config_root):
+            shutil.rmtree(self.user_config_root)
 
     def load_alerts(self) -> dict:
-        """Loads the alerts database from _json_/alerts_db.json"""
-        # Create alerts database if it does not already exist
-        if not isfile(self.alerts_path):
-            with open(self.alerts_path, 'w+') as database:
-                database.write(json.dumps({}, indent=2))
-
-        # Load the database contents and return it in JSON format
+        """Load the database contents and return it in JSON format"""
         with open(self.alerts_path, 'r') as infile:
             return json.load(infile)
 
@@ -36,28 +74,12 @@ class ConfigHandler:
         with open(self.config_path, 'w') as outfile:
             outfile.write(json.dumps(data, indent=2))
 
-    def get_administrators(self) -> list[str]:
-        with open(self.config_path, 'r') as infile:
-            return json.loads(infile.read())['administrators']
-
-    def add_administrators(self, ids: list[str]) -> None:
+    def admin_status(self, new_value: bool = None) -> bool:
         config = self.load_config()
-        for tg_id in ids:
-            if tg_id not in config['administrators']:
-                config['administrators'].append(tg_id)
-        self.update_config(config)
-
-    def remove_administrators(self, ids: list[str]) -> list[str]:
-        """Attempts to remove administrators from config, and returns fails"""
-        config = self.load_config()
-        fail = []
-        for tg_id in ids:
-            if tg_id in config['administrators']:
-                config['administrators'].remove(tg_id)
-            else:
-                fail.append(tg_id)
-        self.update_config(config)
-        return fail
+        if new_value is not None:
+            config['is_admin'] = new_value
+            self.update_config(config)
+        return config['is_admin']
 
     def get_emails(self) -> list[str]:
         return self.load_config()['emails']
@@ -103,13 +125,10 @@ class ConfigHandler:
         self.update_config(config)
         return fail
 
-    def get_help_command(self) -> str:
-        with open(self.help_path, 'r') as help_file:
-            return help_file.read()
-
     def get_email_template(self) -> str:
         with open(self.email_template_path, 'r') as template:
             return template.read()
+
 
 """ -------------- UTILITIES -------------- """
 def get_logfile() -> str:
@@ -118,6 +137,17 @@ def get_logfile() -> str:
     if not isdir(log_dir):
         mkdir(log_dir)
     return join(log_dir, 'log.txt')
+
+
+def get_help_command() -> str:
+    with open(join(dirname(abspath(__file__)), 'resources/help_command.txt'), 'r') as help_file:
+        return help_file.read()
+
+
+def get_whitelist() -> list:
+    root = join(dirname(abspath(__file__)), f'whitelist')
+    return [_id for _id in listdir(root) if isdir(join(root, _id))]
+
 
 def handle_env():
     """Checks if the .env file exists in the current working dir, and imports the variables if so"""

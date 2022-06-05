@@ -2,3 +2,4 @@ pyTelegramBotAPI
 requests
 python-dotenv
 yagmail
+ratelimit

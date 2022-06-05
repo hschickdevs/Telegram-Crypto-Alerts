@@ -2,7 +2,8 @@ import time
 from datetime import datetime
 
 from .custom_logger import logger
-from .io_handler import ConfigHandler, get_logfile
+from .io_client import UserConfiguration, get_logfile, get_help_command, get_whitelist
+from .static_config import MAX_ALERTS_PER_USER
 
 from telebot import TeleBot
 import requests
@@ -12,13 +13,19 @@ from requests.exceptions import ReadTimeout
 class TelegramBot(TeleBot):
     def __init__(self, bot_token: str):
         super().__init__(token=bot_token)
-        self.config_handler = ConfigHandler()
+
+        @self.message_handler(commands=['id'])
+        def on_id(message):
+            """Public function to return someone's Telegram user ID"""
+            self.reply_to(message, f"{message.from_user.username}'s Telegram ID:\n{message.from_user.id}")
 
         @self.message_handler(commands=['help'])
+        @self.is_whitelisted
         def on_help(message):
-            self.reply_to(message, self.config_handler.get_help_command())
+            self.reply_to(message, get_help_command())
 
         @self.message_handler(commands=['newalert'])
+        @self.is_whitelisted
         def on_new_alert(message):
             """/newalert PAIR/PAIR INDICATOR TARGET optional_ENTRY_PRICE"""
             acceptable_indicators = ['ABOVE', 'BELOW', 'PCTCHG']
@@ -38,34 +45,31 @@ class TelegramBot(TeleBot):
                 return
 
             try:
-                verified_pair = False
+                configuration = UserConfiguration(str(message.from_user.id))
+                alerts_db = configuration.load_alerts()
+
+                if MAX_ALERTS_PER_USER is not None:
+                    if sum(len(alerts) for alerts in alerts_db.values()) >= MAX_ALERTS_PER_USER:
+                        raise OverflowError(f"Maximum active alerts reached ({MAX_ALERTS_PER_USER})")
+
                 if len(msg) > 3:
                     entry_price = msg[3]
                 else:
                     try:
                         entry_price = self.get_binance_price(pair)
-                        verified_pair = True
                     except Exception as exc:
-                        self.reply_to(message, str(exc))
-                        return
-
-                if not verified_pair:
-                    try:
-                        lp = self.get_binance_price(pair)
-                    except:
-                        self.reply_to(message, "An error occurred when attempting to verify the pair on binance.\n"
+                        self.reply_to(message, f"{str(exc)}\n"
                                                "Please verify that your pair is listed on binance and follows the "
                                                "format: TOKEN1/TOKEN2")
                         return
 
-                alerts_db = self.config_handler.load_alerts()
                 if pair in alerts_db.keys():
                     alerts_db[pair].append(
                         {"indicator": indicator, "entry": entry_price, "target": target, "alerted": False})
                 else:
                     alerts_db[pair] = [
                         {"indicator": indicator, "entry": entry_price, "target": target, "alerted": False}]
-                self.config_handler.update_alerts(alerts_db)
+                configuration.update_alerts(alerts_db)
                 self.reply_to(message, f'Successfully activated new alert!')
             except Exception as exc:
                 self.reply_to(message,
@@ -73,6 +77,7 @@ class TelegramBot(TeleBot):
                 return
 
         @self.message_handler(commands=['cancelalert'])
+        @self.is_whitelisted
         def on_cancel_alert(message):
             """/cancelalert PAIR/PAIR alert_index"""
             try:
@@ -86,26 +91,30 @@ class TelegramBot(TeleBot):
                 return
 
             try:
-                alerts_db = self.config_handler.load_alerts()
+                configuration = UserConfiguration(str(message.from_user.id))
+                alerts_db = configuration.load_alerts()
                 rm_alert = alerts_db[pair].pop(alert_index - 1)
                 all_rm = False
                 if len(alerts_db[pair]) == 0:
                     rm_pair = alerts_db.pop(pair)
                     all_rm = True
-                self.config_handler.update_alerts(alerts_db)
+                configuration.update_alerts(alerts_db)
                 self.reply_to(message, f'Successfully Canceled {pair} Alert:\n'
                                        f'{rm_alert}{f" (All alerts canceled for {pair})" if all_rm else ""}')
             except Exception as exc:
                 self.reply_to(message, f'An error occurred when trying to cancel the alert:\n{exc}')
 
         @self.message_handler(commands=['viewalerts'])
+        @self.is_whitelisted
         def on_view_alerts(message):
             """/viewalerts PAIR (<- optional)"""
             try:
                 alerts_pair = self.split_message(message.text)[0].upper()
             except IndexError:
                 alerts_pair = "ALL"
-            alerts_db = self.config_handler.load_alerts()
+
+            configuration = UserConfiguration(str(message.from_user.id))
+            alerts_db = configuration.load_alerts()
             output = ""
             for ticker in alerts_db.keys():
                 if ticker == alerts_pair or alerts_pair == "ALL":
@@ -117,6 +126,7 @@ class TelegramBot(TeleBot):
             self.reply_to(message, output if len(output) > 0 else "Found 0 matching alerts.")
 
         @self.message_handler(commands=['getprice'])
+        @self.is_whitelisted
         def on_get_price(message):
             """/getprice PAIR/PAIR"""
             try:
@@ -131,46 +141,34 @@ class TelegramBot(TeleBot):
                 self.reply_to(message, str(exc))
 
         @self.message_handler(commands=['priceall'])
+        @self.is_whitelisted
         def on_price_all(message):
             """/priceall - Gets the price of all tokens with alerts set"""
+            configuration = UserConfiguration(str(message.from_user.id))
             tokens = [f'{key}: {self.get_binance_price(key.replace("/", "").upper())}' for key
-                      in self.config_handler.load_alerts().keys()]
+                      in configuration.load_alerts().keys()]
             try:
                 self.reply_to(message, "\n".join(tokens))
             except Exception as exc:
                 self.reply_to(message, str(exc))
 
         @self.message_handler(commands=['indicators'])
+        @self.is_whitelisted
         def on_indicators(message):
             """/indicators"""
-            self.reply_to(message, f'Available Indicators:\n'
+            self.reply_to(message, f'Available Indicators:\n\n'
                                    f'PCTCHG - Specify a percentage change target (ie. 10% = 10)\n'
                                    f'BELOW - Specify a price floor target for the pair.\n'
                                    f'ABOVE - Specify a price ceiling target for the pair.\n\n')
 
-        """------ADMINISTRATOR COMMANDS BELOW------"""
-
-        @self.message_handler(commands=['getlogs'])
-        @self.user_is_administrator
-        def on_getlogs(message):
-            """Returns the progam's logs at logs/logs.txt"""
-            with open(get_logfile(), 'rb') as logfile:
-                if len(logfile.read()) > 0:
-                    self.reply_to(message, 'Fetching logs...')
-                    try:
-                        self.send_document(message.chat.id, logfile)
-                    except Exception as exc:
-                        self.reply_to(message, f'An error occurred - {exc}')
-                else:
-                    self.reply_to(message, 'Logfile exists, but no logs have been recorded yet.')
-
         @self.message_handler(commands=['viewconfig'])
-        @self.user_is_administrator
+        @self.is_whitelisted
         def on_viewconfig(message):
             """Returns the current configuration of the bot (used as reference for /setconfig)"""
             try:
-                config = self.config_handler.load_config()['settings']
-                msg = f"{self.get_me().first_name} Configuration:\n\n"
+                configuration = UserConfiguration(str(message.from_user.id))
+                config = configuration.load_config()['settings']
+                msg = f"{message.from_user.username} {self.get_me().first_name} Configuration:\n\n"
                 for k, v in config.items():
                     # msg += f"{key.strip()} settings:\n"
                     # for k, v in variables.items():
@@ -183,13 +181,14 @@ class TelegramBot(TeleBot):
                 self.reply_to(message, str(exc))
 
         @self.message_handler(commands=['setconfig'])
-        @self.user_is_administrator
+        @self.is_whitelisted
         def on_setconfig(message):
             """Used to change configuration variables of the bot"""
             msg = ""
             failed = []
-            user_id = message.from_user.id
-            full_config = self.config_handler.load_config()
+            user_id = str(message.from_user.id)
+            configuration = UserConfiguration(user_id)
+            full_config = configuration.load_config()
             try:
                 config = full_config['settings']
                 for change in self.split_message(message.text):
@@ -215,7 +214,7 @@ class TelegramBot(TeleBot):
                         continue
 
                 full_config['settings'] = config
-                self.config_handler.update_config(full_config)
+                configuration.update_config(full_config)
 
                 if len(msg) > 0:
                     self.reply_to(message, "Successfully set configuration:\n\n" + msg)
@@ -229,89 +228,31 @@ class TelegramBot(TeleBot):
                 logger.exception('Could not set config', exc_info=exc)
                 self.reply_to(message, str(exc))
 
-        @self.message_handler(commands=['admins'])
-        @self.user_is_administrator
-        def on_admins(message):
-            splt_msg = self.split_message(message.text)
-            try:
-                if splt_msg[0].lower() == "add":
-                    new_admins = splt_msg[1].split(",")
-                    self.config_handler.add_administrators(new_admins)
-                    self.reply_to(message, f"Successfully added administrator(s): {', '.join(new_admins)}")
-                elif splt_msg[0].lower() == "remove":
-                    rm_admins = splt_msg[1].split(",")
-                    fails = self.config_handler.remove_administrators(rm_admins)
-                    if len(fails) > 0:
-                        self.reply_to(message, f"Failed to remove administrator(s): {', '.join(fails)}")
-
-                    self.reply_to(message, f"Successfully removed administrators(s): "
-                                           f"{', '.join([tg_id for tg_id in rm_admins if tg_id not in fails])}")
-                else:
-                    msg = "Current Administrators:\n"
-                    for admin in self.config_handler.get_administrators():
-                        msg += f"{admin}\n"
-                    self.reply_to(message, msg)
-            except IndexError:
-                self.reply_to(message, "Invalid formatting - Use /admins VIEW/ADD/REMOVE USER_ID (<- if ADD)")
-            except Exception as exc:
-                self.reply_to(message, f"An unexpected error occurred - {exc}")
-
-        @self.message_handler(commands=['emails'])
-        @self.user_is_administrator
-        def on_emails(message):
-            splt_msg = self.split_message(message.text)
-            try:
-                if splt_msg[0].lower() == "add":
-                    new_emails = splt_msg[1].split(",")
-                    self.config_handler.add_emails(new_emails)
-                    self.reply_to(message, f"Successfully added email(s): {', '.join(new_emails)}")
-                elif splt_msg[0].lower() == "remove":
-                    rm_emails = splt_msg[1].split(",")
-                    fails = self.config_handler.remove_emails(rm_emails)
-                    if len(fails) > 0:
-                        self.reply_to(message, f"Failed to remove email(s): {', '.join(fails)}")
-
-                    self.reply_to(message, f"Successfully removed email(s): "
-                                           f"{', '.join([email for email in rm_emails if email not in fails])}")
-                else:
-                    emails = self.config_handler.get_emails()
-                    if len(emails) == 0:
-                        self.reply_to(message, 'No emails registered. Use /emails ADD email@email.com,email@email.com')
-                        return
-
-                    msg = "Current Email Recipients:\n"
-                    for email in emails:
-                        msg += f"{email}\n"
-                    self.reply_to(message, msg)
-            except IndexError:
-                self.reply_to(message, "Invalid formatting - Use /emails VIEW/ADD/REMOVE email@email.com")
-            except Exception as exc:
-                self.reply_to(message, f"An unexpected error occurred - {exc}")
-
         @self.message_handler(commands=['channels'])
-        @self.user_is_administrator
+        @self.is_whitelisted
         def on_channels(message):
             splt_msg = self.split_message(message.text)
             try:
+                configuration = UserConfiguration(str(message.from_user.id))
                 if splt_msg[0].lower() == "add":
                     new_channels = splt_msg[1].split(",")
-                    self.config_handler.add_channels(new_channels)
+                    configuration.add_channels(new_channels)
                     self.reply_to(message, f"Successfully added channel(s): {', '.join(new_channels)}")
                 elif splt_msg[0].lower() == "remove":
                     rm_channels = splt_msg[1].split(",")
-                    fails = self.config_handler.remove_channels(rm_channels)
+                    fails = configuration.remove_channels(rm_channels)
                     if len(fails) > 0:
                         self.reply_to(message, f"Failed to remove channel(s): {', '.join(fails)}")
 
                     self.reply_to(message, f"Successfully removed channel(s): "
                                            f"{', '.join([email for email in rm_channels if email not in fails])}")
                 else:
-                    channels = self.config_handler.get_channels()
+                    channels = configuration.get_channels()
                     if len(channels) == 0:
                         self.reply_to(message, 'No channels registered. Use /channels ADD ID,ID,ID')
                         return
 
-                    msg = "Current Alert Channels:\n"
+                    msg = "Current Alert Channels:\n\n"
                     for channel in channels:
                         msg += f"{channel}\n"
                     self.reply_to(message, msg)
@@ -320,25 +261,177 @@ class TelegramBot(TeleBot):
             except Exception as exc:
                 self.reply_to(message, f"An unexpected error occurred - {exc}")
 
+        @self.message_handler(commands=['emails'])
+        @self.is_whitelisted
+        def on_emails(message):
+            splt_msg = self.split_message(message.text)
+            try:
+                configuration = UserConfiguration(str(message.from_user.id))
+                if splt_msg[0].lower() == "add":
+                    new_emails = splt_msg[1].split(",")
+                    configuration.add_emails(new_emails)
+                    self.reply_to(message, f"Successfully added email(s): {', '.join(new_emails)}")
+                elif splt_msg[0].lower() == "remove":
+                    rm_emails = splt_msg[1].split(",")
+                    fails = configuration.remove_emails(rm_emails)
+                    if len(fails) > 0:
+                        self.reply_to(message, f"Failed to remove email(s): {', '.join(fails)}")
+
+                    self.reply_to(message, f"Successfully removed email(s): "
+                                           f"{', '.join([email for email in rm_emails if email not in fails])}")
+                else:
+                    emails = configuration.get_emails()
+                    if len(emails) == 0:
+                        self.reply_to(message, 'No emails registered. Use /emails ADD email@email.com,email@email.com')
+                        return
+
+                    msg = "Current Email Recipients:\n\n"
+                    for email in emails:
+                        msg += f"{email}\n"
+                    self.reply_to(message, msg)
+            except IndexError:
+                self.reply_to(message, "Invalid formatting - Use /emails VIEW/ADD/REMOVE email@email.com")
+            except Exception as exc:
+                self.reply_to(message, f"An unexpected error occurred - {exc}")
+
+        """------ ADMINISTRATOR COMMANDS: ------"""
+        @self.message_handler(commands=['whitelist'])
+        @self.is_admin
+        def on_whitelist(message):
+            splt_msg = self.split_message(message.text)
+            try:
+                if splt_msg[0].lower() == "add":
+                    new_users = splt_msg[1].split(",")
+                    for user in new_users:
+                        UserConfiguration(user).whitelist_user()
+                    self.reply_to(message, f"Whitelisted Users: {', '.join(new_users)}")
+                elif splt_msg[0].lower() == "remove":
+                    rm_users = splt_msg[1].split(",")
+                    for user in rm_users:
+                        UserConfiguration(user).blacklist_user()
+                    self.reply_to(message, f"Removed Users from Whitelist: {', '.join(rm_users)}")
+                else:
+                    msg = "Current Whitelist:\n\n"
+                    for user_id in get_whitelist():
+                        msg += f"{user_id}\n"
+                    self.reply_to(message, msg)
+            except IndexError:
+                self.reply_to(message, "Invalid formatting - Use /whitelist VIEW/ADD/REMOVE TG_USER_ID,TG_USER_ID")
+            except Exception as exc:
+                self.reply_to(message, f"An unexpected error occurred - {exc}")
+
+        # @self.message_handler(commands=['blacklist'])
+        # @self.is_admin
+        # def on_blacklist(message):
+        #     splt_msg = self.split_message(message.text)
+        #     try:
+        #         rm_users = splt_msg[0].split(",")
+        #         for user in rm_users:
+        #             UserConfiguration(user).blacklist_user()
+        #         self.reply_to(message, f"Blacklisted Users: {', '.join(rm_users)}")
+        #     except IndexError:
+        #         self.reply_to(message, "Invalid formatting - Use /blacklist TG_USER_ID,TG_USER_ID")
+        #     except Exception as exc:
+        #         self.reply_to(message, f"An unexpected error occurred - {exc}")
+
+        @self.message_handler(commands=['getlogs'])
+        @self.is_admin
+        def on_getlogs(message):
+            """Returns the progam's logs at logs/logs.txt"""
+            with open(get_logfile(), 'rb') as logfile:
+                if len(logfile.read()) > 0:
+                    self.reply_to(message, 'Fetching logs...')
+                    try:
+                        self.send_document(message.chat.id, logfile)
+                    except Exception as exc:
+                        self.reply_to(message, f'An error occurred - {exc}')
+                else:
+                    self.reply_to(message, 'Logfile exists, but no logs have been recorded yet.')
+
+        @self.message_handler(commands=['admins'])
+        @self.is_admin
+        def on_admins(message):
+            splt_msg = self.split_message(message.text)
+            try:
+                whitelist = get_whitelist()
+                if splt_msg[0].lower() == "add":
+                    new_admins = splt_msg[1].split(",")
+                    failure_msgs = []
+                    for i, new_admin in enumerate(new_admins):
+                        try:
+                            if new_admin in whitelist:
+                                UserConfiguration(new_admin).admin_status(new_value=True)
+                            else:
+                                failure_msgs.append(f"{new_admins.pop(i)} - User is not yet whitelisted")
+                        except Exception as exc:
+                            failure_msgs.append(f"{new_admins.pop(i)} - {exc}")
+                    msg = f"Successfully added administrator(s): {', '.join(new_admins)}"
+                    if len(failure_msgs) > 0:
+                        msg += "\n\nFailed to add administrator(s):"
+                        for fail_msg in failure_msgs:
+                            msg += f"\n{fail_msg}"
+                    self.reply_to(message, msg)
+                elif splt_msg[0].lower() == "remove":
+                    rm_admins = splt_msg[1].split(",")
+                    failure_msgs = []
+                    for i, admin in enumerate(rm_admins):
+                        try:
+                            if admin in whitelist:
+                                UserConfiguration(admin).admin_status(new_value=False)
+                            else:
+                                failure_msgs.append(f"{rm_admins.pop(i)} - User is not yet whitelisted")
+                        except Exception as exc:
+                            failure_msgs.append(f"{rm_admins.pop(i)} - {exc}")
+                    msg = f"Successfully revoked administrator(s): {', '.join(rm_admins)}"
+                    if len(failure_msgs) > 0:
+                        msg += "\n\nFailed to revoke administrator(s):"
+                        for fail_msg in failure_msgs:
+                            msg += f"\n{fail_msg}"
+                    self.reply_to(message, msg)
+                else:
+                    msg = "Current Administrators:\n\n"
+                    for user_id in get_whitelist():
+                        if UserConfiguration(user_id).admin_status():
+                            msg += f"{user_id}\n"
+                    self.reply_to(message, msg)
+            except IndexError:
+                self.reply_to(message, "Invalid formatting - Use /admin VIEW/ADD/REMOVE USER_ID,USER_ID")
+            except Exception as exc:
+                self.reply_to(message, f"An unexpected error occurred - {exc}")
 
     def split_message(self, message: str, convert_type=None) -> list:
         return [chunk.strip() if convert_type is None else convert_type(chunk.strip()) for chunk in
                 message.split(" ")[1:] if not all(char == " " for char in chunk) and len(chunk) > 0]
 
-    def user_is_administrator(self, func):
+    def is_whitelisted(self, func):
         """
         (Decorator) Checks if the user is an administrator before proceeding with the function
 
-        :param func: Expects the function to be a message handler, with the 'message' class as the first argument
+        :param func: PyTelegramBotAPI message handler function, with the 'message' class as the first argument
         """
         def wrapper(*args, **kw):
             message = args[0]
-            user_id = str(message.from_user.id)
-            if user_id in self.config_handler.get_administrators():
+            if str(message.from_user.id) in get_whitelist():
                 return func(*args, **kw)
             else:
                 self.reply_to(message,
-                              f"{message.from_user.username} ({message.from_user.id}) is not an administrator.")
+                              f"{message.from_user.username} ({message.from_user.id}) is not whitelisted")
+                return False
+        return wrapper
+
+    def is_admin(self, func):
+        """
+        (Decorator) Checks if the user is an administrator before calling the function
+
+        :param func: PyTelegramBotAPI message handler function, with the 'message' class as the first argument
+        """
+        def wrapper(*args, **kw):
+            message = args[0]
+            if UserConfiguration(str(message.from_user.id)).admin_status():
+                return func(*args, **kw)
+            else:
+                self.reply_to(message,
+                              f"{message.from_user.username} ({message.from_user.id}) is not an admin")
                 return False
         return wrapper
 
