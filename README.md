@@ -152,7 +152,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 
 ## Roadmap
 
-1. Scale to multiple unique user configurations using MySQL & SQLAlchemy
+1. ~~Scale to multiple unique user configurations~~
 2. Integrate technical indicators from [taapi.io](https://taapi.io/)
 3. Implement concurrency if needed
 4. Create twitter alerts integration
