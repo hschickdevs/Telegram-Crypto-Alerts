@@ -1,0 +1,9 @@
+For the technical indicators project:
+
+Probably need to have the technical indicators client run separately from the main thread so that it can respect the API rate limit. 
+
+Use the ratelimit class in the technical indicators client
+
+Will now need to specify what the type of indicator is (simple or technical)
+
+https://taapi.io/documentation/integration/direct/
