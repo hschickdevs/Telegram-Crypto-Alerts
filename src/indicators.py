@@ -22,6 +22,7 @@ from os.path import join, isdir, dirname, abspath
 from typing import Optional
 
 import requests
+from ratelimit import limits, sleep_and_retry
 
 BINANCE_CALL_URL = 'https://api.binance.com/api/v3/ticker/price?symbol={}'  # format to token pair (ex: BTCUSDT)
 TA_DB_PATH = join(dirname(abspath(__file__)), 'resources/ta_db.json')
@@ -90,6 +91,7 @@ def get_pair_price(token_pair, retry_delay: int = 2, maximum_retries: int = 5, _
 
 
 class TADatabaseClient:
+    """This client should handle the cross-process operations of the technical analysis indicators database"""
     def build_ta_db(self):
         pass
 
@@ -103,22 +105,13 @@ class TADatabaseClient:
         return json.loads(open(TA_DB_PATH).read())
 
 
-class TAAPIClient(TADatabaseClient):
-    def __init__(self, taapi_io_apikey: str):
-        self.taapi_key = taapi_io_apikey
+class TaapiioProcess:
+    def __init__(self):
+        self.last_call = 0
+        self.db = TADatabaseClient()
 
-    def get_technical_indicators(self, pair: str, interval: str, indicators_data: dict[dict]):
-        """
-        Should build a bundled API call for the given pair to fetch the status of each technical indicator in the DB
-
-        :param pair: The crypto pair (e.g. ETH/USDT)
-        :param interval: The common timeframe for the query (e.g. 15m, 1h, 1d)
-        :param indicators_data: { "2CROWS": {"user_params": ["interval=15m", "backtrack=20"] } }
-        """
+    def run(self):
         pass
 
-    def get_technical_indicators_aggregate(self):
-        """Aggregates all technical indicators across all whitelisted users and prepares the bulk queries"""
+    def build_aggregate(self):
         pass
-
-# Might need a daily utility to update the technical analysis database using webscraping
