@@ -154,9 +154,6 @@ cython_debug/
 #.idea/
 
 # Project Specific
-testing.py
-src/_json_/administrators.json
-src/_json_/alerts_db.json
-src/_json_/config.json
+testing.*
 logs/log.txt
 src/whitelist/*

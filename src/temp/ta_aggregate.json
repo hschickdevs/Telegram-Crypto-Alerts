@@ -1,0 +1,20 @@
+{
+  "ETH/USDT": {},
+  "BTC/USDT": {
+    "1d": [
+      {
+        "indicator": "ma",
+        "period": 365
+      },
+      {
+        "indicator": "rsi"
+      }
+    ],
+    "1h": [
+      {
+        "indicator": "ema",
+        "period": 12
+      }
+    ]
+  }
+}

@@ -3,18 +3,41 @@
     {
       "indicator": "ABOVE",
       "target": 999999,
-      "alerted": false
+      "alerted": false,
+      "type": "s"
     },
     {
       "indicator": "BELOW",
       "target": 1,
-      "alerted": false
+      "alerted": false,
+      "type": "s"
     },
     {
       "indicator": "PCTCHG",
       "entry": 2000,
       "target": 1000.0,
-      "alerted": false
+      "alerted": false,
+      "type": "s"
+    }
+  ],
+  "BTC/USDT": [
+    {
+      "type": "t",
+      "indicator": "MA",
+      "interval": "1d",
+      "params": {"period": 365}
+    },
+    {
+      "type": "t",
+      "indicator": "RSI",
+      "interval": "1d",
+      "params": {}
+    },
+    {
+      "type": "t",
+      "indicator": "EMA",
+      "interval": "1h",
+      "params": {"period": 12}
     }
   ]
 }

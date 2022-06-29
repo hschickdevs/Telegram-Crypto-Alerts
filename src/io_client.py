@@ -4,8 +4,7 @@ import json
 from dotenv import find_dotenv, load_dotenv
 import shutil
 
-WHITELIST_ROOT = join(dirname(abspath(__file__)), 'whitelist')
-RESOURCES_ROOT = join(dirname(abspath(__file__)), 'resources')
+from .static_config import *
 
 
 class UserConfiguration:
