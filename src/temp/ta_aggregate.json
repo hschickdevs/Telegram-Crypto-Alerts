@@ -1,40 +1,23 @@
 {
-  "ETH/USDT": {},
   "BTC/USDT": {
-    "1d": [
-      {
-        "indicator": "ma",
-        "period": 30,
-        "values": {
-          "value": 24366.63533333334
-        },
-        "last_update": 1656574374
-      },
-      {
-        "indicator": "rsi",
-        "values": {
-          "value": 29.491679051555685
-        },
-        "last_update": 1656574374
-      }
-    ],
     "1h": [
       {
-        "indicator": "bbands",
-        "values": {
-          "valueUpperBand": 20407.737346124548,
-          "valueMiddleBand": 19793.843999999994,
-          "valueLowerBand": 19179.95065387544
-        },
-        "last_update": 1656574390
-      },
-      {
         "indicator": "ma",
-        "period": 48,
+        "period": 12,
         "values": {
-          "value": 20068.805666666663
+          "value": 19530.639000000014
         },
-        "last_update": 1656574390
+        "last_update": 1656628778
+      }
+    ],
+    "1d": [
+      {
+        "indicator": "rsi",
+        "period": 14,
+        "values": {
+          "value": 28.068942428620996
+        },
+        "last_update": 1656628794
       }
     ]
   }

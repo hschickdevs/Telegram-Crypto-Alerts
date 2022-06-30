@@ -5,6 +5,7 @@ from os.path import isdir, join, dirname, abspath, isfile, exists
 """Alert Handler Configuration"""
 POLLING_PERIOD = 10  # Delay for the alert handler to pull prices and check alert conditions (in seconds)
 BINANCE_CALL_URL = 'https://api.binance.com/api/v3/ticker/price?symbol={}'
+OUTPUT_VALUE_PRECISION = 2
 
 """Telegram Handler Configuration"""
 MAX_ALERTS_PER_USER = 10  # Integer or None (Should be set in a static configuration file)
@@ -12,7 +13,7 @@ MAX_ALERTS_PER_USER = 10  # Integer or None (Should be set in a static configura
 """Paths"""
 WHITELIST_ROOT = join(dirname(abspath(__file__)), 'whitelist')
 RESOURCES_ROOT = join(dirname(abspath(__file__)), 'resources')
-TA_DB_PATH = join(dirname(abspath(__file__)), 'resources/ta_db.json')
+TA_DB_PATH = join(dirname(abspath(__file__)), 'resources/indicator_format_reference.json')
 AGG_DATA_LOCATION = join(dirname(abspath(__file__)), 'temp/ta_aggregate.json')
 
 """TAAPI.IO"""

@@ -1,24 +1,28 @@
 import time
 from datetime import datetime
+import os
 
 from .io_client import UserConfiguration, get_whitelist
 from .custom_logger import logger
 from .static_config import *
-from .indicators import get_pair_price, TADatabaseClient, TAAggregateClient
+from .indicators import get_pair_price, IndicatorsReferenceClient, TAAggregateClient
 
 import requests
 import yagmail
 from ratelimit import limits, sleep_and_retry
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import *
 
 
 class AlertHandler:
-    def __init__(self, telegram_bot_token: str, alert_email_user: str = None, alert_email_pass: str = None):
+    def __init__(self, telegram_bot_token: str, sendgrid_apikey: str = None, alert_email: str = None):
         self.polling = False  # Temporary variable to manage alerts
         self.tg_bot_token = telegram_bot_token
-        self.alert_email_user = alert_email_user
-        self.alert_email_pass = alert_email_pass
-        self.ta_db = TADatabaseClient().fetch_ta_db()
+        self.alert_email = alert_email
+        # self.alert_email_pass = alert_email_pass
+        self.ta_db = IndicatorsReferenceClient().fetch_ref()
         self.ta_agg_cli = TAAggregateClient()
+        self.sendgrid_cli = SendGridAPIClient(api_key=sendgrid_apikey) if sendgrid_apikey is not None else None
 
     def poll_user_alerts(self, tg_user_id: str) -> None:
         """
@@ -67,7 +71,7 @@ class AlertHandler:
                     logger.warn(f"Failed to send Telegram alert ({post}) to the following IDs: {status[1]}")
 
                 if config['settings']['send_email_alerts']:
-                    self.email_alert(post, configuration)
+                    self.email_alert_sendgrid(post, configuration)
 
         if not self.polling:
             self.polling = True
@@ -103,7 +107,7 @@ class AlertHandler:
 
         return output
 
-    def email_alert(self, post: str, configuration: UserConfiguration):
+    def email_alert_sendgrid(self, post: str, configuration: UserConfiguration) -> None:
         """
         Dynamically builds the email by formatting the string in email_template.html with the post
 
@@ -111,20 +115,52 @@ class AlertHandler:
         :param post: The post (price alert) to add to the email template and send to all registered emails
         :return:
         """
+        if self.alert_email is None or self.sendgrid_cli is None:
+            raise Exception("Email alerts are enabled, but the required environment variables are missing for login.")
 
-        if self.alert_email_pass is None or self.alert_email_user is None:
-            raise NotImplementedError(f"Email alerts are enabled, "
-                                      f"but the required environment variables are missing for login.")
+        recipients = configuration.load_config()['emails']
+        if len(recipients) == 0:
+            return
 
-        logger.info(f"Sending email alert to registered users: {post}")
+        pair = post.split(" ")[0]
+        binance_url = f"https://www.binance.com/en/trade/{pair.replace('/', '_')}?type=spot"
+        formatted_html = configuration.get_email_template().format(post=post,
+                                                                   binance_url=binance_url,
+                                                                   pair=pair)
 
-        emails = configuration.load_config()['emails']
-        with yagmail.SMTP(user=self.alert_email_user, password=self.alert_email_pass) as smtp:
-            for recipient in emails:
-                smtp.send(to=recipient, subject="Crypto Indicator Alert",
-                          contents=configuration.get_email_template().format(post=post))
+        formatted_mail = Mail(from_email=Email(self.alert_email),
+                              to_emails=recipients,
+                              subject="Crypto Indicator Alert",
+                              html_content=formatted_html)
+        try:
+            self.sendgrid_cli.client.mail.send.post(request_body=formatted_mail.get())
+            logger.info(f"Emails sent to {recipients} with post {post}")
+        except Exception as exc:
+            logger.warn(f"Could not send alert email to recipients: {recipients}", exc_info=exc)
 
-        logger.info(f"Emails sent to: {emails}")
+    # --> Deprecated in favor of SendGrid integration and Outdated <--
+    # def email_alert_smtp(self, post: str, configuration: UserConfiguration):
+    #     """
+    #     Dynamically builds the email by formatting the string in email_template.html with the post
+    #
+    #     :param configuration: The io_handler.UserConfiguration object for the current user
+    #     :param post: The post (price alert) to add to the email template and send to all registered emails
+    #     :return:
+    #     """
+    #
+    #     if self.alert_email_pass is None or self.alert_email_user is None:
+    #         raise NotImplementedError(f"Email alerts are enabled, "
+    #                                   f"but the required environment variables are missing for login.")
+    #
+    #     logger.info(f"Sending email alert to registered users: {post}")
+    #
+    #     emails = configuration.load_config()['emails']
+    #     with yagmail.SMTP(user=self.alert_email_user, password=self.alert_email_pass) as smtp:
+    #         for recipient in emails:
+    #             smtp.send(to=recipient, subject="Crypto Indicator Alert",
+    #                       contents=configuration.get_email_template().format(post=post))
+    #
+    #     logger.info(f"Emails sent to: {emails}")
 
     def get_simple_indicator(self, pair: str, alert: dict, pair_price: float = None) -> tuple[bool, float, str]:
         """
@@ -180,29 +216,22 @@ class AlertHandler:
         null_output = False, 0, ""
 
         aggregate = self.ta_agg_cli.load_agg()
+        if aggregate == {}:
+            logger.warn("Attempted to load the aggregate in get_technical_indicator() but it was empty")
+            return null_output
 
         # Match the alert to its corresponding reference in the aggregate and check the value:
         matched_indicator = None
         formatted_alert = self.ta_agg_cli.format_alert_for_match(alert)
 
+        # Attempt to find an existing indicator match for the alert
         for indicator in aggregate[pair][alert['interval']]:
-            """Attempt to find an existing indicator match for the alert"""
             try:
                 if all(indicator[k] == v for k, v in formatted_alert.items()):
                     matched_indicator = indicator
                     break
             except KeyError:
                 continue
-
-        # for indicator in aggregate[pair][alert['interval']]:
-        #     if indicator['indicator'].lower() != alert['indicator'].lower():
-        #         continue
-        #     for param, val in alert['params'].items():
-        #         try:
-        #             assert indicator[param] == val
-        #         except (KeyError, AssertionError) as exc:
-        #             continue
-        #     matched_indicator = indicator
 
         if matched_indicator is None:
             raise ValueError(f"Could not match alert to indicator in the TA aggregate - Alert: {alert}")
@@ -224,7 +253,11 @@ class AlertHandler:
 
         # Return
         if satisfied:
-            return True, value, f"{pair} {alert['indicator']} {alert['comparison']} {alert['target']} TARGET AT {value}"
+            indicator_str = f"{self.ta_db[alert['indicator'].upper()]['name']} ({alert['indicator'].upper()})"
+            params_str = ', '.join([f'{param.upper()}={v}' for param, v in alert['params'].items()])
+            post_str = f"{pair} {indicator_str} {alert['interval']} {params_str} {alert['comparison']} {alert['target']}" \
+                       f" AT {value:.{OUTPUT_VALUE_PRECISION}f}\n"
+            return True, value, post_str
         else:
             return null_output
 

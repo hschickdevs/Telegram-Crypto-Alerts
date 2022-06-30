@@ -19,7 +19,8 @@ import json
 from time import time, sleep
 from os import getcwd, mkdir
 from os.path import join, isdir, dirname, abspath
-from typing import Optional
+from typing import Union
+import os
 
 from .io_client import get_whitelist, UserConfiguration
 from .static_config import *
@@ -52,20 +53,20 @@ def get_pair_price(token_pair, retry_delay: int = 2, maximum_retries: int = 5, _
             return get_pair_price(token_pair, _try=_try + 1)
 
 
-class TADatabaseClient:
+class IndicatorsReferenceClient:
     """This client should handle the cross-process operations of the technical analysis indicators database"""
 
-    def dump_ta_db(self, data: dict) -> None:
+    def dump_ref(self, data: dict) -> None:
         """Update the technical analysis indicators database"""
         with open(TA_DB_PATH, 'w') as out:
             out.write(json.dumps(data, indent=2))
 
-    def fetch_ta_db(self) -> dict:
+    def fetch_ref(self) -> dict:
         """Get the location of and return the technical analysis indicators database in JSON format"""
         return json.loads(open(TA_DB_PATH).read())
 
     def add_indicator(self, indicator_id: str, name: str, endpoint: str, reference_url: str,
-                      params: list[tuple[str, str, bool]], output: list[str]) -> None:
+                      params: list[tuple[str, str, bool]], output: list[str], indicator_type: str = "t") -> None:
         """
         Add an indicator to the TA database
 
@@ -77,28 +78,33 @@ class TADatabaseClient:
         :param params: List of tuples containing parameter data
             - param_id: The ID for the parameter as shown on the API parameters documentation (e.g. "symbol")
             - param_description: A docstring that lets the user know what data the parameter expects
-            - param_required: A bool indicating whether the parameter is required
+            - param_default: The default value for the parameter, or None if the parameter is strictly required
         :param output: List of output variables that are returned by the API so that the user can choose which
                        to use, and so that the bot can know how to process the response.
                        NOTE: All return types for the output_values are considered as FLOAT
+        :param indicator_type: "s" for simple indicator, and "t" for technical indicator
         """
-        db = self.fetch_ta_db()
+        db = self.fetch_ref()
         db[indicator_id.upper()] = {"name": name, "endpoint": endpoint, "ref": reference_url,
-                                    "params": params, "output": output}
-        self.dump_ta_db(db)
+                                    "params": params, "output": output, "type": indicator_type}
+        self.dump_ref(db)
         print(f"{name} ({indicator_id}) indicator added to TA database.")
 
-    def get_indicator(self, _id: str):
+    def get_indicator(self, _id: str, key = None):
         """Returns the indicator data from the database"""
         try:
-            return self.fetch_ta_db()[_id.upper()]
+            if key is not None:
+                return self.fetch_ref()[_id.upper()][key]
+            else:
+                return self.fetch_ref()[_id.upper()]
         except KeyError:
             raise ValueError(f"'{_id}' is an invalid indicator ID")
 
 
 class TAAggregateClient:
     def __init__(self):
-        self.ta_database = TADatabaseClient()
+        self.indicators_db_cli = IndicatorsReferenceClient()
+        self.indicators_reference = self.indicators_db_cli.fetch_ref()
 
     def build_ta_aggregate(self, ta_db: dict = None):
         """
@@ -119,18 +125,20 @@ class TAAggregateClient:
         logger.info("Building TA aggregate...")
         
         if ta_db is None:
-            ta_db = self.ta_database.fetch_ta_db()
+            ta_db = self.indicators_reference
 
-        # You have to have this for the previous values to persist:
-        # TODO: NEED TO REMOVE INDICATORS FROM DB THAT NO LONGER HAVE MATCHES
+        # Fetch the old aggregate to get previous values
         try:
-            agg = self.load_agg()
+            old_agg = self.load_agg()
         except FileNotFoundError:
-            agg = {}
+            old_agg = {}
+            self.dump_agg(old_agg)
         except Exception as exc:
             logger.exception('Could not load TA aggregate', exc_info=exc)
             raise exc
-            
+
+        # Create the new aggregate to weed out unused indicators:
+        agg = {}
         for user in get_whitelist():
             alerts_data = UserConfiguration(user).load_alerts()
             for symbol, alerts in alerts_data.items():
@@ -145,24 +153,26 @@ class TAAggregateClient:
                     # Build the alert to store in the aggregate with format prepared to be sent to the API in bulk call
                     formatted_alert = self.format_alert_for_match(alert)
 
-                    for indicator in agg[symbol][alert['interval']]:
-                        """Attempt to find an existing match to have preivous values persist"""
-                        try:
-                            if all(indicator[k] == v for k, v in formatted_alert.items()):
-                                formatted_alert = indicator
-                                break
-                        except KeyError:
-                            continue
+                    # Attempt to find an existing match to have previous values persist
+                    match = None
+                    try:
+                        for indicator in old_agg[symbol][alert['interval']]:
+                            try:
+                                if all(indicator[k] == v for k, v in formatted_alert.items()):
+                                    match = indicator
+                                    break
+                            except KeyError:
+                                continue
+                    except KeyError:
+                        pass
+                    if match is not None:
+                        formatted_alert = match
                     else:
-                        """Match does not exist"""
                         formatted_alert["values"] = {var: None for var in ta_db[alert['indicator'].upper()]['output']}
                         formatted_alert["last_update"] = 0
 
-                        # Add the formatted alert to the database if it doesn't already exist
-                        # if not any(formatted_alert == indicator for indicator in agg[symbol][alert['interval']]):
-                        agg[symbol][alert['interval']].append(formatted_alert)
-                        # if formatted_alert not in agg[symbol][alert['interval']]:  <-- deprecate
-                            # agg[symbol][alert['interval']].append(formatted_alert)
+                    # Add the formatted alert to the database
+                    agg[symbol][alert['interval']].append(formatted_alert)
 
         # Update the aggregate with the new data
         self.dump_agg(agg)
@@ -170,17 +180,27 @@ class TAAggregateClient:
 
     def format_alert_for_match(self, alert: dict):
         formatted_alert = {"indicator": alert['indicator'].lower()}
-        for param, value in alert['params'].items():
-            formatted_alert[param] = value
+        for param, _, default_value in self.indicators_db_cli.get_indicator(_id=alert['indicator'].upper(), key="params"):
+            try:
+                formatted_alert[param] = alert["params"][param]
+            except KeyError:
+                formatted_alert[param] = default_value
+
         return formatted_alert
 
     def dump_agg(self, data: dict) -> None:
+        if not os.path.isdir(os.path.dirname(AGG_DATA_LOCATION)):
+            os.mkdir(os.path.dirname(AGG_DATA_LOCATION))
         with open(AGG_DATA_LOCATION, 'w') as outfile:
             outfile.write(json.dumps(data, indent=2))
 
     def load_agg(self) -> dict:
-        with open(AGG_DATA_LOCATION, 'r') as infile:
-            return json.load(infile)
+        try:
+            with open(AGG_DATA_LOCATION, 'r') as infile:
+                return json.load(infile)
+        except FileNotFoundError:
+            self.dump_agg({})
+            return self.load_agg()
 
     def clean_agg(self) -> None:
         """Remove all unused indicators from the aggregate"""
@@ -196,7 +216,7 @@ class TaapiioProcess:
     def __init__(self, taapiio_apikey: str, telegram_bot_token: str = None):
         self.apikey = taapiio_apikey
         self.last_call = 0
-        self.ta_db = TADatabaseClient().fetch_ta_db()  # TA DB is static and can be loaded once
+        self.ta_db = IndicatorsReferenceClient().fetch_ref()  # TA DB is static and can be loaded once
         self.agg_cli = TAAggregateClient()
         self.tg_bot_token = telegram_bot_token  # Can be left blank, but the process wont be able to report errors
 
@@ -276,12 +296,15 @@ class TaapiioProcess:
                 requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
                               params={'chat_id': user, 'text': message})
 
-    def run(self):
+    def run(self) -> None:
         restart_period = 15
         try:
             self.mainloop()
+        except KeyboardInterrupt:
+            return
         except Exception as exc:
             logger.exception(f"An error has occurred in the mainloop - restarting in 5 seconds...", exc_info=exc)
             self.alert_admins(message=f"A critical error has occurred in the TaapiioProcess "
                                       f"(Restarting in {restart_period} seconds) - {exc}")
             sleep(restart_period)
+            return self.run()

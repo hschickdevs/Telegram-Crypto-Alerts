@@ -1,23 +1,26 @@
 {
+  "PRICE": {
+    "name": "Spot Price",
+    "endpoint": null,
+    "ref": null,
+    "params": [],
+    "type": "s"
+  },
   "MA": {
     "name": "Moving Average",
     "endpoint": "https://api.taapi.io/ma?secret={api_key}&exchange=binance",
     "ref": "https://taapi.io/indicators/moving-average/",
     "params": [
       [
-        "interval",
-        "Time frame for candles: 1m, 5m, 15m, 30, 1h, 2h, 4h, 12h, 1d, 1w",
-        true
-      ],
-      [
         "period",
         "Length / period of the moving average. It sets the number of candles used in the MA calculation (Default = 30)",
-        false
+        30
       ]
     ],
     "output": [
       "value"
-    ]
+    ],
+    "type": "t"
   },
   "EMA": {
     "name": "Exponential Moving Average",
@@ -25,19 +28,15 @@
     "ref": "https://taapi.io/indicators/exponential-moving-average/",
     "params": [
       [
-        "interval",
-        "Time frame for candles: 1m, 5m, 15m, 30, 1h, 2h, 4h, 12h, 1d, 1w",
-        true
-      ],
-      [
         "period",
         "Length / period of the EMA. It sets the number of candles used in the EMA calculation (Default = 30)",
-        false
+        30
       ]
     ],
     "output": [
       "value"
-    ]
+    ],
+    "type": "t"
   },
   "SMA": {
     "name": "Simple Moving Average",
@@ -45,19 +44,15 @@
     "ref": "https://taapi.io/indicators/simple-moving-average/",
     "params": [
       [
-        "interval",
-        "Time frame for candles: 1m, 5m, 15m, 30, 1h, 2h, 4h, 12h, 1d, 1w",
-        true
-      ],
-      [
         "period",
         "Length / period of the SMA. It sets the number of candles used in the SMA calculation (Default = 30)",
-        false
+        30
       ]
     ],
     "output": [
       "value"
-    ]
+    ],
+    "type": "t"
   },
   "RSI": {
     "name": "Relative Strength Index",
@@ -65,19 +60,15 @@
     "ref": "https://taapi.io/indicators/relative-strength-index-rsi/",
     "params": [
       [
-        "interval",
-        "Time frame for candles: 1m, 5m, 15m, 30, 1h, 2h, 4h, 12h, 1d, 1w",
-        true
-      ],
-      [
         "period",
         "Adjust the RSI length- number of candles used to calculate RSI (Default = 14)",
-        false
+        14
       ]
     ],
     "output": [
       "value"
-    ]
+    ],
+    "type": "t"
   },
   "BBANDS": {
     "name": "Bollinger Bands",
@@ -85,25 +76,21 @@
     "ref": "https://taapi.io/indicators/bollinger-bands-another-implementation/",
     "params": [
       [
-        "interval",
-        "Time frame for candles: 1m, 5m, 15m, 30, 1h, 2h, 4h, 12h, 1d, 1w",
-        true
-      ],
-      [
         "period",
         "The period length to consider in the data set (Default = 20)",
-        false
+        20
       ],
       [
         "stddev",
         "Standard deviation value of the price (Default = 2)",
-        false
+        2
       ]
     ],
     "output": [
-        "valueUpperBand",
-        "valueMiddleBand",
-        "valueLowerBand"
-    ]
+      "valueUpperBand",
+      "valueMiddleBand",
+      "valueLowerBand"
+    ],
+    "type": "t"
   }
 }

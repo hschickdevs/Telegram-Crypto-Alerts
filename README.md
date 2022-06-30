@@ -37,10 +37,10 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 3. Set your environment variables or create a `.env` file in the root directory with the following:
     ```bash
      TELEGRAM_BOT_TOKEN=123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Your telegram bot token
-     (OPTIONAL) ALERTS_EMAIL_USER=email@email.com  # The email from which to send price alerts
-     (OPTIONAL) ALERTS_EMAIL_PASS=password  # The password for the email from which to send price alerts
+     (OPTIONAL) SENDGRID_APIKEY=your_apikey  # Your SendGrid API key for automated email alerts
+     (OPTIONAL) ALERTS_EMAIL=your_email  # The email from which you would like alerts to be sent from (must be registered on SendGrid)
     ```
-    If the alerts email variables are not set, only Telegram alerts will be available. The bot uses these email credentials to send email alerts using [yagmail](https://github.com/kootenpv/yagmail).
+    If the *SENDGRID_APIKEY* and *ALERTS_EMAIL* variables are not set, only Telegram alerts will be available. The bot uses these email credentials to send email alerts using [SendGrid](https://sendgrid.com/). You can sign up [here](https://signup.sendgrid.com/) for free.
 
     The alert emails are dynamically built from the `src/templates/email_template.html` file.
 

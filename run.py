@@ -19,8 +19,8 @@ if __name__ == "__main__":
 
     # Run the AlertHandler() in a daemon thread
     threading.Thread(target=AlertHandler(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN'),
-                                         alert_email_user=getenv('ALERTS_EMAIL_USER'),
-                                         alert_email_pass=getenv('ALERTS_EMAIL_PASS')).run, daemon=True).start()
+                                         sendgrid_apikey=getenv('SENDGRID_APIKEY'),
+                                         alert_email=getenv('ALERTS_EMAIL')).run, daemon=True).start()
 
     # Run the TG bot in the main thread
     TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN')).run()

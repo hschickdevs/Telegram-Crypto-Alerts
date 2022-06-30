@@ -5,6 +5,7 @@
       "indicator": "PRICE",
       "comparison": "ABOVE",
       "target": 999999,
+      "params": {},
       "alerted": false
     },
     {
@@ -12,6 +13,7 @@
       "indicator": "PRICE",
       "comparison": "BELOW",
       "target": 1,
+      "params": {},
       "alerted": false
     },
     {
@@ -20,6 +22,7 @@
       "comparison": "PCTCHG",
       "entry": 2000,
       "target": 1000.0,
+      "params": {},
       "alerted": false
     }
   ],
@@ -40,7 +43,7 @@
       "comparison": "ABOVE",
       "alerted": false,
       "interval": "1d",
-      "params": {},
+      "params": {"period":  14},
       "output_value": "value",
       "target": 30.00
     },
@@ -50,7 +53,7 @@
       "comparison": "ABOVE",
       "alerted": false,
       "interval": "1d",
-      "params": {},
+      "params": {"period":  20, "stddev": 2},
       "output_value": "valueUpperBand",
       "target": 20000.00
     }

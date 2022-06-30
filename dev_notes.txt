@@ -14,3 +14,6 @@ the valid parameters.
 The telegram bot may need a separate APIKEY if using the free trial
 To use 1 key, you would need to assign a certain amount of the API credits to the telegram bot, and a certain amount
 to the taapi.io process.
+
+NEED TO ADD DEFAULT VALUES SO THAT THE PARAMS CAN BE PULLED AND REFERENCED WHEN THE USER POLLS FOR THEIR ACTIVE ALERTS
+Instead of having a
