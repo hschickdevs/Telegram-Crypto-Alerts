@@ -10,3 +10,7 @@ https://taapi.io/documentation/integration/direct/
 
 Will need to test technical indicators before they are added to the database to make sure that the user has entered
 the valid parameters.
+
+The telegram bot may need a separate APIKEY if using the free trial
+To use 1 key, you would need to assign a certain amount of the API credits to the telegram bot, and a certain amount
+to the taapi.io process.

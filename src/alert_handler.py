@@ -4,7 +4,7 @@ from datetime import datetime
 from .io_client import UserConfiguration, get_whitelist
 from .custom_logger import logger
 from .static_config import *
-from .indicators import get_simple_indicator
+from .indicators import get_pair_price, TADatabaseClient, TAAggregateClient
 
 import requests
 import yagmail
@@ -17,6 +17,8 @@ class AlertHandler:
         self.tg_bot_token = telegram_bot_token
         self.alert_email_user = alert_email_user
         self.alert_email_pass = alert_email_pass
+        self.ta_db = TADatabaseClient().fetch_ta_db()
+        self.ta_agg_cli = TAAggregateClient()
 
     def poll_user_alerts(self, tg_user_id: str) -> None:
         """
@@ -40,7 +42,12 @@ class AlertHandler:
                     remove_queue.append(alert)
                     continue
 
-                condition, value, post_string = get_simple_indicator(pair, alert)
+                if alert['type'] == "s":
+                    condition, value, post_string = self.get_simple_indicator(pair, alert)
+                elif alert['type'] == "t":
+                    condition, value, post_string = self.get_technical_indicator(pair, alert)
+                else:
+                    raise Exception("Invalid alert type: s = simple, t = technical")
 
                 if condition:  # If there is a condition satisfied
                     post_queue.append(post_string)
@@ -65,9 +72,6 @@ class AlertHandler:
         if not self.polling:
             self.polling = True
             logger.info(f'Bot polling for next alert...')
-
-    # def format_post_string(self, alert: dict):
-    #     pass
 
     @sleep_and_retry
     @limits(calls=1, period=POLLING_PERIOD)
@@ -121,6 +125,108 @@ class AlertHandler:
                           contents=configuration.get_email_template().format(post=post))
 
         logger.info(f"Emails sent to: {emails}")
+
+    def get_simple_indicator(self, pair: str, alert: dict, pair_price: float = None) -> tuple[bool, float, str]:
+        """
+        Accounts for the 3 following simple price movement indicators:
+        PCTCHG - Percent change in the price
+        ABOVE - Price above the target
+        BELOW - Price below the target
+        :param pair: The crypto pair
+        :param pair_price: The current price of the crypto pair.
+                           Get the pair price before calling the self.get_pair_price() function
+        :param alert: An alert data dictionary as returned by src.io_handler.UserConfiguration.load_alerts()
+        :returns: Tuple:
+                  (Boolean) True if the indicator is satisfied, False if not
+                  (Float) The current value of the indicator
+                  (String) The formatted string to send with alerts
+        """
+        target = alert['target']
+        indicator = alert["indicator"]
+        if pair_price is None:
+            pair_price = get_pair_price(token_pair=pair.replace("/", ""))
+
+        if indicator == 'PCTCHG':
+            entry = alert['entry']
+            if pair_price > entry * (1 + target):
+                pct_chg = ((pair_price - entry) / entry) * 100
+                return True, pct_chg, f"{pair} UP {pct_chg:.1f}% AT {pair_price}"
+            elif pair_price < entry * (1 - target):
+                pct_chg = ((entry - pair_price) / entry) * 100
+                return True, pct_chg, f"{pair} DOWN {pct_chg:.1f}% AT {pair_price}"
+        elif indicator == 'ABOVE':
+            if pair_price > target:
+                return True, pair_price, f"{pair} ABOVE {target} TARGET AT {pair_price}"
+        elif indicator == 'BELOW':
+            if pair_price < target:
+                return True, pair_price, f"{pair} BELOW {target} TARGET AT {pair_price}"
+
+        return False, pair_price, ""
+
+    def get_technical_indicator(self, pair: str, alert: dict) -> tuple[bool, float, str]:
+        """
+        Accounts for all of the implemented taapi.io indicators.
+        Get the available indicators using the telegram command.
+        References the alert against the temp/ta_aggregate.json file to check for satisfaction.
+
+        :param pair: The crypto pair
+        :param alert: An alert data dictionary as returned by src.io_handler.UserConfiguration.load_alerts()
+
+        :returns: Tuple:
+                  (Boolean) True if the indicator is satisfied, False if not
+                  (Float) The current value of the indicator
+                  (String) The formatted string to send with alerts
+        """
+        null_output = False, 0, ""
+
+        aggregate = self.ta_agg_cli.load_agg()
+
+        # Match the alert to its corresponding reference in the aggregate and check the value:
+        matched_indicator = None
+        formatted_alert = self.ta_agg_cli.format_alert_for_match(alert)
+
+        for indicator in aggregate[pair][alert['interval']]:
+            """Attempt to find an existing indicator match for the alert"""
+            try:
+                if all(indicator[k] == v for k, v in formatted_alert.items()):
+                    matched_indicator = indicator
+                    break
+            except KeyError:
+                continue
+
+        # for indicator in aggregate[pair][alert['interval']]:
+        #     if indicator['indicator'].lower() != alert['indicator'].lower():
+        #         continue
+        #     for param, val in alert['params'].items():
+        #         try:
+        #             assert indicator[param] == val
+        #         except (KeyError, AssertionError) as exc:
+        #             continue
+        #     matched_indicator = indicator
+
+        if matched_indicator is None:
+            raise ValueError(f"Could not match alert to indicator in the TA aggregate - Alert: {alert}")
+
+        # If these tests pass, this is the correct indicator because the symbol, interval, and params pass
+        value = matched_indicator['values'][alert['output_value']]
+        if value is None:
+            return null_output
+
+        satisfied = False
+        if alert['comparison'] == "ABOVE":
+            if value > alert['target']:
+                satisfied = True
+        elif alert['comparison'] == "BELOW":
+            if value < alert['target']:
+                satisfied = True
+        else:
+            raise ValueError(f"'{alert['comparison']}' IS AN INVALID COMPARISON TYPE (ABOVE OR BELOW)")
+
+        # Return
+        if satisfied:
+            return True, value, f"{pair} {alert['indicator']} {alert['comparison']} {alert['target']} TARGET AT {value}"
+        else:
+            return null_output
 
     def alert_admins(self, message: str):
         for user in get_whitelist():

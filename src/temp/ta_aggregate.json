@@ -4,28 +4,37 @@
     "1d": [
       {
         "indicator": "ma",
-        "period": 365,
+        "period": 30,
         "values": {
-          "value": null,
-          "last_update": 0
-        }
+          "value": 24366.63533333334
+        },
+        "last_update": 1656574374
       },
       {
         "indicator": "rsi",
         "values": {
-          "value": null,
-          "last_update": 0
-        }
+          "value": 29.491679051555685
+        },
+        "last_update": 1656574374
       }
     ],
     "1h": [
       {
-        "indicator": "ema",
-        "period": 12,
+        "indicator": "bbands",
         "values": {
-          "value": null,
-          "last_update": 0
-        }
+          "valueUpperBand": 20407.737346124548,
+          "valueMiddleBand": 19793.843999999994,
+          "valueLowerBand": 19179.95065387544
+        },
+        "last_update": 1656574390
+      },
+      {
+        "indicator": "ma",
+        "period": 48,
+        "values": {
+          "value": 20068.805666666663
+        },
+        "last_update": 1656574390
       }
     ]
   }

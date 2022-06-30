@@ -12,7 +12,10 @@ MAX_ALERTS_PER_USER = 10  # Integer or None (Should be set in a static configura
 """Paths"""
 WHITELIST_ROOT = join(dirname(abspath(__file__)), 'whitelist')
 RESOURCES_ROOT = join(dirname(abspath(__file__)), 'resources')
+TA_DB_PATH = join(dirname(abspath(__file__)), 'resources/ta_db.json')
+AGG_DATA_LOCATION = join(dirname(abspath(__file__)), 'temp/ta_aggregate.json')
 
 """TAAPI.IO"""
 INTERVALS = ["1m", "5m", "15m", "30m", "1h", "2h", "4h", "12h", "1d", '1w']
 DEFAULT_EXCHANGE = "binance"
+BULK_ENDPOINT = "https://api.taapi.io/bulk"

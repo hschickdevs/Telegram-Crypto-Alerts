@@ -22,51 +22,13 @@ from os.path import join, isdir, dirname, abspath
 from typing import Optional
 
 from .io_client import get_whitelist, UserConfiguration
-from .static_config import INTERVALS
+from .static_config import *
+from .custom_logger import logger
 
 import requests
 from ratelimit import limits, sleep_and_retry
 
 BINANCE_CALL_URL = 'https://api.binance.com/api/v3/ticker/price?symbol={}'  # format to token pair (ex: BTCUSDT)
-TA_DB_PATH = join(dirname(abspath(__file__)), 'resources/ta_db.json')
-AGG_DATA_LOCATION = join(dirname(abspath(__file__)), 'temp/ta_aggregate.json')
-
-
-def get_simple_indicator(pair: str, alert: dict) -> tuple[bool, float, str]:
-    """
-    Accounts for the 3 following simple price movement indicators:
-    PCTCHG - Percent change in the price
-    ABOVE - Price above the target
-    BELOW - Price below the target
-    :param pair: The crypto pair
-    :param pair_price: The current price of the crypto pair.
-                       Get the pair price before calling the self.get_pair_price() function
-    :param alert: An alert data dictionary as returned by src.io_handler.UserConfiguration.load_alerts()
-    :returns: Tuple:
-              (Boolean) True if the indicator is satisfied, False if not
-              (Float) The current value of the indicator
-              (String) The formatted string to send with alerts
-    """
-    target = alert['target']
-    indicator = alert["indicator"]
-    pair_price = get_pair_price(token_pair=pair.replace("/", ""))
-
-    if indicator == 'PCTCHG':
-        entry = alert['entry']
-        if pair_price > entry * (1 + target):
-            pct_chg = ((pair_price - entry) / entry) * 100
-            return True, pct_chg, f"{pair} UP {pct_chg:.1f}% AT {pair_price}"
-        elif pair_price < entry * (1 - target):
-            pct_chg = ((entry - pair_price) / entry) * 100
-            return True, pct_chg, f"{pair} DOWN {pct_chg:.1f}% AT {pair_price}"
-    elif indicator == 'ABOVE':
-        if pair_price > target:
-            return True, pair_price, f"{pair} ABOVE {target} TARGET AT {pair_price}"
-    elif indicator == 'BELOW':
-        if pair_price < target:
-            return True, pair_price, f"{pair} BELOW {target} TARGET AT {pair_price}"
-
-    return False, 0, ""
 
 
 def get_pair_price(token_pair, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
@@ -138,9 +100,11 @@ class TAAggregateClient:
     def __init__(self):
         self.ta_database = TADatabaseClient()
 
-    def build_ta_aggregate(self):
+    def build_ta_aggregate(self, ta_db: dict = None):
         """
         Build the TA aggregate of all users' alert databases to update the technical analysis reference
+        
+        :param ta_db: Can optionally be provided if the ta_db is already stored in a higher level function.
 
         Structure Reference:
 
@@ -152,33 +116,63 @@ class TAAggregateClient:
             }
         }
         """
-        ta_db = self.ta_database.fetch_ta_db()
+        logger.info("Building TA aggregate...")
+        
+        if ta_db is None:
+            ta_db = self.ta_database.fetch_ta_db()
 
-        agg = {}
+        # You have to have this for the previous values to persist:
+        # TODO: NEED TO REMOVE INDICATORS FROM DB THAT NO LONGER HAVE MATCHES
+        try:
+            agg = self.load_agg()
+        except FileNotFoundError:
+            agg = {}
+        except Exception as exc:
+            logger.exception('Could not load TA aggregate', exc_info=exc)
+            raise exc
+            
         for user in get_whitelist():
             alerts_data = UserConfiguration(user).load_alerts()
             for symbol, alerts in alerts_data.items():
                 if symbol not in agg.keys():
                     agg[symbol] = {}
-                    for alert in alerts:
-                        if alert['type'] == 's':
-                            continue
-                        if alert['interval'] not in agg[symbol].keys():
-                            agg[symbol][alert['interval']] = []
+                for alert in alerts:
+                    if alert['type'] == 's':
+                        continue
+                    if alert['interval'] not in agg[symbol].keys():
+                        agg[symbol][alert['interval']] = []
 
-                        # Build the alert to store in the aggregate with format prepared to be sent to the API in a bulk call
-                        formatted_alert = {"indicator": alert['indicator'].lower()}
-                        for param, value in alert['params'].items():
-                            formatted_alert[param] = value
+                    # Build the alert to store in the aggregate with format prepared to be sent to the API in bulk call
+                    formatted_alert = self.format_alert_for_match(alert)
+
+                    for indicator in agg[symbol][alert['interval']]:
+                        """Attempt to find an existing match to have preivous values persist"""
+                        try:
+                            if all(indicator[k] == v for k, v in formatted_alert.items()):
+                                formatted_alert = indicator
+                                break
+                        except KeyError:
+                            continue
+                    else:
+                        """Match does not exist"""
                         formatted_alert["values"] = {var: None for var in ta_db[alert['indicator'].upper()]['output']}
-                        formatted_alert["values"]["last_update"] = 0
+                        formatted_alert["last_update"] = 0
 
                         # Add the formatted alert to the database if it doesn't already exist
-                        if formatted_alert not in agg[symbol][alert['interval']]:
-                            agg[symbol][alert['interval']].append(formatted_alert)
+                        # if not any(formatted_alert == indicator for indicator in agg[symbol][alert['interval']]):
+                        agg[symbol][alert['interval']].append(formatted_alert)
+                        # if formatted_alert not in agg[symbol][alert['interval']]:  <-- deprecate
+                            # agg[symbol][alert['interval']].append(formatted_alert)
 
-
+        # Update the aggregate with the new data
         self.dump_agg(agg)
+        logger.info("TA aggregate built.")
+
+    def format_alert_for_match(self, alert: dict):
+        formatted_alert = {"indicator": alert['indicator'].lower()}
+        for param, value in alert['params'].items():
+            formatted_alert[param] = value
+        return formatted_alert
 
     def dump_agg(self, data: dict) -> None:
         with open(AGG_DATA_LOCATION, 'w') as outfile:
@@ -188,25 +182,106 @@ class TAAggregateClient:
         with open(AGG_DATA_LOCATION, 'r') as infile:
             return json.load(infile)
 
+    def clean_agg(self) -> None:
+        """Remove all unused indicators from the aggregate"""
+        try:
+            agg = self.load_agg()
+        except Exception as exc:
+            logger.exception('Could not load TA aggregate to clean', exc_info=exc)
+            raise exc
+
 
 class TaapiioProcess:
     """Taapi.io process should be run in a separate thread to allow for sleeping between API calls"""
-    def __init__(self, taapiio_apikey: str):
+    def __init__(self, taapiio_apikey: str, telegram_bot_token: str = None):
         self.apikey = taapiio_apikey
         self.last_call = 0
-        self.db = TADatabaseClient()
+        self.ta_db = TADatabaseClient().fetch_ta_db()  # TA DB is static and can be loaded once
+        self.agg_cli = TAAggregateClient()
+        self.tg_bot_token = telegram_bot_token  # Can be left blank, but the process wont be able to report errors
 
     @sleep_and_retry
-    @limits(calls=1, period=15)
-    def call_api(self, endpoint: str, params: dict, r_type: str = "POST"):
-        """Free API key limit is 1 call every 15 seconds"""
+    @limits(calls=1, period=16)
+    def call_api(self, endpoint: str, params: dict, r_type: str = "POST") -> dict:
+        """
+        Calls the taapi.io API and returned the response in JSON format
+        
+        Free API key limit is 1 call every 15 seconds, we use +1 to add a safety buffer
+        """
         if r_type == "GET":
             return requests.get(endpoint.format(api_key=self.apikey), params=params).json()
         elif r_type == "POST":
+            logger.info(f"Sending bulk query to API: {params}")
             return requests.post(endpoint, json=params).json()
 
+    def mainloop(self):
+        """
+        Run the process mainloop as fast as possible while respecting the API call limit
 
+        Exceptions should be handled at a higher level than this function
+        """
+        logger.warn("Taapi.io process started.")
+        previous_rates = []  # Store the last 5 values for process time to fetch and update all values in the aggregate
+        while True:
+            start = time()
+            num_indicators = 0
 
+            # 1. Build to aggregate before every cycle
+            self.agg_cli.build_ta_aggregate(self.ta_db)
+            
+            # 2. Poll all values from the aggregate using bulk queries to the taapi.io API 
+            aggregate = self.agg_cli.load_agg()
+            for symbol, intervals in aggregate.items():
+                for interval, indicators in intervals.items():
+                    num_indicators += len(indicators)  # For logging
+
+                    # Prepare the bulk query for the API
+                    EXCLUDE_INDICATOR_KEYS = ["values", "last_update"]
+                    indicators_query = [{k: v for k, v in indicator.items() if k not in EXCLUDE_INDICATOR_KEYS}
+                                        for indicator in indicators]
+                    query = {"secret": self.apikey, "construct": {"exchange": DEFAULT_EXCHANGE, "symbol": symbol,
+                                                                   "interval": interval, "indicators": indicators_query}}
+
+                    r = self.call_api(endpoint=BULK_ENDPOINT, params=query)
+                    try:
+                        responses = r["data"]
+                    except KeyError:
+                        raise Exception(f"Error occurred calling taapi.io API - {r}")
+
+                    # Assign returned values and update aggregate:
+                    for i, response in enumerate(responses):
+                        for output_variable in self.ta_db[indicators[i]["indicator"].upper()]["output"]:
+                            indicators[i]["values"][output_variable] = response["result"][output_variable]
+                        indicators[i]["last_update"] = int(time())
+
+            # 3. Dump aggregate with updated values so that the alerts client can reference it
+            self.agg_cli.dump_agg(aggregate)
+            # print("End Aggregate:")
+            # print(json.dumps(aggregate, indent=2))
+
+            # Logging
+            previous_rates.append(round(time() - start, 1))
+            if len(previous_rates) > 3:
+                del previous_rates[0]
+            logger.info(f"TA aggregate values updated. "
+                        f"Average through process rate: {round(sum(previous_rates) / len(previous_rates), 1)} seconds")
+
+    def alert_admins(self, message: str) -> None:
+        if self.tg_bot_token is None:
+            logger.warn(f"Attempted to alert admins, but no telegram bot token was set: {message}")
+            return None
+
+        for user in get_whitelist():
+            if UserConfiguration(user).admin_status():
+                requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
+                              params={'chat_id': user, 'text': message})
 
     def run(self):
-        pass
+        restart_period = 15
+        try:
+            self.mainloop()
+        except Exception as exc:
+            logger.exception(f"An error has occurred in the mainloop - restarting in 5 seconds...", exc_info=exc)
+            self.alert_admins(message=f"A critical error has occurred in the TaapiioProcess "
+                                      f"(Restarting in {restart_period} seconds) - {exc}")
+            sleep(restart_period)

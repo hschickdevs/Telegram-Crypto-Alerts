@@ -101,11 +101,9 @@
       ]
     ],
     "output": [
-      [
         "valueUpperBand",
         "valueMiddleBand",
         "valueLowerBand"
-      ]
     ]
   }
 }
