@@ -4,16 +4,28 @@
     "1d": [
       {
         "indicator": "ma",
-        "period": 365
+        "period": 365,
+        "values": {
+          "value": null,
+          "last_update": 0
+        }
       },
       {
-        "indicator": "rsi"
+        "indicator": "rsi",
+        "values": {
+          "value": null,
+          "last_update": 0
+        }
       }
     ],
     "1h": [
       {
         "indicator": "ema",
-        "period": 12
+        "period": 12,
+        "values": {
+          "value": null,
+          "last_update": 0
+        }
       }
     ]
   }

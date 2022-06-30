@@ -92,6 +92,7 @@ def get_pair_price(token_pair, retry_delay: int = 2, maximum_retries: int = 5, _
 
 class TADatabaseClient:
     """This client should handle the cross-process operations of the technical analysis indicators database"""
+
     def dump_ta_db(self, data: dict) -> None:
         """Update the technical analysis indicators database"""
         with open(TA_DB_PATH, 'w') as out:
@@ -134,8 +135,8 @@ class TADatabaseClient:
 
 
 class TAAggregateClient:
-    def __int__(self):
-        self.db = TADatabaseClient()
+    def __init__(self):
+        self.ta_database = TADatabaseClient()
 
     def build_ta_aggregate(self):
         """
@@ -151,7 +152,8 @@ class TAAggregateClient:
             }
         }
         """
-        # indicators = self.db.fetch_ta_db().keys()
+        ta_db = self.ta_database.fetch_ta_db()
+
         agg = {}
         for user in get_whitelist():
             alerts_data = UserConfiguration(user).load_alerts()
@@ -164,12 +166,17 @@ class TAAggregateClient:
                         if alert['interval'] not in agg[symbol].keys():
                             agg[symbol][alert['interval']] = []
 
+                        # Build the alert to store in the aggregate with format prepared to be sent to the API in a bulk call
                         formatted_alert = {"indicator": alert['indicator'].lower()}
                         for param, value in alert['params'].items():
                             formatted_alert[param] = value
+                        formatted_alert["values"] = {var: None for var in ta_db[alert['indicator'].upper()]['output']}
+                        formatted_alert["values"]["last_update"] = 0
 
+                        # Add the formatted alert to the database if it doesn't already exist
                         if formatted_alert not in agg[symbol][alert['interval']]:
                             agg[symbol][alert['interval']].append(formatted_alert)
+
 
         self.dump_agg(agg)
 
