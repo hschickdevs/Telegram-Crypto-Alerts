@@ -1,11 +1,4 @@
 {
-  "PRICE": {
-    "name": "Spot Price",
-    "endpoint": null,
-    "ref": null,
-    "params": [],
-    "type": "s"
-  },
   "MA": {
     "name": "Moving Average",
     "endpoint": "https://api.taapi.io/ma?secret={api_key}&exchange=binance",
@@ -13,7 +6,7 @@
     "params": [
       [
         "period",
-        "Length / period of the moving average. It sets the number of candles used in the MA calculation (Default = 30)",
+        "Length/period of the moving average. It sets the number of candles used in the MA calculation",
         30
       ]
     ],
@@ -29,7 +22,7 @@
     "params": [
       [
         "period",
-        "Length / period of the EMA. It sets the number of candles used in the EMA calculation (Default = 30)",
+        "Length / period of the EMA. It sets the number of candles used in the EMA calculation",
         30
       ]
     ],
@@ -45,7 +38,7 @@
     "params": [
       [
         "period",
-        "Length / period of the SMA. It sets the number of candles used in the SMA calculation (Default = 30)",
+        "Length / period of the SMA. It sets the number of candles used in the SMA calculation",
         30
       ]
     ],
@@ -61,7 +54,7 @@
     "params": [
       [
         "period",
-        "Adjust the RSI length- number of candles used to calculate RSI (Default = 14)",
+        "Adjust the RSI length- number of candles used to calculate RSI",
         14
       ]
     ],
@@ -77,12 +70,12 @@
     "params": [
       [
         "period",
-        "The period length to consider in the data set (Default = 20)",
+        "The period length to consider in the data set",
         20
       ],
       [
         "stddev",
-        "Standard deviation value of the price (Default = 2)",
+        "Standard deviation value of the price",
         2
       ]
     ],

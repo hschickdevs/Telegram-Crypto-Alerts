@@ -17,3 +17,15 @@ to the taapi.io process.
 
 NEED TO ADD DEFAULT VALUES SO THAT THE PARAMS CAN BE PULLED AND REFERENCED WHEN THE USER POLLS FOR THEIR ACTIVE ALERTS
 Instead of having a
+
+For the /indicators output:
+https://stackoverflow.com/questions/45268368/how-to-send-a-hyperlink-in-bot-sendmessage
+(Have a hyperlink for the taapi.io reference)
+<a href={ref_url}><b>BBANDS</p></a> (Bollinger Bands):
+    * <b>Available Params:</b>
+        - period: The period length to consider in the data set (Default = {default}})
+        - stddev: Standard deviation value of the price (Default = {default})
+    * <b>Available Outputs:</b>
+        - valueUpperBand
+        - valueMiddleBand
+        - valueLowerBand

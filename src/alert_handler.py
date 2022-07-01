@@ -96,11 +96,12 @@ class AlertHandler:
         :param channel_ids: All group ids to send the alert to (self.config_client.load_config()['channels'])
         :return: Tuple = ([successful group ids], [unsuccessful group ids])
         """
+        header_str = f"🔔 <b>ALERT:</b> 🔔\n"
         output = ([], [])
         for group_id in channel_ids:
             try:
                 requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
-                              params={'chat_id': group_id, 'text': post})
+                              params={'chat_id': group_id, 'text': header_str + post, "parse_mode": "HTML"})
                 output[0].append(group_id)
             except:
                 output[1].append(group_id)

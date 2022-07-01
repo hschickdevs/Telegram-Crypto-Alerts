@@ -15,6 +15,7 @@ Features Needed:
       SIN (Vector Trigonometric Sin)
 * Need a combination of indicators (AND/OR)
 """
+from dataclasses import dataclass
 import json
 from time import time, sleep
 from os import getcwd, mkdir
@@ -99,6 +100,28 @@ class IndicatorsReferenceClient:
                 return self.fetch_ref()[_id.upper()]
         except KeyError:
             raise ValueError(f"'{_id}' is an invalid indicator ID")
+
+    def validate_indicator(self, indicator: str, args: list = None) -> Union[dict, None]:
+        """
+        :param indicator: The uppercase indicator symbol
+        :param args: Any param or output IDs
+        :return: indicator if one is found and valid, None if not valid.
+        """
+        db = self.fetch_ref()
+
+        try:
+            indicator = db[indicator]
+        except KeyError:
+            return None
+
+        if args is not None:
+            params = [param[0] for param in indicator["params"]]
+            output_vals = [val[0] for val in indicator["output"]]
+            if not any(arg in params or arg in output_vals for arg in args):
+                return None
+
+        return indicator
+
 
 
 class TAAggregateClient:
@@ -308,3 +331,24 @@ class TaapiioProcess:
                                       f"(Restarting in {restart_period} seconds) - {exc}")
             sleep(restart_period)
             return self.run()
+
+
+@dataclass
+class TechnicalIndicator:
+    pair: str
+    indicator: str
+    interval: str
+    params: dict
+    output_vals: list
+    endpoint: str
+    name: str
+    type: str = 't'
+
+@dataclass
+class SimpleIndicator:
+    pair: str
+    indicator: str
+    params: dict = None
+    type: str = 's'
+
+

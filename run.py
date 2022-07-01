@@ -23,4 +23,5 @@ if __name__ == "__main__":
                                          alert_email=getenv('ALERTS_EMAIL')).run, daemon=True).start()
 
     # Run the TG bot in the main thread
-    TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN')).run()
+    TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
+                taapiio_apikey=getenv('TAAPIIO_APIKEY2')).run()

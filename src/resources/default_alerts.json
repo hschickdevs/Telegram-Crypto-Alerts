@@ -30,7 +30,7 @@
     {
       "type": "t",
       "indicator": "MA",
-      "comparison": "ABOVE",
+      "comparison": "BELOW",
       "alerted": false,
       "interval": "1h",
       "params": {"period": 12},
@@ -50,7 +50,7 @@
     {
       "type": "t",
       "indicator": "BBANDS",
-      "comparison": "ABOVE",
+      "comparison": "BELOW",
       "alerted": false,
       "interval": "1d",
       "params": {"period":  20, "stddev": 2},
