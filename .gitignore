@@ -157,3 +157,4 @@ cython_debug/
 testing.*
 logs/log.txt
 src/whitelist/*
+src/temp/*

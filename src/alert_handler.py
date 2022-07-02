@@ -277,5 +277,5 @@ class AlertHandler:
             logger.critical(exc_info=exc)
             # self.alert_admins(str(exc))
         except Exception as exc:
-            logger.exception("An error has occurred in the mainloop. Trying again in 15 seconds...", exc_info=exc)
+            logger.critical("An error has occurred in the mainloop. Trying again in 15 seconds...", exc_info=exc)
             time.sleep(15)

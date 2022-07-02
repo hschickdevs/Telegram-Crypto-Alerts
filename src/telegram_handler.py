@@ -4,7 +4,7 @@ from typing import Union
 
 from .custom_logger import logger
 from .io_client import UserConfiguration, get_logfile, get_help_command, get_whitelist
-from .static_config import MAX_ALERTS_PER_USER
+from .static_config import MAX_ALERTS_PER_USER, OUTPUT_VALUE_PRECISION
 from src.indicators import IndicatorsReferenceClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
 
 from telebot import TeleBot
@@ -225,6 +225,7 @@ class TelegramBot(TeleBot):
                                        "Please check your parameters and formatting - See /indicators")
                 return
 
+            self.reply_to(message, "Fetching indicator, please wait...")
             try:
                 r = self.get_technical_indicator(indicator)
             except Exception as exc:
@@ -233,6 +234,8 @@ class TelegramBot(TeleBot):
 
             msg = ""
             for k, v in r.items():
+                if type(v) is float:
+                    v = round(v, OUTPUT_VALUE_PRECISION)
                 msg += f"<b>{k}:</b> {v}\n"
             self.reply_to(message, msg, parse_mode="HTML")
 
@@ -450,15 +453,18 @@ class TelegramBot(TeleBot):
         @self.is_admin
         def on_getlogs(message):
             """Returns the progam's logs at logs/logs.txt"""
-            with open(get_logfile(), 'rb') as logfile:
-                if len(logfile.read()) > 0:
-                    self.reply_to(message, 'Fetching logs...')
-                    try:
-                        self.send_document(message.chat.id, logfile)
-                    except Exception as exc:
-                        self.reply_to(message, f'An error occurred - {exc}')
-                else:
-                    self.reply_to(message, 'Logfile exists, but no logs have been recorded yet.')
+            try:
+                with open(get_logfile(), 'rb') as logfile:
+                    if len(logfile.read()) > 0:
+                        self.reply_to(message, 'Fetching logs...')
+                        try:
+                            self.send_document(message.chat.id, logfile)
+                        except Exception as exc:
+                            self.reply_to(message, f'An error occurred - {exc}')
+                    else:
+                        self.reply_to(message, 'Logfile exists, but no logs have been recorded yet.')
+            except Exception as exc:
+                self.reply_to(message, f"Could not fetch logs - {str(exc)}")
 
         @self.message_handler(commands=['admins'])
         @self.is_admin

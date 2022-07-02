@@ -22,6 +22,7 @@ from os import getcwd, mkdir
 from os.path import join, isdir, dirname, abspath
 from typing import Union
 import os
+from math import ceil
 
 from .io_client import get_whitelist, UserConfiguration
 from .static_config import *
@@ -146,7 +147,7 @@ class TAAggregateClient:
         }
         """
         logger.info("Building TA aggregate...")
-        
+
         if ta_db is None:
             ta_db = self.indicators_reference
 
@@ -238,13 +239,13 @@ class TaapiioProcess:
     """Taapi.io process should be run in a separate thread to allow for sleeping between API calls"""
     def __init__(self, taapiio_apikey: str, telegram_bot_token: str = None):
         self.apikey = taapiio_apikey
-        self.last_call = 0
+        self.last_call = 0  # Implemented instead of the ratelimit package solution to solve the buffer issue
         self.ta_db = IndicatorsReferenceClient().fetch_ref()  # TA DB is static and can be loaded once
         self.agg_cli = TAAggregateClient()
         self.tg_bot_token = telegram_bot_token  # Can be left blank, but the process wont be able to report errors
 
     @sleep_and_retry
-    @limits(calls=1, period=16)
+    @limits(calls=1, period=round(RATE_LIMITS[1] * (1 + RATE_LIMITS[2]), 1))
     def call_api(self, endpoint: str, params: dict, r_type: str = "POST") -> dict:
         """
         Calls the taapi.io API and returned the response in JSON format
@@ -271,7 +272,7 @@ class TaapiioProcess:
 
             # 1. Build to aggregate before every cycle
             self.agg_cli.build_ta_aggregate(self.ta_db)
-            
+
             # 2. Poll all values from the aggregate using bulk queries to the taapi.io API 
             aggregate = self.agg_cli.load_agg()
             for symbol, intervals in aggregate.items():
@@ -289,6 +290,8 @@ class TaapiioProcess:
                     try:
                         responses = r["data"]
                     except KeyError:
+                        # if "error" in r.keys():
+                        #     logger.warn(f"Taapio error occurred when building aggregate: {r['error']}")
                         raise Exception(f"Error occurred calling taapi.io API - {r}")
 
                     # Assign returned values and update aggregate:
@@ -326,7 +329,7 @@ class TaapiioProcess:
         except KeyboardInterrupt:
             return
         except Exception as exc:
-            logger.exception(f"An error has occurred in the mainloop - restarting in 5 seconds...", exc_info=exc)
+            logger.critical(f"An error has occurred in the mainloop - restarting in 5 seconds...", exc_info=exc)
             self.alert_admins(message=f"A critical error has occurred in the TaapiioProcess "
                                       f"(Restarting in {restart_period} seconds) - {exc}")
             sleep(restart_period)

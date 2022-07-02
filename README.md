@@ -37,6 +37,8 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 3. Set your environment variables or create a `.env` file in the root directory with the following:
     ```bash
      TELEGRAM_BOT_TOKEN=123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Your telegram bot token
+     TAAPIIO_APIKEY=123456789.ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Your TAAPI.IO API key
+     
      (OPTIONAL) SENDGRID_APIKEY=your_apikey  # Your SendGrid API key for automated email alerts
      (OPTIONAL) ALERTS_EMAIL=your_email  # The email from which you would like alerts to be sent from (must be registered on SendGrid)
     ```
@@ -153,10 +155,9 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 ## Roadmap
 
 1. ~~Scale to multiple unique user configurations~~
-2. Integrate technical indicators from [taapi.io](https://taapi.io/)
+2. ~~Integrate technical indicators from [taapi.io](https://taapi.io/)~~
 3. Implement concurrency if needed
 4. Create twitter alerts integration
-5. Create a web interface
 
 ## License
 
