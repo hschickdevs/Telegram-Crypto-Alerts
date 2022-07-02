@@ -131,7 +131,7 @@ class AlertHandler:
 
         formatted_mail = Mail(from_email=Email(self.alert_email),
                               to_emails=recipients,
-                              subject="Crypto Indicator Alert",
+                              subject=f"{pair} Crypto Indicator Alert",
                               html_content=formatted_html)
         try:
             self.sendgrid_cli.client.mail.send.post(request_body=formatted_mail.get())

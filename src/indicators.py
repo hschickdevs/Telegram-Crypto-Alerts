@@ -124,7 +124,6 @@ class IndicatorsReferenceClient:
         return indicator
 
 
-
 class TAAggregateClient:
     def __init__(self):
         self.indicators_db_cli = IndicatorsReferenceClient()

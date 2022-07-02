@@ -24,38 +24,16 @@
       "target": 1000.0,
       "params": {},
       "alerted": false
-    }
-  ],
-  "BTC/USDT": [
+    },
     {
       "type": "t",
       "indicator": "MA",
-      "comparison": "BELOW",
-      "alerted": false,
-      "interval": "1h",
-      "params": {"period": 12},
-      "output_value": "value",
-      "target": 20000.00
-    },
-    {
-      "type": "t",
-      "indicator": "RSI",
       "comparison": "ABOVE",
       "alerted": false,
       "interval": "1d",
-      "params": {"period":  14},
+      "params": {"period": 30},
       "output_value": "value",
-      "target": 30.00
-    },
-    {
-      "type": "t",
-      "indicator": "BBANDS",
-      "comparison": "BELOW",
-      "alerted": false,
-      "interval": "1d",
-      "params": {"period":  20, "stddev": 2},
-      "output_value": "valueUpperBand",
-      "target": 20000.00
+      "target": 99999.00
     }
   ]
 }

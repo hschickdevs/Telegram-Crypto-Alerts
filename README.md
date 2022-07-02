@@ -3,14 +3,15 @@
   <img src="img/telegram-binance.png" alt="Logo" width="270">
   <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2>
   <p align="center">
-    Software written in Python that allows you to receive alerts on cryptocurrency price movements through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
+    Software written in Python that allows you to receive alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
     <br>
   </p>
   <p align="center">
     <h3><strong>Features Include:</strong></h3>
     Simple Telegram command interface<br>
     Live cryptocurrency pair prices from Binance<br>
-    Dynamic HTML styled email alerts using <a href="https://github.com/kootenpv/yagmail">yagmail</a><br>
+    Technical indicator alerts integrated using <a href="https://www.taapi.io/">Taapi.io</a><br>
+    Dynamic HTML styled email alerts using <a href="https://www.sendgrid.com">SendGrid</a><br>
     State and configuration data stored in a local JSON database
 </div>
 <br>
@@ -38,6 +39,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
     ```bash
      TELEGRAM_BOT_TOKEN=123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Your telegram bot token
      TAAPIIO_APIKEY=123456789.ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Your TAAPI.IO API key
+     TAAPIIO_APIKEY2=123456789.ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Alternate TAAPI.IO key for the telegram message handler
      
      (OPTIONAL) SENDGRID_APIKEY=your_apikey  # Your SendGrid API key for automated email alerts
      (OPTIONAL) ALERTS_EMAIL=your_email  # The email from which you would like alerts to be sent from (must be registered on SendGrid)
@@ -82,26 +84,60 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    /viewalerts
    # Returns all active alerts
 
-   /indicators
-   # View the list of available indicators for the /newalert command
 
-   /newalert <base/quote> <indicator> <target>
-   # Creates a new active alert (See use /indicators command to see available indicators)
-   # e.g. /newalert BTC/USDT ABOVE 2000
+   /indicators
+   # View the list of all available types of simple and technical indicators with their detailed descriptions.
+
+
+   """Create new alert for simple indicators ONLY (see /indicators)"""
+   /newalert <BASE/QUOTE> <INDICATOR> <COMPARISON> <TARGET> <optional_ENTRY_PRICE>
+   # - BASE/QUOTE: The base currency for the alert (e.g. BTC/USDT)
+   # - COMPARISON: The comparison operator for the alert (ABOVE, BELOW, or PCTCHG)
+   # - TARGET: The target value for the alert (For PCTCHG, use % form e.g. 10.5% = 10.5)
+   # - optional_ENTRY_PRICE: If using the "PCTCHG" comparison opperator, you can specify this as an alternate entry price to the current price for calculating percentage changes.
+   
+   # Creates a new active simple indicator alert with the given parameters.
+   # E.g. /newalert BTC/USDT PRICE PCTCHG 10.0 1200
+
+
+   """Create new alert for technical indicators ONLY (see /indicators)"""
+   /newalert <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS> <OUTPUT_VALUE> <COMPARISON> <TARGET>
+   # - BASE/QUOTE: The base currency for the alert (e.g. BTC/USDT)
+   # - INDICATOR: The ID for the technical indicator (e.g. RSI)
+   # - TIMEFRAME: The desired time interval for the indicator (Options: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 12h, 1d, or 1w)
+   # - PARAMS: No-space-comma-separated list of param=value pairs for the indicator (E.g. period=10,stddev=3) (Use "default" to skip passing params and use default values) (See /indicators for available params)
+   # - OUTPUT_VALUE: The desired output value to monitor (See /indicators for available output values)
+   # - COMPARISON: The comparison operator for the alert (Options: ABOVE or BELOW)
+   # - TARGET: The target value of <OUTPUT_VALUE> for the alert to trigger
+
+   # Creates a new active technical indicator alert with the given parameters.
+   # E.g. /newalert ETH/USDT BBANDS 1d default valueUpperBand ABOVE 1500
+
 
    /cancelalert <base/quote> <index>
    # Cancels the pair alert at the given index (use /viewalerts <base/quote> to see the indexes)
    # e.g. /cancelalert BTC/USDT 1
    ```
 
-- ### Pricing
+- ### Pricing/Data
 
    ```sh
    /getprice <base/quote>
    # Get the current pair price from Binance
 
+
    /priceall
    # Get the current pair price for all pairs with active alerts.
+
+   
+   /getindicator <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS>
+   # - BASE/QUOTE: The base currency for the alert (e.g. BTC/USDT)
+   # - INDICATOR: The ID for the technical indicator (e.g. BBANDS)
+   # - TIMEFRAME: The desired time interval for the indicator (Options: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 12h, 1d, or 1w)
+   # - PARAMS: No-space-comma-separated list of param=value pairs for the indicator (E.g. period=10,stddev=3) (use "default" to use the default values for the indicator)
+   
+   # Get the current value(s) of a technical indicator
+   # E.g. /getindicator ETH/USDT BBANDS 1d default
    ```
 
 - ### Configuration
@@ -110,27 +146,28 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    /viewconfig
    # Returns the current general configuration for the bot
 
+
    /setconfig <key>=<value> <key>=<value>
    # Modify individual configuration settings
    # e.g. /setconfig send_email_alerts=True
    # You can change multiple settings by separating them with a space
 
-   /admins VIEW/ADD/REMOVE <telegram_user_id>,<telegram_user_id>
-   # VIEW - Returns the current list of admins from the registry
-   # ADD - Adds each of the telegram user ids (separated by a comma) to the admin registry
-   # REMOVE - Removes each of the telegram user ids (separated by a comma) from the admin registry
-   # e.g. /admins ADD -123456789,-987654321
 
    /channels VIEW/ADD/REMOVE <telegram_channel_id>,<telegram_channel_id>
    # VIEW - Returns the current list of Telegram channels in which to send price alerts
    # ADD - Adds each of the telegram channel ids (separated by a comma) to the channel registry. The <telegram_channel_id> parameter can be either a user's telegram id or a channel's telegram id
    # REMOVE - Removes each of the telegram channel ids (separated by a comma) from the channel registry
+
+   # Interact with your channels alert output configuration
    # e.g. /channels ADD 123456789,987654321
+
 
    /emails VIEW/ADD/REMOVE <email@email.com>,<email@email.com>
    # VIEW - Returns the current list of emails in which to send price alerts. If the send_email_alerts config is set to False, emails will not be sent.
    # ADD - Adds each of the emails (separated by a comma) to the email registry. 
    # REMOVE - Removes each of the emails (separated by a comma) from the channel registry
+
+   # Interact with your email alert output configuration  
    # e.g. /channels ADD 123456789,987654321
    ```
 - ### Administrator Only:
@@ -140,23 +177,29 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    # VIEW - Returns the current list of admins from the registry
    # ADD - Adds each of the telegram user ids (separated by a comma) to the admin registry
    # REMOVE - Removes each of the telegram user ids (separated by a comma) from the admin registry
+
+   # Interact with the bot's administrator list
    # e.g. /admins ADD -123456789,-987654321
+
 
    /whitelist VIEW/ADD/REMOVE <telegram_user_id>,<telegram_user_id>
    # VIEW - Returns the current whitelist
    # ADD - Adds each of the telegram user ids (separated by a comma) to the whitelist
    # REMOVE - Removes each of the telegram user ids (separated by a comma) from the whitelist
+
+   # Interact with the bot's whitelist
    # e.g. /whitelist ADD -123456789,-987654321
 
+
    /getlogs
-   # Returns the current logs
+   # Returns the current process logs
    ```
 
 ## Roadmap
 
 1. ~~Scale to multiple unique user configurations~~
-2. ~~Integrate technical indicators from [taapi.io](https://taapi.io/)~~
-3. Implement concurrency if needed
+2. ~~Build infrastructure to integrate indicators from [taapi.io](https://taapi.io/)~~
+3. Add support for other indicators from [taapi.io](https://taapi.io/)
 4. Create twitter alerts integration
 
 ## License
