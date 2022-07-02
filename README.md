@@ -10,7 +10,7 @@
     <h3><strong>Features Include:</strong></h3>
     Simple Telegram command interface<br>
     Live cryptocurrency pair prices from Binance<br>
-    Technical indicator alerts integrated using <a href="https://www.taapi.io/">Taapi.io</a><br>
+    Technical indicator alerts integrated using <a href="https://taapi.io/">Taapi.io</a><br>
     Dynamic HTML styled email alerts using <a href="https://www.sendgrid.com">SendGrid</a><br>
     State and configuration data stored in a local JSON database
 </div>
