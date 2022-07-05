@@ -200,8 +200,10 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 
 1. ~~Scale to multiple unique user configurations~~
 2. ~~Build infrastructure to integrate indicators from [taapi.io](https://taapi.io/)~~
-3. Add support for other indicators from [taapi.io](https://taapi.io/)
-4. Create twitter alerts integration
+3. Refactor to Docker container 
+4. Add support for other indicators from [taapi.io](https://taapi.io/)
+5. Create twitter alerts integration
+6. Create alternate message handler for Discord
 
 ## License
 
