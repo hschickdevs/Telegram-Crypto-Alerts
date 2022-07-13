@@ -72,7 +72,7 @@ class TelegramBot(TeleBot):
                                   f'Invalid indicator. Valid indicators: {simple_indicators + technical_indicators}')
                     return
 
-            except:
+            except Exception as exc:
                 self.reply_to(message,
                               'Invalid message formatting.\n'
                               'Please verify that your request follows the format corresponding to your desired indicator type:\n'
@@ -190,7 +190,7 @@ class TelegramBot(TeleBot):
                             output += f"{alert['interval']} "
                         output += f"{alert['comparison']} "
                         output += f"{str(alert['target'] * 100) + '% FROM ' + str(alert['entry']) if alert['comparison'] == 'PCTCHG' else alert['target']} "
-                        if "params" in alert.keys() and len(alert['params']) > 0:
+                        if "params" in alert.keys() and alert['params'] is not None and len(alert['params']) > 0:
                             output += f"with params: {alert['params']}"
 
                     output += "\n\n"
@@ -646,7 +646,7 @@ class TelegramBot(TeleBot):
         return TechnicalIndicator(pair, indicator_id, interval, params, output, indicator['endpoint'], indicator['name'])
 
     def parse_simple_indicator_message(self, message: str) -> SimpleIndicator:
-        msg = self.split_message(message.text)
+        msg = self.split_message(message)
         pair = msg[0].upper()
         indicator = msg[1].upper()
         
