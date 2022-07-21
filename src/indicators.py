@@ -55,8 +55,10 @@ def get_pair_price(token_pair, retry_delay: int = 2, maximum_retries: int = 5, _
             return get_pair_price(token_pair, _try=_try + 1)
 
 
-class IndicatorsReferenceClient:
+class TADatabaseClient:
     """This client should handle the cross-process operations of the technical analysis indicators database"""
+    def build_ta_db(self):
+        pass
 
     def dump_ref(self, data: dict) -> None:
         """Update the technical analysis indicators database"""
@@ -352,5 +354,3 @@ class SimpleIndicator:
     indicator: str
     params: dict = None
     type: str = 's'
-
-

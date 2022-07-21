@@ -158,3 +158,4 @@ testing.*
 logs/log.txt
 src/whitelist/*
 src/temp/*
+dev_notes.txt
