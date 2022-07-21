@@ -4,8 +4,7 @@ import json
 from dotenv import find_dotenv, load_dotenv
 import shutil
 
-WHITELIST_ROOT = join(dirname(abspath(__file__)), 'whitelist')
-RESOURCES_ROOT = join(dirname(abspath(__file__)), 'resources')
+from .static_config import *
 
 
 class UserConfiguration:
@@ -155,7 +154,7 @@ def get_whitelist() -> list:
 
 
 def handle_env():
-    """Checks if the .env file exists in the current working dir, and imports the variables if so"""
+    """Checks if the ..env file exists in the current working dir, and imports the variables if so"""
     try:
         envpath = find_dotenv(raise_error_if_not_found=True, usecwd=True)
         load_dotenv(dotenv_path=envpath)

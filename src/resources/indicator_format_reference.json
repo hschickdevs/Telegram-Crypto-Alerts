@@ -1,0 +1,89 @@
+{
+  "MA": {
+    "name": "Moving Average",
+    "endpoint": "https://api.taapi.io/ma?secret={api_key}&exchange=binance",
+    "ref": "https://taapi.io/indicators/moving-average/",
+    "params": [
+      [
+        "period",
+        "Length/period of the moving average. It sets the number of candles used in the MA calculation",
+        30
+      ]
+    ],
+    "output": [
+      "value"
+    ],
+    "type": "t"
+  },
+  "EMA": {
+    "name": "Exponential Moving Average",
+    "endpoint": "https://api.taapi.io/ema?secret={api_key}&exchange=binance",
+    "ref": "https://taapi.io/indicators/exponential-moving-average/",
+    "params": [
+      [
+        "period",
+        "Length / period of the EMA. It sets the number of candles used in the EMA calculation",
+        30
+      ]
+    ],
+    "output": [
+      "value"
+    ],
+    "type": "t"
+  },
+  "SMA": {
+    "name": "Simple Moving Average",
+    "endpoint": "https://api.taapi.io/sma?secret={api_key}&exchange=binance",
+    "ref": "https://taapi.io/indicators/simple-moving-average/",
+    "params": [
+      [
+        "period",
+        "Length / period of the SMA. It sets the number of candles used in the SMA calculation",
+        30
+      ]
+    ],
+    "output": [
+      "value"
+    ],
+    "type": "t"
+  },
+  "RSI": {
+    "name": "Relative Strength Index",
+    "endpoint": "https://api.taapi.io/rsi?secret={api_key}&exchange=binance",
+    "ref": "https://taapi.io/indicators/relative-strength-index-rsi/",
+    "params": [
+      [
+        "period",
+        "Adjust the RSI length- number of candles used to calculate RSI",
+        14
+      ]
+    ],
+    "output": [
+      "value"
+    ],
+    "type": "t"
+  },
+  "BBANDS": {
+    "name": "Bollinger Bands",
+    "endpoint": "https://api.taapi.io/bbands2?secret={api_key}&exchange=binance",
+    "ref": "https://taapi.io/indicators/bollinger-bands-another-implementation/",
+    "params": [
+      [
+        "period",
+        "The period length to consider in the data set",
+        20
+      ],
+      [
+        "stddev",
+        "Standard deviation value of the price",
+        2
+      ]
+    ],
+    "output": [
+      "valueUpperBand",
+      "valueMiddleBand",
+      "valueLowerBand"
+    ],
+    "type": "t"
+  }
+}

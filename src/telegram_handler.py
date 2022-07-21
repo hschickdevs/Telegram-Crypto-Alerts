@@ -1,9 +1,11 @@
 import time
 from datetime import datetime
+from typing import Union
 
 from .custom_logger import logger
 from .io_client import UserConfiguration, get_logfile, get_help_command, get_whitelist
-from .static_config import MAX_ALERTS_PER_USER
+from .static_config import MAX_ALERTS_PER_USER, OUTPUT_VALUE_PRECISION
+from src.indicators import IndicatorsReferenceClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
 
 from telebot import TeleBot
 import requests
@@ -11,8 +13,11 @@ from requests.exceptions import ReadTimeout
 
 
 class TelegramBot(TeleBot):
-    def __init__(self, bot_token: str):
+    def __init__(self, bot_token: str, taapiio_apikey: str = None):
         super().__init__(token=bot_token)
+        self.indicators_ref_cli = IndicatorsReferenceClient()
+        self.indicators_db = self.indicators_ref_cli.fetch_ref()
+        self.taapiio_cli = None if taapiio_apikey is None else TaapiioProcess(taapiio_apikey)
 
         @self.message_handler(commands=['id'])
         def on_id(message):
@@ -28,20 +33,55 @@ class TelegramBot(TeleBot):
         @self.is_whitelisted
         def on_new_alert(message):
             """/newalert PAIR/PAIR INDICATOR TARGET optional_ENTRY_PRICE"""
-            acceptable_indicators = ['ABOVE', 'BELOW', 'PCTCHG']
+            simple_indicators = ["PRICE"]
+            technical_indicators = list(self.indicators_db.keys())
             try:
                 msg = self.split_message(message.text)
-                pair = msg[0].upper()
                 indicator = msg[1].upper()
-                if indicator not in acceptable_indicators:
+                if indicator in simple_indicators:
+                    # Verify accurate formatting:
+                    pair, indicator, comparison, target = msg[0], msg[1], msg[2], msg[3]
+
+                    indicator_instance = self.parse_simple_indicator_message(message.text)
+                elif indicator in technical_indicators:
+                    self.reply_to(message, "Attempting to verify parameters with taapi.io and add alert to database...")
+
+                    # Verify accurate formatting:
+                    pair, indicator, interval, params, output_value, comparison, target = msg
+
+                    # Verify indicator:
+                    indicator_instance = self.parse_technical_indicator_message(message.text)
+                    if indicator_instance is None:
+                        self.reply_to(message, "Could not match passed parameters to valid technical indicator in the database.\n"
+                                               "Please check your formatting with /indicators")
+                        return
+
+                    # Verify that no errors are returned by the indicator on taapi.io:
+                    try:
+                        r = self.get_technical_indicator(indicator_instance)
+                        if output_value not in r.keys():
+                            self.reply_to(message, f"Invalid output value - Options: {r.keys()}")
+                            return
+                    except Exception as exc:
+                        self.reply_to(message, f"Database match found, but an error occurred with taapi.io:\n"
+                                               f"{str(exc)}\n"
+                                               f"The parameters passed were most likely invalid.")
+                        return
+                else:
                     self.reply_to(message,
-                                  f'Invalid indicator. Valid indicators: {acceptable_indicators}')
+                                  f'Invalid indicator. Valid indicators: {simple_indicators + technical_indicators}')
                     return
-                target = float(msg[2].strip()) if indicator != "PCTCHG" else float(msg[2].strip()) / 100
-            except:
+
+            except Exception as exc:
                 self.reply_to(message,
-                              'Invalid message formatting.\nPlease verify that your request follows the format:\n'
-                              '/newalert PAIR/PAIR INDICATOR TARGET optional_ENTRY_PRICE')
+                              'Invalid message formatting.\n'
+                              'Please verify that your request follows the format corresponding to your desired indicator type:\n'
+                              '\n<b>Simple Indicator:</b>\n'
+                              '/newalert PAIR/PAIR INDICATOR COMPARISON TARGET optional_ENTRY_PRICE\n'
+                              '\n<b>Technical Indicator:</b>\n'
+                              '/newalert BASE/QUOTE INDICATOR TIMEFRAME PARAMS OUTPUT_VALUE COMPARISON TARGET\n'
+                              '\nUse the /help command for more information on command formatting.',
+                              parse_mode="HTML")
                 return
 
             try:
@@ -52,23 +92,46 @@ class TelegramBot(TeleBot):
                     if sum(len(alerts) for alerts in alerts_db.values()) >= MAX_ALERTS_PER_USER:
                         raise OverflowError(f"Maximum active alerts reached ({MAX_ALERTS_PER_USER})")
 
-                if len(msg) > 3:
-                    entry_price = msg[3]
+                if indicator_instance.type == "s":
+                    # Handle simple indicator:
+                    comparison = msg[2].upper()
+                    target = float(msg[3].strip()) if indicator != "PCTCHG" else float(msg[2].strip()) / 100
+                    if len(msg) > 4:
+                        entry_price = msg[4]
+                    else:
+                        try:
+                            entry_price = self.get_binance_price(pair)
+                        except Exception as exc:
+                            self.reply_to(message, f"{str(exc)}\n"
+                                                   "Please verify that your pair is listed on binance and follows the "
+                                                   "format: TOKEN1/TOKEN2")
+                            return
+
+                    alert = {"type": indicator_instance.type,
+                             "indicator": indicator_instance.indicator.upper(),
+                             "comparison": comparison,
+                             "entry": entry_price,
+                             "target": target,
+                             "params": indicator_instance.params,
+                             "alerted": False}
                 else:
-                    try:
-                        entry_price = self.get_binance_price(pair)
-                    except Exception as exc:
-                        self.reply_to(message, f"{str(exc)}\n"
-                                               "Please verify that your pair is listed on binance and follows the "
-                                               "format: TOKEN1/TOKEN2")
-                        return
+                    # Handle technical indicator:
+                    output_value = msg[4]
+                    comparison = msg[5].upper()
+                    target = float(msg[6])
+                    alert = {"type": indicator_instance.type,
+                             "indicator": indicator_instance.indicator.upper(),
+                             "comparison": comparison,
+                             "interval": indicator_instance.interval,
+                             "params": indicator_instance.params,
+                             "output_value": output_value,
+                             "target": target,
+                             "alerted": False}
 
                 if pair in alerts_db.keys():
-                    alerts_db[pair].append(
-                        {"indicator": indicator, "entry": entry_price, "target": target, "alerted": False})
+                    alerts_db[pair].append(alert)
                 else:
-                    alerts_db[pair] = [
-                        {"indicator": indicator, "entry": entry_price, "target": target, "alerted": False}]
+                    alerts_db[pair] = [alert]
                 configuration.update_alerts(alerts_db)
                 self.reply_to(message, f'Successfully activated new alert!')
             except Exception as exc:
@@ -118,12 +181,20 @@ class TelegramBot(TeleBot):
             output = ""
             for ticker in alerts_db.keys():
                 if ticker == alerts_pair or alerts_pair == "ALL":
-                    output += f"{ticker}:"
+                    output += f"<b>{ticker}:</b>"
                     for index, alert in enumerate(alerts_db[ticker]):
-                        output += f"\n    {index + 1} - {alert['indicator']} " \
-                                  f"{str(alert['target'] * 100) + '% FROM ' + str(alert['entry']) if alert['indicator'] == 'PCTCHG' else alert['target']}"
+                        output += f"\n    {index + 1} - {alert['indicator']} "
+                        if "output_value" in alert.keys():
+                            output += f"({alert['output_value']}) "
+                        if "interval" in alert.keys():
+                            output += f"{alert['interval']} "
+                        output += f"{alert['comparison']} "
+                        output += f"{str(alert['target'] * 100) + '% FROM ' + str(alert['entry']) if alert['comparison'] == 'PCTCHG' else alert['target']} "
+                        if "params" in alert.keys() and alert['params'] is not None and len(alert['params']) > 0:
+                            output += f"with params: {alert['params']}"
+
                     output += "\n\n"
-            self.reply_to(message, output if len(output) > 0 else "Found 0 matching alerts.")
+            self.reply_to(message, output if len(output) > 0 else "Found 0 matching alerts.", parse_mode="HTML")
 
         @self.message_handler(commands=['getprice'])
         @self.is_whitelisted
@@ -140,6 +211,34 @@ class TelegramBot(TeleBot):
             except Exception as exc:
                 self.reply_to(message, str(exc))
 
+        @self.message_handler(commands=['getindicator'])
+        @self.is_whitelisted
+        def on_getindicator(message):
+            """/getindicator BASE/QUOTE INTERVAL TIMEFRAME kwarg,kwarg"""
+            if self.taapiio_cli is None:
+                self.reply_to(message, "Indicator requests unavailable. Please set the Taapi.io APIKEY parameter.")
+                return
+
+            indicator = self.parse_technical_indicator_message(message.text)
+            if indicator is None:
+                self.reply_to(message, "Could not match indicator and parameters to valid indicator in the reference.\n"
+                                       "Please check your parameters and formatting - See /indicators")
+                return
+
+            self.reply_to(message, "Fetching indicator, please wait...")
+            try:
+                r = self.get_technical_indicator(indicator)
+            except Exception as exc:
+                self.reply_to(message, str(exc))
+                return
+
+            msg = ""
+            for k, v in r.items():
+                if type(v) is float:
+                    v = round(v, OUTPUT_VALUE_PRECISION)
+                msg += f"<b>{k}:</b> {v}\n"
+            self.reply_to(message, msg, parse_mode="HTML")
+
         @self.message_handler(commands=['priceall'])
         @self.is_whitelisted
         def on_price_all(message):
@@ -150,16 +249,33 @@ class TelegramBot(TeleBot):
             try:
                 self.reply_to(message, "\n".join(tokens))
             except Exception as exc:
-                self.reply_to(message, str(exc))
+                self.reply_to(message, f"Error: {str(exc)}")
 
         @self.message_handler(commands=['indicators'])
         @self.is_whitelisted
         def on_indicators(message):
             """/indicators"""
-            self.reply_to(message, f'Available Indicators:\n\n'
-                                   f'PCTCHG - Specify a percentage change target (ie. 10% = 10)\n'
-                                   f'BELOW - Specify a price floor target for the pair.\n'
-                                   f'ABOVE - Specify a price ceiling target for the pair.\n\n')
+            # Add the simple price indicator:
+            output = "<u><b>Simple Indicators:</b></u>\n"
+            output += "<b>PRICE</b> (Token Pair Spot Price):"  #  \n" \
+                      # "   - To set a simple price alert, use the following command:\n" \
+                      # "     /newalert PAIR ABOVE/BELOW/PCTCHG TARGET optional_ENTRY_PRICE\n" \
+                      # "   - PAIR should be the cryptocurrency pair with format: BASE/QUOTE (e.g. BTC/USDT)\n" \
+                      # "   - If you're using PCTCHG as the comparison and you'd like to get the change from a specifed price as opposed to the current price, specify the optional_ENTRY_PRICE parameter."
+
+            # Build technical indicators reference:
+            output += "\n\n<u><b>Technical Indicators:</b></u>\n"
+            for indicator, data in self.indicators_db.items():
+                output += f"<a href='{data['ref']}'><b>{indicator}</b></a> ({data['name']}):\n" \
+                          f"   • <u>Available Params:</u>\n"
+                for param, desc, default in data['params']:
+                    output += f"      - <b><i>{param}:</i></b> {desc} (Default = {default})\n"
+                output += f"   • <u>Available Outputs:</u>\n"
+                for output_val in data['output']:
+                    output += f"      - <b><i>{output_val}</i></b>\n"
+                output += "\n"
+
+            self.reply_to(message, output, parse_mode="HTML")
 
         @self.message_handler(commands=['viewconfig'])
         @self.is_whitelisted
@@ -175,7 +291,6 @@ class TelegramBot(TeleBot):
                     msg += f'{k}={v}\n'
                     # msg += '\n'
                 self.reply_to(message, msg)
-
             except Exception as exc:
                 logger.exception('Could not call /viewconfig', exc_info=exc)
                 self.reply_to(message, str(exc))
@@ -338,15 +453,18 @@ class TelegramBot(TeleBot):
         @self.is_admin
         def on_getlogs(message):
             """Returns the progam's logs at logs/logs.txt"""
-            with open(get_logfile(), 'rb') as logfile:
-                if len(logfile.read()) > 0:
-                    self.reply_to(message, 'Fetching logs...')
-                    try:
-                        self.send_document(message.chat.id, logfile)
-                    except Exception as exc:
-                        self.reply_to(message, f'An error occurred - {exc}')
-                else:
-                    self.reply_to(message, 'Logfile exists, but no logs have been recorded yet.')
+            try:
+                with open(get_logfile(), 'rb') as logfile:
+                    if len(logfile.read()) > 0:
+                        self.reply_to(message, 'Fetching logs...')
+                        try:
+                            self.send_document(message.chat.id, logfile)
+                        except Exception as exc:
+                            self.reply_to(message, f'An error occurred - {exc}')
+                    else:
+                        self.reply_to(message, 'Logfile exists, but no logs have been recorded yet.')
+            except Exception as exc:
+                self.reply_to(message, f"Could not fetch logs - {str(exc)}")
 
         @self.message_handler(commands=['admins'])
         @self.is_admin
@@ -448,6 +566,91 @@ class TelegramBot(TeleBot):
                              exc_info=exc)
             raise Exception(
                 f'An unexpected error has occurred when trying to fetch the price of {pair} on Binance - {exc}')
+
+    def get_technical_indicator(self, indicator: TechnicalIndicator) -> dict:
+        # Message should first be parsed, and have the technical indicator returned.
+
+        # Prepare the params for the taapi.io single call GET request:
+        params = indicator.params
+        params["symbol"] = indicator.pair
+        params["interval"] = indicator.interval
+
+        # Call the taapi.io API to get the indicator values:
+        endpoint = indicator.endpoint.format(api_key=self.taapiio_cli.apikey)
+        r = self.taapiio_cli.call_api(endpoint, params, "GET")
+        try:
+            return {output_val: r[output_val] for output_val in indicator.output_vals}
+        except Exception as exc:
+            err_msg = f"Could not get technical indicator: {str(exc)}"
+            if 'errors' in r.keys():
+                err_msg += f" - {r['errors']}"
+            if 'error' in r.keys():
+                err_msg += f" - {r['error']}"
+            raise Exception(err_msg)
+
+    def parse_technical_indicator_message(self, message: str) -> Union[TechnicalIndicator, None]:
+        """
+        Message should follow the following format:
+        /getindicator BASE/QUOTE INDICATOR TIMEFRAME kwarg,kwarg
+        The "kwarg" parameter guide:
+            - For indicator parameters: param_name=value,param_name=value
+            - For selection output values: output=output_value_name
+            - Note: You can combine these: param_name=value,output=output_value_name
+
+        :returns: A TechnicalIndicator object instance if params are valid, else None
+            - pair
+            - indicator
+            - interval
+            - params
+            - output
+        """
+        splt_msg = self.split_message(message)
+        pair = splt_msg[0]
+        indicator_id = splt_msg[1].upper()
+        interval = splt_msg[2].lower()
+        try:
+            args = splt_msg[3]
+            if args.lower() == "default":
+                args = None
+        except IndexError:
+            args = None
+
+        # Parse args
+        params = {}
+        output = []
+        if args is not None:
+            splt_args = args.split(",")
+            for arg in splt_args:
+                param, val = arg.split("=")
+                if param == "output":
+                    output.append(val)
+                else:
+                    params[param] = val
+
+        # Validate indicator with reference:
+        indicator = self.indicators_ref_cli.validate_indicator(indicator_id, args)
+        if indicator is None:
+            return None
+
+        # Add default/missing values to params and output:
+        for param, desc, default in indicator['params']:
+            if param not in params.keys():
+                params[param] = default
+        if len(output) == 0:
+            output = indicator['output']
+
+        # This should be done if a single (not bulk) request needs to be made to the API
+        # params["symbol"] = pair
+        # params["interval"] = interval
+
+        return TechnicalIndicator(pair, indicator_id, interval, params, output, indicator['endpoint'], indicator['name'])
+
+    def parse_simple_indicator_message(self, message: str) -> SimpleIndicator:
+        msg = self.split_message(message)
+        pair = msg[0].upper()
+        indicator = msg[1].upper()
+        
+        return SimpleIndicator(pair, indicator)
 
     def run(self):
         logger.warn(f'{self.get_me().username} started at {datetime.utcnow()} UTC+0')

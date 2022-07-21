@@ -1,7 +1,0 @@
-{
-  "2CROWS": {
-    "name": "Two Crows",
-    "reference": "https://taapi.io/indicators/two-crows/",
-    "endpoint": "https://api.taapi.io/2crows?secret={api_key}&exchange=binance"
-  }
-}

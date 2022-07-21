@@ -1,2 +1,2 @@
 You can view the documentation here:
-https://github.com/hschickdevs/Telegram-Crypto-Alerts#telegram-bot-commands
+https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/development/README.md#telegram-bot-commands
