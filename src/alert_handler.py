@@ -38,7 +38,7 @@ class AlertHandler:
         config = configuration.load_config()
 
         post_queue = []
-        for pair in alerts_database.keys():
+        for pair in alerts_database.copy().keys():
 
             remove_queue = []
             for alert in alerts_database[pair]:
@@ -59,6 +59,8 @@ class AlertHandler:
 
             for item in remove_queue:
                 alerts_database[pair].remove(item)
+                if len(alerts_database[pair]) == 0:
+                    alerts_database.pop(pair)
 
         configuration.update_alerts(alerts_database)
 
@@ -179,11 +181,12 @@ class AlertHandler:
                   (String) The formatted string to send with alerts
         """
         target = alert['target']
-        indicator = alert["indicator"]
+        # indicator = alert["indicator"]
+        comparison = alert['comparison']
         if pair_price is None:
             pair_price = get_pair_price(token_pair=pair.replace("/", ""))
 
-        if indicator == 'PCTCHG':
+        if comparison == 'PCTCHG':
             entry = alert['entry']
             if pair_price > entry * (1 + target):
                 pct_chg = ((pair_price - entry) / entry) * 100
@@ -191,10 +194,10 @@ class AlertHandler:
             elif pair_price < entry * (1 - target):
                 pct_chg = ((entry - pair_price) / entry) * 100
                 return True, pct_chg, f"{pair} DOWN {pct_chg:.1f}% AT {pair_price}"
-        elif indicator == 'ABOVE':
+        elif comparison == 'ABOVE':
             if pair_price > target:
                 return True, pair_price, f"{pair} ABOVE {target} TARGET AT {pair_price}"
-        elif indicator == 'BELOW':
+        elif comparison == 'BELOW':
             if pair_price < target:
                 return True, pair_price, f"{pair} BELOW {target} TARGET AT {pair_price}"
 
