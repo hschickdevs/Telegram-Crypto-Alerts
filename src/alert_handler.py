@@ -5,7 +5,7 @@ import os
 from .io_client import UserConfiguration, get_whitelist
 from .custom_logger import logger
 from .static_config import *
-from .indicators import get_pair_price, IndicatorsReferenceClient, TAAggregateClient
+from .indicators import get_pair_price, TADatabaseClient, TAAggregateClient
 
 import requests
 import yagmail
@@ -20,7 +20,7 @@ class AlertHandler:
         self.tg_bot_token = telegram_bot_token
         self.alert_email = alert_email
         # self.alert_email_pass = alert_email_pass
-        self.ta_db = IndicatorsReferenceClient().fetch_ref()
+        self.ta_db = TADatabaseClient().fetch_ref()
         self.ta_agg_cli = TAAggregateClient()
         self.sendgrid_cli = SendGridAPIClient(api_key=sendgrid_apikey) if sendgrid_apikey is not None else None
 

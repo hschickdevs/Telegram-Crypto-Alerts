@@ -128,12 +128,13 @@ class TADatabaseClient:
 
 class TAAggregateClient:
     def __init__(self):
-        self.indicators_db_cli = IndicatorsReferenceClient()
+        self.indicators_db_cli = TADatabaseClient()
         self.indicators_reference = self.indicators_db_cli.fetch_ref()
 
     def build_ta_aggregate(self, ta_db: dict = None):
         """
         Build the TA aggregate of all users' alert databases to update the technical analysis reference
+        (Simply constructs the aggregate, does not call the API)
         
         :param ta_db: Can optionally be provided if the ta_db is already stored in a higher level function.
 
@@ -147,7 +148,7 @@ class TAAggregateClient:
             }
         }
         """
-        logger.info("Building TA aggregate...")
+        # logger.info("Building TA aggregate...")
 
         if ta_db is None:
             ta_db = self.indicators_reference
@@ -201,7 +202,7 @@ class TAAggregateClient:
 
         # Update the aggregate with the new data
         self.dump_agg(agg)
-        logger.info("TA aggregate built.")
+        # logger.info("TA aggregate built.")
 
     def format_alert_for_match(self, alert: dict):
         formatted_alert = {"indicator": alert['indicator'].lower()}
@@ -241,7 +242,7 @@ class TaapiioProcess:
     def __init__(self, taapiio_apikey: str, telegram_bot_token: str = None):
         self.apikey = taapiio_apikey
         self.last_call = 0  # Implemented instead of the ratelimit package solution to solve the buffer issue
-        self.ta_db = IndicatorsReferenceClient().fetch_ref()  # TA DB is static and can be loaded once
+        self.ta_db = TADatabaseClient().fetch_ref()  # TA DB is static and can be loaded once
         self.agg_cli = TAAggregateClient()
         self.tg_bot_token = telegram_bot_token  # Can be left blank, but the process wont be able to report errors
 
@@ -276,6 +277,10 @@ class TaapiioProcess:
 
             # 2. Poll all values from the aggregate using bulk queries to the taapi.io API 
             aggregate = self.agg_cli.load_agg()
+            if all(len(v) == 0 for v in aggregate.values()):
+                sleep(0.1)  # To prevent excessive spamming
+                continue
+
             for symbol, intervals in aggregate.items():
                 for interval, indicators in intervals.items():
                     num_indicators += len(indicators)  # For logging
@@ -286,7 +291,6 @@ class TaapiioProcess:
                                         for indicator in indicators]
                     query = {"secret": self.apikey, "construct": {"exchange": DEFAULT_EXCHANGE, "symbol": symbol,
                                                                    "interval": interval, "indicators": indicators_query}}
-
                     r = self.call_api(endpoint=BULK_ENDPOINT, params=query)
                     try:
                         responses = r["data"]
@@ -310,7 +314,7 @@ class TaapiioProcess:
             previous_rates.append(round(time() - start, 1))
             if len(previous_rates) > 3:
                 del previous_rates[0]
-            logger.info(f"TA aggregate values updated. "
+            logger.info(f"TA Aggregate updated. "
                         f"Average through process rate: {round(sum(previous_rates) / len(previous_rates), 1)} seconds")
 
     def alert_admins(self, message: str) -> None:
