@@ -154,7 +154,7 @@ def get_whitelist() -> list:
 
 
 def handle_env():
-    """Checks if the ..env file exists in the current working dir, and imports the variables if so"""
+    """Checks if the .env file exists in the current working dir, and imports the variables if so"""
     try:
         envpath = find_dotenv(raise_error_if_not_found=True, usecwd=True)
         load_dotenv(dotenv_path=envpath)

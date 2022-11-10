@@ -5,7 +5,7 @@ from typing import Union
 from .custom_logger import logger
 from .io_client import UserConfiguration, get_logfile, get_help_command, get_whitelist
 from .static_config import MAX_ALERTS_PER_USER, OUTPUT_VALUE_PRECISION
-from src.indicators import IndicatorsReferenceClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
+from src.indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
 
 from telebot import TeleBot
 import requests
@@ -15,7 +15,7 @@ from requests.exceptions import ReadTimeout
 class TelegramBot(TeleBot):
     def __init__(self, bot_token: str, taapiio_apikey: str = None):
         super().__init__(token=bot_token)
-        self.indicators_ref_cli = IndicatorsReferenceClient()
+        self.indicators_ref_cli = TADatabaseClient()
         self.indicators_db = self.indicators_ref_cli.fetch_ref()
         self.taapiio_cli = None if taapiio_apikey is None else TaapiioProcess(taapiio_apikey)
 

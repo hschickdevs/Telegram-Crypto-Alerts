@@ -21,3 +21,4 @@ INTERVALS = ["1m", "5m", "15m", "30m", "1h", "2h", "4h", "12h", "1d", '1w']
 DEFAULT_EXCHANGE = "binance"
 BULK_ENDPOINT = "https://api.taapi.io/bulk"
 RATE_LIMITS = (1, 15, 0.05)  # (requests per period in seconds, period in seconds, buffer percentage)
+# TA_AGGREGATE_PPERIOD = 30  # TA Aggregate polling period, to poll technical indicators
