@@ -5,7 +5,7 @@ import os
 from .io_client import UserConfiguration, get_whitelist
 from .custom_logger import logger
 from .static_config import *
-from .indicators import get_pair_price, TADatabaseClient, TAAggregateClient
+from .indicators import get_pair_price, TADatabaseClient, TAAggregateClient, get_24hr_price_change
 
 import requests
 import yagmail
@@ -194,6 +194,10 @@ class AlertHandler:
             elif pair_price < entry * (1 - target):
                 pct_chg = ((entry - pair_price) / entry) * 100
                 return True, pct_chg, f"{pair} DOWN {pct_chg:.1f}% AT {pair_price}"
+        elif comparison == '24HRCHG':
+            pct_change = get_24hr_price_change(pair.replace("/", ""))
+            if abs(pct_change) >= alert['target']:
+                return True, pct_change, f"{pair} 24HR CHANGE {pct_change:.1f}% AT {pair_price}"
         elif comparison == 'ABOVE':
             if pair_price > target:
                 return True, pair_price, f"{pair} ABOVE {target} TARGET AT {pair_price}"

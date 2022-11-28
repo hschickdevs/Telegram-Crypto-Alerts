@@ -4,7 +4,10 @@ from os.path import isdir, join, dirname, abspath, isfile, exists
 
 """Alert Handler Configuration"""
 POLLING_PERIOD = 10  # Delay for the alert handler to pull prices and check alert conditions (in seconds)
-BINANCE_CALL_URL = 'https://api.binance.com/api/v3/ticker/price?symbol={}'
+BINANCE_PRICE_URL = 'https://api.binance.com/api/v3/ticker/price?symbol={}'  # format to token pair (ex: BTCUSDT)
+BINANCE_24HR_URL = 'https://api.binance.com/api/v3/ticker/24hr'  # must be parsed to locate pair
+SIMPLE_INDICATORS = ['PRICE']
+SIMPLE_INDICATOR_COMPARISONS = ['ABOVE', 'BELOW', 'PCTCHG', '24HRCHG']
 OUTPUT_VALUE_PRECISION = 3
 
 """Telegram Handler Configuration"""
