@@ -4,7 +4,7 @@ from typing import Union
 
 from .custom_logger import logger
 from .io_client import UserConfiguration, get_logfile, get_help_command, get_whitelist
-from .static_config import MAX_ALERTS_PER_USER, OUTPUT_VALUE_PRECISION
+from .static_config import *
 from src.indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
 
 from telebot import TeleBot
@@ -72,6 +72,12 @@ class TelegramBot(TeleBot):
                                   f'Invalid indicator. Valid indicators: {simple_indicators + technical_indicators}')
                     return
 
+            except AssertionError as exc:
+                self.reply_to(message,
+                              '<b>Assertion Error:</b>\n'
+                              f'{exc}',
+                              parse_mode="HTML")
+                return
             except Exception as exc:
                 self.reply_to(message,
                               'Invalid message formatting.\n'
@@ -95,7 +101,7 @@ class TelegramBot(TeleBot):
                 if indicator_instance.type == "s":
                     # Handle simple indicator:
                     comparison = msg[2].upper()
-                    target = float(msg[3].strip()) if indicator != "PCTCHG" else float(msg[2].strip()) / 100
+                    target = float(msg[3].strip()) if comparison not in ["PCTCHG", "24HRCHG"] else float(msg[3].strip()) / 100
                     if len(msg) > 4:
                         entry_price = msg[4]
                     else:
@@ -189,7 +195,7 @@ class TelegramBot(TeleBot):
                         if "interval" in alert.keys():
                             output += f"{alert['interval']} "
                         output += f"{alert['comparison']} "
-                        output += f"{str(alert['target'] * 100) + '% FROM ' + str(alert['entry']) if alert['comparison'] == 'PCTCHG' else alert['target']} "
+                        output += f"{str(alert['target'] * 100) + '% FROM ' + str(alert['entry']) if alert['comparison'] in ['PCTCHG', '24HRCHG'] else alert['target']} "
                         if "params" in alert.keys() and alert['params'] is not None and len(alert['params']) > 0:
                             output += f"with params: {alert['params']}"
 
@@ -257,14 +263,13 @@ class TelegramBot(TeleBot):
             """/indicators"""
             # Add the simple price indicator:
             output = "<u><b>Simple Indicators:</b></u>\n"
-            output += "<b>PRICE</b> (Token Pair Spot Price):"  #  \n" \
-                      # "   - To set a simple price alert, use the following command:\n" \
-                      # "     /newalert PAIR ABOVE/BELOW/PCTCHG TARGET optional_ENTRY_PRICE\n" \
-                      # "   - PAIR should be the cryptocurrency pair with format: BASE/QUOTE (e.g. BTC/USDT)\n" \
-                      # "   - If you're using PCTCHG as the comparison and you'd like to get the change from a specifed price as opposed to the current price, specify the optional_ENTRY_PRICE parameter."
+            output += "<a href='https://github.com/hschickdevs/Telegram-Crypto-Alerts/tree/main#alerts'><b>PRICE</b></a> (Token Pair Spot Price):\n" \
+                      f"   • <u>Available Comparisons:</u>\n"
+            for comparison in SIMPLE_INDICATOR_COMPARISONS:
+                output += f"      - <b><i>{comparison}</i></b>\n"
 
             # Build technical indicators reference:
-            output += "\n\n<u><b>Technical Indicators:</b></u>\n"
+            output += "\n<u><b>Technical Indicators:</b></u>\n"
             for indicator, data in self.indicators_db.items():
                 output += f"<a href='{data['ref']}'><b>{indicator}</b></a> ({data['name']}):\n" \
                           f"   • <u>Available Params:</u>\n"
@@ -649,7 +654,10 @@ class TelegramBot(TeleBot):
         msg = self.split_message(message)
         pair = msg[0].upper()
         indicator = msg[1].upper()
-        
+        comparison = msg[2].upper()
+        assert comparison in SIMPLE_INDICATOR_COMPARISONS, f'{comparison} is an invalid simple indicator comparison operator.\n' \
+                                                           f'Options: {SIMPLE_INDICATOR_COMPARISONS}'
+
         return SimpleIndicator(pair, indicator)
 
     def run(self):

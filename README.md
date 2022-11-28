@@ -93,8 +93,8 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    /newalert <BASE/QUOTE> <INDICATOR> <COMPARISON> <TARGET> <optional_ENTRY_PRICE>
    # - BASE/QUOTE: The base currency for the alert (e.g. BTC/USDT)
    # - INDICATOR: Currently, the only available simple indicator is "PRICE"
-   # - COMPARISON: The comparison operator for the alert (ABOVE, BELOW, or PCTCHG)
-   # - TARGET: The target value for the alert (For PCTCHG, use % form e.g. 10.5% = 10.5)
+   # - COMPARISON: The comparison operator for the alert (ABOVE, BELOW, PCTCHG, or 24HRCHG)
+   # - TARGET: The target value for the alert (For PCTCHG and 24HRCHG, use % form e.g. 10.5% = 10.5)
    # - optional_ENTRY_PRICE: If using the "PCTCHG" comparison opperator, you can specify this as an alternate entry price to the current price for calculating percentage changes.
    
    # Creates a new active simple indicator alert with the given parameters.
