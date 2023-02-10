@@ -8,7 +8,6 @@ from .static_config import *
 from .indicators import get_pair_price, TADatabaseClient, TAAggregateClient, get_24hr_price_change
 
 import requests
-import yagmail
 from ratelimit import limits, sleep_and_retry
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import *
@@ -187,6 +186,7 @@ class AlertHandler:
             pair_price = get_pair_price(token_pair=pair.replace("/", ""))
 
         if comparison == 'PCTCHG':
+            print(f"PCTCHG CURRENT PAIR PRICE: {pair_price}, of type {type(pair_price)}")
             entry = alert['entry']
             if pair_price > entry * (1 + target):
                 pct_chg = ((pair_price - entry) / entry) * 100
