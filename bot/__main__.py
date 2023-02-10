@@ -5,6 +5,7 @@ from .alert_handler import AlertHandler
 from .telegram_handler import TelegramBot
 from .io_client import handle_env, get_whitelist
 from .indicators import TaapiioProcess
+from .custom_logger import logger
 
 if __name__ == "__main__":
     if len(get_whitelist()) == 0:
@@ -16,13 +17,26 @@ if __name__ == "__main__":
 
     # Run the Taapi.io process in a daemon thread
     threading.Thread(target=TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'),
-                                           telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run, daemon=True).start()
+                                           telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run, 
+                     daemon=True).start()
 
     # Run the AlertHandler() in a daemon thread
     threading.Thread(target=AlertHandler(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN'),
-                                         sendgrid_apikey=getenv('SENDGRID_APIKEY'),
-                                         alert_email=getenv('ALERTS_EMAIL')).run, daemon=True).start()
+                                         sendgrid_apikey=getenv(
+                                             'SENDGRID_APIKEY'),
+                                         alert_email=getenv('ALERTS_EMAIL')).run, 
+                     daemon=True).start()
 
-    # Run the TG bot in the main thread
-    TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
-                taapiio_apikey=getenv('TAAPIIO_APIKEY2')).run()
+    # Run the TG bot in a daemon thread
+    threading.Thread(target=TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
+                                        taapiio_apikey=getenv('TAAPIIO_APIKEY2')).run, 
+                     daemon=True).start()
+
+    # Keep the main thread alive
+    logger.info("Bot started - use Ctrl+C to stop the bot.")
+    while True:
+        try:
+            pass
+        except KeyboardInterrupt:
+            logger.info("Bot stopped")
+            exit(0)

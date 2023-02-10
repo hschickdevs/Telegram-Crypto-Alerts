@@ -97,7 +97,8 @@ class TADatabaseClient:
     def add_indicator(self, indicator_id: str, name: str, endpoint: str, reference_url: str,
                       params: list[tuple[str, str, bool]], output: list[str], indicator_type: str = "t") -> None:
         """
-        Add an indicator to the TA database
+        Add an indicator to the TA database. 
+        If the indicator already exists, it will be overwritten with the new data.
 
         :param indicator_id: The uppercase indicator ID a shown on taapi.io (e.g. 2CROWS)
         :param name: The indicator name as shown on taapi.io (e.g. Two Crows)

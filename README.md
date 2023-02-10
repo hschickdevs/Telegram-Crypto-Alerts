@@ -258,9 +258,79 @@ Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here
 
 ## How to Add Technical Indicators
 
-As stated previously, the bot is designed to be easily extensible. You can add any technical indicator that is supplied by taapi.io by following the steps below:
+As stated previously, the bot is designed to be easily extensible. View the currently available indicators by using the `/indicators` command on the bot. If your indicator is not listed, head over to [taapi.io/indicators](https://taapi.io/indicators/) and find the indicator you want to add. You can add any technical indicator that is supplied by taapi.io by following the steps below:
 
-1. View the currently available indicators by using the `/indicators` command on the bot. If your indicator is not listed, head over to [taapi.io/indicators](https://taapi.io/indicators/) and find the indicator you want to add.
+1. Shut the bot down if it is currently running using `CRTL+C` in the terminal window.
+
+2. Open the `/util/add_indicators.ipynb` file using jupyter notebook.
+   
+   > If you don't have jupyter installed, see this guide: [https://jupyter.org/install](https://jupyter.org/install)
+
+3. Make a new cell, and use the `db.add_indicator` function to add the indicator to the database:
+
+   View the previous **examples** of how the existing indicators were added to the database using the `db.add_indicator` function (see `TADatabaseClient.add_indicator` in [`/bot/indicators.py`](/bot/indicators.py))
+
+   The usage of the `db.add_indicator` function is as follows:
+
+   ```python
+   db.add_indicator(
+      indicator_id  # Name/abbreviation of the endpoint as shown on taapi.io (e.g. BBANDS, MACD, MA)
+      name  # The full name of the indicator on taapi.io (e.g. Bollinger Bands, Moving)
+      endpoint  # the endpoint for the indicator in the following format: https://api.taapi.io/{indicator_id}?secret={api_key}&exchange=binance
+      reference_url  # The url to the taapi.io documentation for the indicator
+      params  # A list of tuples to specify additional parameters for the indicator: (param_name, param_description, default_value)
+      output  # A list of output values for the indicator, as shown on taapi.io (e.g. upperBand, middleBand, lowerBand)
+   )
+   ```
+
+   ### Important Restrictions:
+   - **endpoint** - Must match the format shown above. The bot automatically adds the `symbol` and `interval` required parameters. Additional parameters can be added using the `params`.
+   - **params** - The `param_name` must match the name of the parameter as shown on taapi.io. The `param_description` is a short description of the parameter (used in the /indicators command). The `default_value` is your custom default value for the parameter.
+
+       Using the following screenshot below as an example:
+
+       ![./img/taapiio_ss.png](./img/taapiio_ss.png)
+
+       The params list would look like the following:
+       ```python
+       [
+         ("optInFastPeriod", "Fast period length", 12),
+         ("optInSlowPeriod", "Slow period length", 26),
+         ("optInSignalPeriod", "Signal smoothing", 9),
+       ]
+       ```
+   - **output** - The `output` list must match the output values as shown on taapi.io.
+
+      Additionally, the output value must be directly accessible from the API response as keys in a dictionary. For example, the following response **would be** valid:
+       
+      ```json
+      {
+         "valueMACD": 737.4052287912818,
+         "valueMACDSignal": 691.8373005221695,
+         "valueMACDHist": 45.56792826911237
+      }
+      ```
+
+      Because of this, parameters such as **`backtracks`** are restricted because they turn the response into a list of dictionaries. The bot is not designed to handle this type of response. The following response **would NOT** be valid:
+      
+      ```json
+      [
+         {
+            "valueMACD": 979.518807843051,
+            "valueMACDSignal": 893.54139321284,
+            "valueMACDHist": 85.977414630211,
+            "backtrack": 0
+         },
+         {
+            "valueMACD": 949.7317001653792,
+            "valueMACDSignal": 872.0470395552873,
+            "valueMACDHist": 77.6846606100919,
+            "backtrack": 1
+         },
+      ]
+      ```
+
+      You may need to DYOR to ensure that the parameters that you are configuring will result in a valid response.
 
 ## Contributing
 
