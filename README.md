@@ -11,11 +11,11 @@
    </p>
    <p align="center">
    <a href="#about-the-project">About the Project</a> •
-   <a href="#usage">Installation & Setup</a> •
-   <a href="#commands">Bot Commands</a> •
-   <a href="#add-indicators">Add Indicators</a> •
-   <a href="#contribute">Contribute</a> •
-   <a href="contact">Contact</a>
+   <a href="#getting-started">Getting Started</a> •
+   <a href="#telegram-bot-commands">Bot Commands</a> •
+   <a href="#how-to-add-technical-indicators">Add Indicators</a> •
+   <a href="#contributing">Contribute</a> •
+   <a href="#contact">Contact</a>
    </p>
 
    <p align="center">
@@ -39,15 +39,44 @@
 
 > ⚠️**Disclaimer**⚠️ Due to recent changes with the Binance regulations, some IPs may be blocked from accessing the Binance API. If you are experiencing issues with the bot, please try using a VPN or proxy service (e.g. NordVPN, IPVN). 
 
-## Installation
+## About the Project
 
-Clone the repository and run the following command:
+The primary goal of _Telegram Crypto Alerts_ is to be a lightweight, intuitive, and modular cryptocurrency price alert bot for the Telegram messaging client.
+
+The bot utilizes Telegram's simple chat interface to provide users the following features:
+* Get live crypto pair prices from Binance, and receive alerts on price movements like **_above_**, **_below_**, **_% change_**, and **_24 hour % change_**
+* Receive alerts on crypto technical indicators like **_RSI_**, **_MACD_**, **_Bollinger Bands_**, _**MA**_, **_SMA_**, and **_EMA_**.
+   - The bot has the capacity to support any technical indicator that is available on [Taapi.io](https://taapi.io/), but only these are shipped from the start. See [How to Add Technical Indicators](#how-to-add-technical-indicators) for more information.
+* Optionally receive dynamic HTML-styled email alerts using the SendGrid API
+* Configure bot access with a full suite of administrator commands
+   - _Invite your friends to use the bot!_
+   - Add additional users with their own unique alerts and configuration.
+* Stores all state and configuration data in a local JSON database
+
+## Getting Started
+
+### Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/hschickdevs/Telegram-Crypto-Alerts.git
+```
+
+CD into the repository root directory:
+
+```bash
+cd /Telegram-Crypto-Alerts
+```
+
+Install the required Python package dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
-Ensure that you have Python 3.9+ installed. If not, you can download [here](https://www.python.org/downloads/release/python-3912/). The syntax is dependent on features added in this recent version.
+Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here](https://www.python.org/downloads/release/python-3912/). The syntax is dependent on features added in this recent version.
 
-## Setup
+### Setup
 
 1. If you haven't already, create a telegram bot using [BotFather](https://core.telegram.org/bots#3-how-do-i-create-a-bot) and get the bot token.
 
@@ -59,6 +88,10 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    - Paste and send the contents of [`commands.txt`](./commands.txt) into the chat
 
 3. Ensure that you are in the repository _root_ directory
+
+   ```bash
+   cd Telegram-Crypto-Alerts
+   ```
 
 4. Set your environment variables or create a `.env` file in the _root_ directory with the following:
     ```bash
@@ -224,6 +257,10 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    ```
 
 ## How to Add Technical Indicators
+
+As stated previously, the bot is designed to be easily extensible. You can add any technical indicator that is supplied by taapi.io by following the steps below:
+
+1. View the currently available indicators by using the `/indicators` command on the bot. If your indicator is not listed, head over to [taapi.io/indicators](https://taapi.io/indicators/) and find the indicator you want to add.
 
 ## Contributing
 
