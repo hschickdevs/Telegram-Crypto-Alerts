@@ -1,5 +1,6 @@
 import threading
 from os import getenv
+from time import sleep
 
 from .alert_handler import AlertHandler
 from .telegram_handler import TelegramBot
@@ -36,7 +37,7 @@ if __name__ == "__main__":
     logger.info("Bot started - use Ctrl+C to stop the bot.")
     while True:
         try:
-            pass
+            sleep(0.5)
         except KeyboardInterrupt:
             logger.info("Bot stopped")
-            exit(0)
+            exit(1)
