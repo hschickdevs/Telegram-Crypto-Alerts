@@ -1,9 +1,24 @@
+![made-with-python](https://img.shields.io/badge/Made%20with-Python3-yellow)
+
 <!-- PROJECT HEADER -->
 <div align="center">
-  <img src="img/telegram-binance.png" alt="Logo" width="270">
-  <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2>
+  <img src="img/logo.png" alt="Logo" width="300">
+  <hr>
+  <!-- <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2> -->
   <p align="center">
-    Software written in Python that allows you to receive alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
+    Python software that facilitates alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/"><b>Telegram</b></a> using their open-source API, and optionally email as well.
+    <br />
+   </p>
+   <p align="center">
+   <a href="#about-the-project">About the Project</a> •
+   <a href="#usage">Installation & Setup</a> •
+   <a href="#commands">Bot Commands</a> •
+   <a href="#add-indicators">Add Indicators</a> •
+   <a href="#contribute">Contribute</a> •
+   <a href="contact">Contact</a>
+   </p>  
+  <!-- <p align="center">
+    Python software that facilitates alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
     <br>
   </p>
   <p align="center">
@@ -12,9 +27,11 @@
     Live cryptocurrency pair prices from Binance<br>
     Technical indicator alerts integrated using <a href="https://taapi.io/">Taapi.io</a><br>
     Dynamic HTML styled email alerts using <a href="https://www.sendgrid.com">SendGrid</a><br>
-    State and configuration data stored in a local JSON database
+    State and configuration data stored in a local JSON database  -->
 </div>
 <br>
+
+> ⚠️**Disclaimer**⚠️ Due to recent changes with the Binance regulations, some IPs may be blocked from accessing the Binance API. If you are experiencing issues with the bot, please try using a VPN or proxy service (e.g. NordVPN, IPVN). 
 
 ## Installation
 
@@ -33,9 +50,11 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    - -> @yourbot
    - -> Edit Bot
    - -> Edit Commands
-   - Paste and send the contents of [`bot_commands.txt`](https://github.com/hschickdevs/telegram-crypto-alerts/blob/main/bot_commands.txt) into the chat
+   - Paste and send the contents of [`commands.txt`](./commands.txt) into the chat
 
-3. Set your environment variables or create a `.env` file in the root directory with the following:
+3. Ensure that you are in the repository _root_ directory
+
+4. Set your environment variables or create a `.env` file in the _root_ directory with the following:
     ```bash
      TELEGRAM_BOT_TOKEN=123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Your telegram bot token
      TAAPIIO_APIKEY=123456789.ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Your TAAPI.IO API key
@@ -48,7 +67,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 
     The alert emails are dynamically built from the `src/templates/email_template.html` file.
 
-4. **(IMPORTANT)** Run the setup script using the `setup.py` file:
+5. **(IMPORTANT)** Run the setup script using the `setup.py` file to create your admin account:
    ```sh
    # Windows:
    python setup.py --id YOUR_TELEGRAM_USER_ID
@@ -64,23 +83,25 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    python setup.py --help
    ```
 
-5. Run the main script using the `main.py` file:
-   ```sh
+   > Note: If you want to add another user as an admin on the bot, you can run the setup script again with the `--id` argument and the additional user's telegram user id.
+
+6. Run the bot using the module:
+   ```bash
    # Windows:
-   python run.py
+   python -m bot
    # or
-   py run.py
+   py -m bot
 
    # Mac/Linux:
-   python3 run.py
+   python3 -m bot
    ```
-   You can either run this script on your local machine, or use a cloud computing service like Google Cloud Platform, Heroku, or PythonAnywhere.
+   You can either run this script on your local machine, or use a cloud computing service like Heroku or PythonAnywhere.
 
 ## Telegram Bot Commands
 
 - ### Alerts
 
-   ```sh
+   ```bash
    /viewalerts
    # Returns all active alerts
 
@@ -122,7 +143,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 
 - ### Pricing/Data
 
-   ```sh
+   ```bash
    /getprice <base/quote>
    # Get the current pair price from Binance
 
@@ -143,7 +164,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 
 - ### Configuration
 
-   ```sh
+   ```bash
    /viewconfig
    # Returns the current general configuration for the bot
 
@@ -173,7 +194,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    ```
 - ### Administrator Only:
 
-   ```sh
+   ```bash
    /admins VIEW/ADD/REMOVE <telegram_user_id>,<telegram_user_id>
    # VIEW - Returns the current list of admins from the registry
    # ADD - Adds each of the telegram user ids (separated by a comma) to the admin registry
@@ -196,14 +217,29 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    # Returns the current process logs
    ```
 
+## How to Add Technical Indicators
+
+## Contributing
+
+Contributions are always welcome! To contribute to the project, please do one of the following:
+
+* Create a [new issue](https://github.com/hschickdevs/Telegram-Crypto-Alerts/issues/new) and describe your idea/suggestion in detail
+* Create a pull request
+   1. Fork the project
+   2. Create a branch for your new edits (E.g. new-indicator)
+   3. Implement and test your changes (test, test, test!)
+   4. [Submit your pull request](https://makeapullrequest.com/)
+
+I am actively maintaining this project, and I will respond to any issues or pull requests as soon as possible.
+
+## Contact
+
+If you have any questions, feel free to reach out to me on [**Telegram**](https://t.me/hschickdevs).
+
 ## Roadmap
 
-1. ~~Scale to multiple unique user configurations~~
-2. ~~Build infrastructure to integrate indicators from [taapi.io](https://taapi.io/)~~
-3. Refactor to Docker container 
-4. Add support for other indicators from [taapi.io](https://taapi.io/)
-5. Create twitter alerts integration
-6. Create alternate message handler for Discord
+- [X] Scale to multiple unique user configurations~~
+- [X] Build infrastructure to integrate indicators from [taapi.io](https://taapi.io/)
 
 ## License
 

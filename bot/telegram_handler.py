@@ -5,7 +5,7 @@ from typing import Union
 from .custom_logger import logger
 from .io_client import UserConfiguration, get_logfile, get_help_command, get_whitelist
 from .static_config import *
-from src.indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
+from .indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
 
 from telebot import TeleBot
 import requests

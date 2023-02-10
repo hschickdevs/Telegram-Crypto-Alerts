@@ -1,10 +1,10 @@
 import threading
 from os import getenv
 
-from src.alert_handler import AlertHandler
-from src.telegram_handler import TelegramBot
-from src.io_client import handle_env, get_whitelist
-from src.indicators import TaapiioProcess
+from .alert_handler import AlertHandler
+from .telegram_handler import TelegramBot
+from .io_client import handle_env, get_whitelist
+from .indicators import TaapiioProcess
 
 if __name__ == "__main__":
     if len(get_whitelist()) == 0:

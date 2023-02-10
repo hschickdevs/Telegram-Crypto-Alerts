@@ -1,7 +1,7 @@
 import argparse
 
-from src.io_client import UserConfiguration
-from src.custom_logger import logger
+from bot.io_client import UserConfiguration
+from bot.custom_logger import logger
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--id', type=str, required=True,

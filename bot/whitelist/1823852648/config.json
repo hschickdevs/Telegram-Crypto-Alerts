@@ -1,0 +1,10 @@
+{
+  "settings": {
+    "send_email_alerts": false
+  },
+  "emails": [],
+  "channels": [
+    "1823852648"
+  ],
+  "is_admin": true
+}
