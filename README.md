@@ -16,7 +16,13 @@
    <a href="#add-indicators">Add Indicators</a> •
    <a href="#contribute">Contribute</a> •
    <a href="contact">Contact</a>
-   </p>  
+   </p>
+
+   <p align="center">
+  
+   ![screenshot](img/demo.gif)
+   </p>                      
+
   <!-- <p align="center">
     Python software that facilitates alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
     <br>
