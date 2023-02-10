@@ -156,6 +156,6 @@ cython_debug/
 # Project Specific
 testing.*
 logs/log.txt
-src/whitelist/*
-src/temp/*
+bot/whitelist/*
+bot/temp/*
 dev_notes.txt

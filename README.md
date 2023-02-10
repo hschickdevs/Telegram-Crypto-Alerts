@@ -1,9 +1,30 @@
+![made-with-python](https://img.shields.io/badge/Made%20with-Python3-yellow)
+
 <!-- PROJECT HEADER -->
 <div align="center">
-  <img src="img/telegram-binance.png" alt="Logo" width="270">
-  <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2>
+  <img src="img/logo.png" alt="Logo" width="300">
+  <hr>
+  <!-- <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2> -->
   <p align="center">
-    Software written in Python that allows you to receive alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
+    Python software that facilitates alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/"><b>Telegram</b></a> using their open-source API, and optionally email as well.
+    <br />
+   </p>
+   <p align="center">
+   <a href="#about-the-project">About the Project</a> •
+   <a href="#getting-started">Getting Started</a> •
+   <a href="#telegram-bot-commands">Bot Commands</a> •
+   <a href="#how-to-add-technical-indicators">Add Indicators</a> •
+   <a href="#contributing">Contribute</a> •
+   <a href="#contact">Contact</a>
+   </p>
+
+   <p align="center">
+  
+   ![screenshot](img/demo.gif)
+   </p>                      
+
+  <!-- <p align="center">
+    Python software that facilitates alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
     <br>
   </p>
   <p align="center">
@@ -12,19 +33,50 @@
     Live cryptocurrency pair prices from Binance<br>
     Technical indicator alerts integrated using <a href="https://taapi.io/">Taapi.io</a><br>
     Dynamic HTML styled email alerts using <a href="https://www.sendgrid.com">SendGrid</a><br>
-    State and configuration data stored in a local JSON database
+    State and configuration data stored in a local JSON database  -->
 </div>
 <br>
 
-## Installation
+> ⚠️**Disclaimer**⚠️ Due to recent changes with the Binance regulations, some IPs may be blocked from accessing the Binance API. If you are experiencing issues with the bot, please try using a VPN or proxy service (e.g. NordVPN, IPVN). 
 
-Clone the repository and run the following command:
+## About the Project
+
+The primary goal of _Telegram Crypto Alerts_ is to be a lightweight, intuitive, and modular cryptocurrency price alert bot for the Telegram messaging client.
+
+The bot utilizes Telegram's simple chat interface to provide users the following features:
+* Get live crypto pair prices from Binance, and receive alerts on price movements like **_above_**, **_below_**, **_% change_**, and **_24 hour % change_**
+* Receive alerts on crypto technical indicators like **_RSI_**, **_MACD_**, **_Bollinger Bands_**, _**MA**_, **_SMA_**, and **_EMA_**.
+   - The bot has the capacity to support any technical indicator that is available on [Taapi.io](https://taapi.io/), but only these are shipped from the start. See [How to Add Technical Indicators](#how-to-add-technical-indicators) for more information.
+* Optionally receive dynamic HTML-styled email alerts using the SendGrid API
+* Configure bot access with a full suite of administrator commands
+   - _Invite your friends to use the bot!_
+   - Add additional users with their own unique alerts and configuration.
+* Stores all state and configuration data in a local JSON database
+
+## Getting Started
+
+### Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/hschickdevs/Telegram-Crypto-Alerts.git
+```
+
+CD into the repository root directory:
+
+```bash
+cd /Telegram-Crypto-Alerts
+```
+
+Install the required Python package dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
-Ensure that you have Python 3.9+ installed. If not, you can download [here](https://www.python.org/downloads/release/python-3912/). The syntax is dependent on features added in this recent version.
+Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here](https://www.python.org/downloads/release/python-3912/). The syntax is dependent on features added in this recent version.
 
-## Setup
+### Setup
 
 1. If you haven't already, create a telegram bot using [BotFather](https://core.telegram.org/bots#3-how-do-i-create-a-bot) and get the bot token.
 
@@ -33,9 +85,15 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    - -> @yourbot
    - -> Edit Bot
    - -> Edit Commands
-   - Paste and send the contents of [`bot_commands.txt`](https://github.com/hschickdevs/telegram-crypto-alerts/blob/main/bot_commands.txt) into the chat
+   - Paste and send the contents of [`commands.txt`](./commands.txt) into the chat
 
-3. Set your environment variables or create a `.env` file in the root directory with the following:
+3. Ensure that you are in the repository _root_ directory
+
+   ```bash
+   cd Telegram-Crypto-Alerts
+   ```
+
+4. Set your environment variables or create a `.env` file in the _root_ directory with the following:
     ```bash
      TELEGRAM_BOT_TOKEN=123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Your telegram bot token
      TAAPIIO_APIKEY=123456789.ABCDEFGHIJKLMNOPQRSTUVWXYZ  # Your TAAPI.IO API key
@@ -48,7 +106,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 
     The alert emails are dynamically built from the `src/templates/email_template.html` file.
 
-4. **(IMPORTANT)** Run the setup script using the `setup.py` file:
+5. **(IMPORTANT)** Run the setup script using the `setup.py` file to create your admin account:
    ```sh
    # Windows:
    python setup.py --id YOUR_TELEGRAM_USER_ID
@@ -64,23 +122,25 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    python setup.py --help
    ```
 
-5. Run the main script using the `main.py` file:
-   ```sh
+   > Note: If you want to add another user as an admin on the bot, you can run the setup script again with the `--id` argument and the additional user's telegram user id.
+
+6. Run the bot using the module:
+   ```bash
    # Windows:
-   python run.py
+   python -m bot
    # or
-   py run.py
+   py -m bot
 
    # Mac/Linux:
-   python3 run.py
+   python3 -m bot
    ```
-   You can either run this script on your local machine, or use a cloud computing service like Google Cloud Platform, Heroku, or PythonAnywhere.
+   You can either run this script on your local machine, or use a cloud computing service like Heroku or PythonAnywhere.
 
 ## Telegram Bot Commands
 
 - ### Alerts
 
-   ```sh
+   ```bash
    /viewalerts
    # Returns all active alerts
 
@@ -122,7 +182,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 
 - ### Pricing/Data
 
-   ```sh
+   ```bash
    /getprice <base/quote>
    # Get the current pair price from Binance
 
@@ -143,7 +203,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
 
 - ### Configuration
 
-   ```sh
+   ```bash
    /viewconfig
    # Returns the current general configuration for the bot
 
@@ -173,7 +233,7 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    ```
 - ### Administrator Only:
 
-   ```sh
+   ```bash
    /admins VIEW/ADD/REMOVE <telegram_user_id>,<telegram_user_id>
    # VIEW - Returns the current list of admins from the registry
    # ADD - Adds each of the telegram user ids (separated by a comma) to the admin registry
@@ -196,14 +256,103 @@ Ensure that you have Python 3.9+ installed. If not, you can download [here](http
    # Returns the current process logs
    ```
 
+## How to Add Technical Indicators
+
+As stated previously, the bot is designed to be easily extensible. View the currently available indicators by using the `/indicators` command on the bot. If your indicator is not listed, head over to [taapi.io/indicators](https://taapi.io/indicators/) and find the indicator you want to add. You can add any technical indicator that is supplied by taapi.io by following the steps below:
+
+1. Shut the bot down if it is currently running using `CRTL+C` in the terminal window.
+
+2. Open the `/util/add_indicators.ipynb` file using jupyter notebook.
+   
+   > If you don't have jupyter installed, see this guide: [https://jupyter.org/install](https://jupyter.org/install)
+
+3. Make a new cell, and use the `db.add_indicator` function to add the indicator to the database:
+
+   View the previous **examples** of how the existing indicators were added to the database using the `db.add_indicator` function (see `TADatabaseClient.add_indicator` in [`/bot/indicators.py`](/bot/indicators.py))
+
+   The usage of the `db.add_indicator` function is as follows:
+
+   ```python
+   db.add_indicator(
+      indicator_id  # Name/abbreviation of the endpoint as shown on taapi.io (e.g. BBANDS, MACD, MA)
+      name  # The full name of the indicator on taapi.io (e.g. Bollinger Bands, Moving)
+      endpoint  # the endpoint for the indicator in the following format: https://api.taapi.io/{indicator_id}?secret={api_key}&exchange=binance
+      reference_url  # The url to the taapi.io documentation for the indicator
+      params  # A list of tuples to specify additional parameters for the indicator: (param_name, param_description, default_value)
+      output  # A list of output values for the indicator, as shown on taapi.io (e.g. upperBand, middleBand, lowerBand)
+   )
+   ```
+
+   ### Important Restrictions:
+   - **endpoint** - Must match the format shown above. The bot automatically adds the `symbol` and `interval` required parameters. Additional parameters can be added using the `params`.
+   - **params** - The `param_name` must match the name of the parameter as shown on taapi.io. The `param_description` is a short description of the parameter (used in the /indicators command). The `default_value` is your custom default value for the parameter.
+
+       Using the following screenshot below as an example:
+
+       ![./img/taapiio_ss.png](./img/taapiio_ss.png)
+
+       The params list would look like the following:
+       ```python
+       [
+         ("optInFastPeriod", "Fast period length", 12),
+         ("optInSlowPeriod", "Slow period length", 26),
+         ("optInSignalPeriod", "Signal smoothing", 9),
+       ]
+       ```
+   - **output** - The `output` list must match the output values as shown on taapi.io.
+
+      Additionally, the output value must be directly accessible from the API response as keys in a dictionary. For example, the following response **would be** valid:
+       
+      ```json
+      {
+         "valueMACD": 737.4052287912818,
+         "valueMACDSignal": 691.8373005221695,
+         "valueMACDHist": 45.56792826911237
+      }
+      ```
+
+      Because of this, parameters such as **`backtracks`** are restricted because they turn the response into a list of dictionaries. The bot is not designed to handle this type of response. The following response **would NOT** be valid:
+      
+      ```json
+      [
+         {
+            "valueMACD": 979.518807843051,
+            "valueMACDSignal": 893.54139321284,
+            "valueMACDHist": 85.977414630211,
+            "backtrack": 0
+         },
+         {
+            "valueMACD": 949.7317001653792,
+            "valueMACDSignal": 872.0470395552873,
+            "valueMACDHist": 77.6846606100919,
+            "backtrack": 1
+         },
+      ]
+      ```
+
+      You may need to DYOR to ensure that the parameters that you are configuring will result in a valid response.
+
+## Contributing
+
+Contributions are always welcome! To contribute to the project, please do one of the following:
+
+* Create a [new issue](https://github.com/hschickdevs/Telegram-Crypto-Alerts/issues/new) and describe your idea/suggestion in detail
+* Create a pull request
+   1. Fork the project
+   2. Create a branch for your new edits (E.g. new-indicator)
+   3. Implement and test your changes (test, test, test!)
+   4. [Submit your pull request](https://makeapullrequest.com/)
+
+I am actively maintaining this project, and I will respond to any issues or pull requests as soon as possible.
+
+## Contact
+
+If you have any questions, feel free to reach out to me on [**Telegram**](https://t.me/hschickdevs).
+
 ## Roadmap
 
-1. ~~Scale to multiple unique user configurations~~
-2. ~~Build infrastructure to integrate indicators from [taapi.io](https://taapi.io/)~~
-3. Refactor to Docker container 
-4. Add support for other indicators from [taapi.io](https://taapi.io/)
-5. Create twitter alerts integration
-6. Create alternate message handler for Discord
+- [X] Scale to multiple unique user configurations~~
+- [X] Build infrastructure to integrate indicators from [taapi.io](https://taapi.io/)
 
 ## License
 

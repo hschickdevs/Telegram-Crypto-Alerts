@@ -85,5 +85,33 @@
       "valueLowerBand"
     ],
     "type": "t"
+  },
+  "MACD": {
+    "name": "Moving Average Convergence Divergence",
+    "endpoint": "https://api.taapi.io/macd?secret={api_key}&exchange=binance",
+    "ref": "https://taapi.io/indicators/macd/",
+    "params": [
+      [
+        "optInFastPeriod",
+        "Fast period length",
+        12
+      ],
+      [
+        "opInSlowPeriod",
+        "Slow period length",
+        26
+      ],
+      [
+        "optInSignalPeriod",
+        "Signal period length",
+        9
+      ]
+    ],
+    "output": [
+      "valueMACD",
+      "valueMACDSignal",
+      "valueMACDHist"
+    ],
+    "type": "t"
   }
 }

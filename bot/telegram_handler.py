@@ -5,7 +5,7 @@ from typing import Union
 from .custom_logger import logger
 from .io_client import UserConfiguration, get_logfile, get_help_command, get_whitelist
 from .static_config import *
-from src.indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
+from .indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
 
 from telebot import TeleBot
 import requests
@@ -103,7 +103,7 @@ class TelegramBot(TeleBot):
                     comparison = msg[2].upper()
                     target = float(msg[3].strip()) if comparison not in ["PCTCHG", "24HRCHG"] else float(msg[3].strip()) / 100
                     if len(msg) > 4:
-                        entry_price = msg[4]
+                        entry_price = float(msg[4])
                     else:
                         try:
                             entry_price = self.get_binance_price(pair)

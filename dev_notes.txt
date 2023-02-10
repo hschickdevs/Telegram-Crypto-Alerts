@@ -1,2 +1,0 @@
-- TECHNICAL INDICATORS UPDATE:
-    - Need to add logging for all system-side errors and let the bot run for a while.
