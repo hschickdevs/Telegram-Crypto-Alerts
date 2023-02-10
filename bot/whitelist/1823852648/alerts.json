@@ -3,19 +3,11 @@
     {
       "type": "s",
       "indicator": "PRICE",
-      "comparison": "BELOW",
-      "target": 1,
-      "params": {},
-      "alerted": false
-    },
-    {
-      "type": "s",
-      "indicator": "PRICE",
       "comparison": "PCTCHG",
-      "entry": 2000,
-      "target": 10.0,
-      "params": {},
-      "alerted": false
+      "entry": 1000.0,
+      "target": 0.05,
+      "params": null,
+      "alerted": true
     }
   ]
 }

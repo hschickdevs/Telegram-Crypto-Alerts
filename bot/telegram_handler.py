@@ -103,7 +103,7 @@ class TelegramBot(TeleBot):
                     comparison = msg[2].upper()
                     target = float(msg[3].strip()) if comparison not in ["PCTCHG", "24HRCHG"] else float(msg[3].strip()) / 100
                     if len(msg) > 4:
-                        entry_price = msg[4]
+                        entry_price = float(msg[4])
                     else:
                         try:
                             entry_price = self.get_binance_price(pair)

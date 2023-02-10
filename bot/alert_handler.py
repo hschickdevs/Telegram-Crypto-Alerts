@@ -186,14 +186,13 @@ class AlertHandler:
             pair_price = get_pair_price(token_pair=pair.replace("/", ""))
 
         if comparison == 'PCTCHG':
-            print(f"PCTCHG CURRENT PAIR PRICE: {pair_price}, of type {type(pair_price)}")
             entry = alert['entry']
-            if pair_price > entry * (1 + target):
+            if pair_price > (entry * (1 + target)):
                 pct_chg = ((pair_price - entry) / entry) * 100
-                return True, pct_chg, f"{pair} UP {pct_chg:.1f}% AT {pair_price}"
-            elif pair_price < entry * (1 - target):
+                return True, pct_chg, f"{pair} UP {pct_chg:.1f}% FROM {entry} AT {pair_price}"
+            elif pair_price < (entry * (1 - target)):
                 pct_chg = ((entry - pair_price) / entry) * 100
-                return True, pct_chg, f"{pair} DOWN {pct_chg:.1f}% AT {pair_price}"
+                return True, pct_chg, f"{pair} DOWN {pct_chg:.1f}% FROM {entry} AT {pair_price}"
         elif comparison == '24HRCHG':
             pct_change = get_24hr_price_change(pair.replace("/", ""))
             if abs(pct_change) >= alert['target']:
