@@ -134,7 +134,7 @@ Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here
    # Mac/Linux:
    python3 -m bot
    ```
-   You can either run this script on your local machine, or use a cloud computing service like Heroku or PythonAnywhere.
+   You can either run this script on your local machine, or use a cloud computing service like [Heroku](https://devcenter.heroku.com/articles/getting-started-with-python) or [PythonAnywhere](https://www.pythonanywhere.com/).
 
 ## Telegram Bot Commands
 
