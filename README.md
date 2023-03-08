@@ -10,10 +10,10 @@
     <br />
    </p>
    <p align="center">
-   <a href="#about-the-project">About the Project</a> •
-   <a href="#getting-started">Getting Started</a> •
-   <a href="#telegram-bot-commands">Bot Commands</a> •
-   <a href="#how-to-add-technical-indicators">Add Indicators</a> •
+   <a href="#about-the-project"><em>About the Project</em></a> •
+   <a href="#getting-started"><em>Getting Started</em></a> •
+   <a href="#telegram-bot-commands"><em>Bot Commands</em></a> •
+   <a href="#how-to-add-technical-indicators"><em>Add Indicators</em></a> •
    <a href="#contributing">Contribute</a> •
    <a href="#contact">Contact</a>
    </p>
