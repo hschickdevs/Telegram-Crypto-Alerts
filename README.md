@@ -345,7 +345,7 @@ Contributions are always welcome! To contribute to the project, please do one of
 
 I am actively maintaining this project, and I will respond to any issues or pull requests as soon as possible.
 
-> Please star ⭐ the project if it helps you, this will help the project gain visibility to help others
+> Please star ⭐ the project if it helps you so that the project gain visibility to help others!
 
 ## Contact
 
