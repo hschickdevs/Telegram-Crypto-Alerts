@@ -15,7 +15,7 @@ sudo apt-get install git python3-pip -y
 
 # Clone the repository
 git clone https://github.com/hschickdevs/Telegram-Crypto-Alerts.git
-cd /Telegram-Crypto-Alerts
+cd Telegram-Crypto-Alerts
 
 # Install Python dependencies
 pip install -r requirements.txt
