@@ -1,27 +1,17 @@
-#!/bin/bash
-# Install script for the "Telegram Alerts Bot"
 
-# Prompt that the user should be using Debain 11
+echo "Welcome to the Telegram Crypto Alerts setup script!"
+echo ""
 echo "This script assumes that you are following the steps in the setup guide."
 echo "If you are not, it will not work properly."
 echo "If you are, press ENTER to continue - if not, press CTRL+C to cancel."
 read
 
-# Get started
-cd ~
-
-# Install dependencies
-sudo apt-get install git python3-pip -y
-
-# Clone the repository
-git clone https://github.com/hschickdevs/Telegram-Crypto-Alerts.git
-cd Telegram-Crypto-Alerts
-
-# Install Python dependencies
-pip install -r requirements.txt
 
 # Create the .env file by prompting for environment variables
+cd ~/Telegram-Crypto-Alerts
+
 echo "Creating .env file..."
+echo ""
 
 echo "Enter your Telegram Bot Token..."
 echo "The bot that owns this token will be the crypto alerts bot:"
@@ -46,3 +36,13 @@ printf "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN\nTAAPI_API_KEY=$TAAPI_API_KEY\nTA
 
 echo "Your .env file has been created!"
 cat .env
+
+echo ""
+echo "Now, you need to add your Telegram user ID to the database."
+echo "If you don't know your user ID, you can use https://t.me/raw_data_bot to get it."
+echo "Please enter your user ID now:"
+read TELEGRAM_USER_ID
+
+echo ""
+python3 setup.py --id $TELEGRAM_USER_ID
+echo ""
