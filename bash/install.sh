@@ -14,7 +14,7 @@ read
 cd ~
 
 # Install dependencies
-sudo apt-get install git python3-pip -y
+sudo apt-get install git tmux python3-pip -y
 
 # Clone the repository
 git clone https://github.com/hschickdevs/Telegram-Crypto-Alerts.git
@@ -22,6 +22,9 @@ cd Telegram-Crypto-Alerts
 
 # Install Python dependencies
 pip install -r requirements.txt
+
+# Move bash scripts to root
+mv bash/* ~
 
 echo ""
 echo "The dependencies have been successfully installed!"

@@ -1,4 +1,4 @@
-
+#!/bin/bash
 echo "Welcome to the Telegram Crypto Alerts setup script!"
 echo ""
 echo "This script assumes that you are following the steps in the setup guide."
@@ -32,11 +32,12 @@ read TAAPI_API_KEY_2
 echo ""
 
 # Now dump the env files to the .env file in the current directory
-printf "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN\nTAAPI_API_KEY=$TAAPI_API_KEY\nTAAPI_API_KEY_2=$TAAPI_API_KEY_2" > .env
+printf "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN\nTAAPIIO_APIKEY=$TAAPI_API_KEY\nTAAPIIO_APIKEY2=$TAAPI_API_KEY_2" > .env
 
 echo "Your .env file has been created!"
 cat .env
 
+echo ""
 echo ""
 echo "Now, you need to add your Telegram user ID to the database."
 echo "If you don't know your user ID, you can use https://t.me/raw_data_bot to get it."

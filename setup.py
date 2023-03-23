@@ -16,6 +16,6 @@ try:
 
     UserConfiguration(user_id).whitelist_user(is_admin=True)
 
-    logger.info("Setup complete! You can now run the bot using the run.py script.")
+    logger.info("Setup complete! You can now run the bot module using: python3 -m bot")
 except Exception as exc:
     logger.exception("An unexpected error occurred during setup", exc_info=exc)
