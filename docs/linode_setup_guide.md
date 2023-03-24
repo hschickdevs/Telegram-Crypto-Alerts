@@ -2,7 +2,7 @@
     <center>
         <img src="https://cdn.freebiesupply.com/logos/large/2x/linode-1-logo-png-transparent.png" width="50"/>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        <img src="https://github.com/hschickdevs/Telegram-Crypto-Alerts/raw/main/img/logo.png" width="80"/>
+        <img src="https://github.com/hschickdevs/Telegram-Crypto-Alerts/raw/main/docs/img/logo.png" width="80"/>
     </center>
     <br>
 </div>

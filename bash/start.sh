@@ -1,7 +1,4 @@
 #!/bin/bash
-tmux new-session -t bot
+tmux new-session -d -s bot 'cd ~/Telegram-Crypto-Alerts && python3 -m bot'
 
-cd ~/Telegram-Crypto-Alerts
-
-# Start the bot
-python3 -m bot
+echo "The bot has been started! Use 'bash stop.sh' to stop it."
