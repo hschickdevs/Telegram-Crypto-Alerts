@@ -2,7 +2,7 @@
 
 <!-- PROJECT HEADER -->
 <div align="center">
-  <img src="img/logo.png" alt="Logo" width="300">
+  <img src="docs/img/logo.png" alt="Logo" width="300">
   <hr>
   <!-- <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2> -->
   <p align="center">
@@ -20,7 +20,7 @@
 
    <p align="center">
   
-   ![screenshot](img/demo.gif)
+   ![screenshot](docs/img/demo.gif)
    </p>                      
 
   <!-- <p align="center">
@@ -55,7 +55,11 @@ The bot utilizes Telegram's simple chat interface to provide users the following
 
 ## Getting Started
 
-### Installation
+Follow this comprehensive guide to learn how to set the bot up on a Linode VPS: [Linode Setup Guide](./docs/linode_setup_guide.md)
+
+Alternatively, follow the steps below to set it up on your local machine.
+
+### Local Installation
 
 Clone the repository:
 
@@ -76,7 +80,7 @@ pip install -r requirements.txt
 ```
 Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here](https://www.python.org/downloads/release/python-3912/). The syntax is dependent on features added in this recent version.
 
-### Setup
+### Local Setup
 
 1. If you haven't already, create a telegram bot using [BotFather](https://core.telegram.org/bots#3-how-do-i-create-a-bot) and get the bot token.
 
@@ -124,7 +128,7 @@ Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here
 
    > Note: If you want to add another user as an admin on the bot, you can run the setup script again with the `--id` argument and the additional user's telegram user id.
 
-6. Run the bot using the module:
+6. Run the bot module using:
    ```bash
    # Windows:
    python -m bot
@@ -289,7 +293,7 @@ As stated previously, the bot is designed to be easily extensible. View the curr
 
        Using the following screenshot below as an example:
 
-       ![./img/taapiio_ss.png](./img/taapiio_ss.png)
+       ![./docs/img/taapiio_ss.png](./docs/img/taapiio_ss.png)
 
        The params list would look like the following:
        ```python
