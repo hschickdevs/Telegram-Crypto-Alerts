@@ -24,7 +24,7 @@ This guide is designed to teach you how to set up the Telegram Crypto Alerts bot
     Fetch the install script:
 
     ```bash
-    wget https://raw.githubusercontent.com/hschickdevs/Telegram-Crypto-Alerts/main/bash/install.sh
+    wget https://raw.githubusercontent.com/hschickdevs/Telegram-Crypto-Alerts/development/bash/install.sh
     ```
 
     Then run:

@@ -55,11 +55,11 @@ The bot utilizes Telegram's simple chat interface to provide users the following
 
 ## Getting Started
 
-Follow this guide to learn how to set the bot up on a Linode VPS: [Linode Setup Guide](./docs/linode_setup_guide.md)
+Follow this comprehensive guide to learn how to set the bot up on a Linode VPS: [Linode Setup Guide](./docs/linode_setup_guide.md)
 
 Alternatively, follow the steps below to set it up on your local machine.
 
-### Installation
+### Local Installation
 
 Clone the repository:
 
@@ -80,7 +80,7 @@ pip install -r requirements.txt
 ```
 Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here](https://www.python.org/downloads/release/python-3912/). The syntax is dependent on features added in this recent version.
 
-### Setup
+### Local Setup
 
 1. If you haven't already, create a telegram bot using [BotFather](https://core.telegram.org/bots#3-how-do-i-create-a-bot) and get the bot token.
 
