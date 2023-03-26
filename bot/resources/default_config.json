@@ -1,6 +1,6 @@
 {
   "settings": {
-    "send_email_alerts": true
+    "send_email_alerts": false
   },
   "emails": [],
   "channels": [],

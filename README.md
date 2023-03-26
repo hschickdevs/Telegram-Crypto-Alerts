@@ -108,6 +108,8 @@ Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here
     ```
     If the *SENDGRID_APIKEY* and *ALERTS_EMAIL* variables are not set, only Telegram alerts will be available. The bot uses these email credentials to send email alerts using [SendGrid](https://sendgrid.com/). You can sign up [here](https://signup.sendgrid.com/) for free.
 
+    > Email alerts are **disabled** in the configuration _by default_, but if you **did** set a Sendgrid API key and email you can enable email alerts using the `/setconfig send_email_alerts=true` command once you start the bot.
+
     The alert emails are dynamically built from the `src/templates/email_template.html` file.
 
 5. **(IMPORTANT)** Run the setup script using the `setup.py` file to create your admin account:
