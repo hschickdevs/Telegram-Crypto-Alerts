@@ -36,6 +36,7 @@ class AlertHandler:
         alerts_database = configuration.load_alerts()
         config = configuration.load_config()
 
+        do_update = False  # If any changes are made, update the database
         post_queue = []
         for pair in alerts_database.copy().keys():
 
@@ -43,6 +44,7 @@ class AlertHandler:
             for alert in alerts_database[pair]:
                 if alert['alerted']:
                     remove_queue.append(alert)
+                    do_update = True  # Since the alert needs to be removed from the database, signal do_update
                     continue
 
                 if alert['type'] == "s":
@@ -55,13 +57,15 @@ class AlertHandler:
                 if condition:  # If there is a condition satisfied
                     post_queue.append(post_string)
                     alert['alerted'] = True
+                    do_update = True  # Since the alert needs to be updated in the database, signal do_update
 
             for item in remove_queue:
                 alerts_database[pair].remove(item)
                 if len(alerts_database[pair]) == 0:
                     alerts_database.pop(pair)
 
-        configuration.update_alerts(alerts_database)
+        if do_update:
+            configuration.update_alerts(alerts_database)
 
         if len(post_queue) > 0:
             self.polling = False
