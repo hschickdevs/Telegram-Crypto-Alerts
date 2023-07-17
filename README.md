@@ -37,9 +37,16 @@
 </div>
 <br>
 
-> ⚠️**Disclaimer**⚠️ Due to recent changes with the Binance regulations, some IPs may be blocked from accessing the Binance API. If you are experiencing issues with the bot, please try using a VPN or proxy service (e.g. NordVPN, IPVN). 
+> ⚠️**Disclaimer**⚠️ Due to recent changes with the Binance regulations, some IPs may be blocked from accessing the Binance API. If you are experiencing issues with the bot, please try using a VPN or proxy service (e.g. NordVPN, IPVN, CyberGhost). 
 
 ## About the Project
+
+<p>
+   <img src="https://skillicons.dev/icons?i=python,mongodb" />
+   <img src="https://cdn-icons-png.flaticon.com/512/2504/2504941.png" width=50 />
+   <img src="https://cdn-icons-png.flaticon.com/512/6001/6001283.png" width=50 />
+   <img src="https://taapi.io/wp-content/uploads/2019/10/social_icon.png" width=50 />
+</p>
 
 The primary goal of _Telegram Crypto Alerts_ is to be a lightweight, intuitive, and modular cryptocurrency price alert bot for the Telegram messaging client.
 
@@ -51,34 +58,37 @@ The bot utilizes Telegram's simple chat interface to provide users the following
 * Configure bot access with a full suite of administrator commands
    - _Invite your friends to use the bot!_
    - Add additional users with their own unique alerts and configuration.
-* Stores all state and configuration data in a local JSON database
+* Optional state and configuration data - Use a local JSON database or configure a MongoDB server!
 
 ## Getting Started
 
-**⚠️ RECOMMENDED ⚠️** Follow this comprehensive guide to learn how to set the bot up on a Linode VPS: [**_Linode Setup Guide_**](./docs/linode_setup_guide.md)
+**⚠️ RECOMMENDED ⚠️** Follow this comprehensive guide to learn how to set the bot up on a Linode VPS: 
 
-Alternatively, follow the steps below to set it up on your local machine.
+[**Linode Setup Guide**](./docs/linode_setup_guide.md)
 
 ### Local Installation
 
-Clone the repository:
+Alternatively, follow the steps below to set it up on your local machine.
 
-```bash
-git clone https://github.com/hschickdevs/Telegram-Crypto-Alerts.git
-```
+1. Clone the repository:
 
-CD into the repository root directory:
+    ```bash
+    git clone https://github.com/hschickdevs/Telegram-Crypto-Alerts.git
+    ```
 
-```bash
-cd /Telegram-Crypto-Alerts
-```
+2. CD into the repository root directory:
 
-Install the required Python package dependencies:
+    ```bash
+    cd /Telegram-Crypto-Alerts
+    ```
 
-```bash
-pip install -r requirements.txt
-```
-Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here](https://www.python.org/downloads/release/python-3912/). The syntax is dependent on features added in this recent version.
+3. Install the required Python package dependencies:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+    
+4. Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here](https://www.python.org/downloads/release/python-3912/). The syntax is dependent on features added in this recent version.
 
 ### Local Setup
 
@@ -112,7 +122,36 @@ Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here
 
     The alert emails are dynamically built from the `src/templates/email_template.html` file.
 
-5. **(IMPORTANT)** Run the setup script using the `setup.py` file to create your admin account:
+5. **(OPTIONAL)** MongoDB Setup & Configuration
+
+   <div style="display: flex; align-items: center;">
+      <img src="https://cdn.icon-icons.com/icons2/2415/PNG/512/mongodb_original_wordmark_logo_icon_146425.png" width="100" style="margin-right: 20px;"/>
+      <p>As of 7/16/2023, this bot now supports MongoDB as a database backend to enable data persistence. If you'd like to use a MongoDB server to store your data, instead of the local JSON database default, follow the steps below:</p>
+   </div>
+   <br>
+
+   First, set the `USE_MONGO_DB` config variable to `True` in the static configuration file: [`/bot/config.py`](/bot/static_config.py)
+
+   Next, you will need to create a MongoDB Atlas account. You can sign up [here](https://www.mongodb.com/cloud/atlas/register).
+
+   Once you have created an account, you will need to create a new databse using the Altas UI: https://www.mongodb.com/basics/create-database#option-1
+
+   You will need to locate the following:
+   * Your `database connection string`
+   * Your `database name`
+   * Your `database collection name`
+
+   All of the documents required for the program's backend are stored in the same collection. The documents are differentiated by the `user_id` field. The `user_id` field is the telegram user id of the user that the document belongs to.
+
+   You will then need to set the following environment variables or add them to your `.env` file:
+
+   ```bash
+   MONGODB_CONNECTION_STRING=your_connection_string  # The URI for your MongoDB server
+   MONGODB_DATABASE=your_database  # The name of the database to use
+   MONGODB_COLLECTION=your_collection  # The name of the database collection to use
+   ```
+
+6. **(IMPORTANT)** Run the setup script using the `setup.py` file to create your admin account:
    ```sh
    # Windows:
    python setup.py --id YOUR_TELEGRAM_USER_ID
@@ -130,7 +169,7 @@ Ensure that you have _**Python 3.9+**_ installed. If not, you can download [here
 
    > Note: If you want to add another user as an admin on the bot, you can run the setup script again with the `--id` argument and the additional user's telegram user id.
 
-6. Run the bot module using:
+7. Run the `bot` module using:
    ```bash
    # Windows:
    python -m bot

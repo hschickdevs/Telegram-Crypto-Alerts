@@ -3,13 +3,15 @@ from datetime import datetime
 from typing import Union
 
 from .custom_logger import logger
-from .io_client import UserConfiguration, get_logfile, get_help_command, get_whitelist
+from .io_client import LocalUserConfiguration, MongoDBUserConfiguration, get_logfile, get_help_command, get_whitelist
 from .static_config import *
 from .indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
 
 from telebot import TeleBot
 import requests
 from requests.exceptions import ReadTimeout
+
+BaseConfig = LocalUserConfiguration if not USE_MONGO_DB else MongoDBUserConfiguration
 
 
 class TelegramBot(TeleBot):
@@ -91,7 +93,7 @@ class TelegramBot(TeleBot):
                 return
 
             try:
-                configuration = UserConfiguration(str(message.from_user.id))
+                configuration = BaseConfig(str(message.from_user.id))
                 alerts_db = configuration.load_alerts()
 
                 if MAX_ALERTS_PER_USER is not None:
@@ -160,7 +162,7 @@ class TelegramBot(TeleBot):
                 return
 
             try:
-                configuration = UserConfiguration(str(message.from_user.id))
+                configuration = BaseConfig(str(message.from_user.id))
                 alerts_db = configuration.load_alerts()
                 rm_alert = alerts_db[pair].pop(alert_index - 1)
                 all_rm = False
@@ -182,7 +184,7 @@ class TelegramBot(TeleBot):
             except IndexError:
                 alerts_pair = "ALL"
 
-            configuration = UserConfiguration(str(message.from_user.id))
+            configuration = BaseConfig(str(message.from_user.id))
             alerts_db = configuration.load_alerts()
             output = ""
             for ticker in alerts_db.keys():
@@ -249,7 +251,7 @@ class TelegramBot(TeleBot):
         @self.is_whitelisted
         def on_price_all(message):
             """/priceall - Gets the price of all tokens with alerts set"""
-            configuration = UserConfiguration(str(message.from_user.id))
+            configuration = BaseConfig(str(message.from_user.id))
             tokens = [f'{key}: {self.get_binance_price(key.replace("/", "").upper())}' for key
                       in configuration.load_alerts().keys()]
             try:
@@ -287,7 +289,7 @@ class TelegramBot(TeleBot):
         def on_viewconfig(message):
             """Returns the current configuration of the bot (used as reference for /setconfig)"""
             try:
-                configuration = UserConfiguration(str(message.from_user.id))
+                configuration = BaseConfig(str(message.from_user.id))
                 config = configuration.load_config()['settings']
                 msg = f"{message.from_user.username} {self.get_me().first_name} Configuration:\n\n"
                 for k, v in config.items():
@@ -307,7 +309,7 @@ class TelegramBot(TeleBot):
             msg = ""
             failed = []
             user_id = str(message.from_user.id)
-            configuration = UserConfiguration(user_id)
+            configuration = BaseConfig(user_id)
             full_config = configuration.load_config()
             try:
                 config = full_config['settings']
@@ -353,7 +355,7 @@ class TelegramBot(TeleBot):
         def on_channels(message):
             splt_msg = self.split_message(message.text)
             try:
-                configuration = UserConfiguration(str(message.from_user.id))
+                configuration = BaseConfig(str(message.from_user.id))
                 if splt_msg[0].lower() == "add":
                     new_channels = splt_msg[1].split(",")
                     configuration.add_channels(new_channels)
@@ -386,7 +388,7 @@ class TelegramBot(TeleBot):
         def on_emails(message):
             splt_msg = self.split_message(message.text)
             try:
-                configuration = UserConfiguration(str(message.from_user.id))
+                configuration = BaseConfig(str(message.from_user.id))
                 if splt_msg[0].lower() == "add":
                     new_emails = splt_msg[1].split(",")
                     configuration.add_emails(new_emails)
@@ -423,12 +425,12 @@ class TelegramBot(TeleBot):
                 if splt_msg[0].lower() == "add":
                     new_users = splt_msg[1].split(",")
                     for user in new_users:
-                        UserConfiguration(user).whitelist_user()
+                        BaseConfig(user).whitelist_user()
                     self.reply_to(message, f"Whitelisted Users: {', '.join(new_users)}")
                 elif splt_msg[0].lower() == "remove":
                     rm_users = splt_msg[1].split(",")
                     for user in rm_users:
-                        UserConfiguration(user).blacklist_user()
+                        BaseConfig(user).blacklist_user()
                     self.reply_to(message, f"Removed Users from Whitelist: {', '.join(rm_users)}")
                 else:
                     msg = "Current Whitelist:\n\n"
@@ -483,7 +485,7 @@ class TelegramBot(TeleBot):
                     for i, new_admin in enumerate(new_admins):
                         try:
                             if new_admin in whitelist:
-                                UserConfiguration(new_admin).admin_status(new_value=True)
+                                BaseConfig(new_admin).admin_status(new_value=True)
                             else:
                                 failure_msgs.append(f"{new_admins.pop(i)} - User is not yet whitelisted")
                         except Exception as exc:
@@ -500,7 +502,7 @@ class TelegramBot(TeleBot):
                     for i, admin in enumerate(rm_admins):
                         try:
                             if admin in whitelist:
-                                UserConfiguration(admin).admin_status(new_value=False)
+                                BaseConfig(admin).admin_status(new_value=False)
                             else:
                                 failure_msgs.append(f"{rm_admins.pop(i)} - User is not yet whitelisted")
                         except Exception as exc:
@@ -514,11 +516,11 @@ class TelegramBot(TeleBot):
                 else:
                     msg = "Current Administrators:\n\n"
                     for user_id in get_whitelist():
-                        if UserConfiguration(user_id).admin_status():
+                        if BaseConfig(user_id).admin_status():
                             msg += f"{user_id}\n"
                     self.reply_to(message, msg)
             except IndexError:
-                self.reply_to(message, "Invalid formatting - Use /admin VIEW/ADD/REMOVE USER_ID,USER_ID")
+                self.reply_to(message, "Invalid formatting - Use /admins VIEW/ADD/REMOVE USER_ID,USER_ID")
             except Exception as exc:
                 self.reply_to(message, f"An unexpected error occurred - {exc}")
 
@@ -550,7 +552,7 @@ class TelegramBot(TeleBot):
         """
         def wrapper(*args, **kw):
             message = args[0]
-            if UserConfiguration(str(message.from_user.id)).admin_status():
+            if BaseConfig(str(message.from_user.id)).admin_status():
                 return func(*args, **kw)
             else:
                 self.reply_to(message,
