@@ -1,7 +1,8 @@
 import argparse
 
-from bot.io_client import UserConfiguration
+from bot.io_client import LocalUserConfiguration, MongoDBUserConfiguration
 from bot.custom_logger import logger
+from bot.static_config import USE_MONGO_DB
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--id', type=str, required=True,
@@ -14,7 +15,10 @@ user_id = parser.parse_args().id
 try:
     logger.info(f"Creating default bot configuration for Telegram user {user_id}...")
 
-    UserConfiguration(user_id).whitelist_user(is_admin=True)
+    if not USE_MONGO_DB:
+        LocalUserConfiguration(user_id).whitelist_user(is_admin=True)
+    else:
+        MongoDBUserConfiguration(user_id).whitelist_user(is_admin=True)
 
     logger.info("Setup complete! You can now run the bot module using: python3 -m bot")
 except Exception as exc:

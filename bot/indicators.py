@@ -24,7 +24,7 @@ from typing import Union
 import os
 from math import ceil
 
-from .io_client import get_whitelist, UserConfiguration
+from .io_client import get_whitelist, LocalUserConfiguration, MongoDBUserConfiguration
 from .static_config import *
 from .custom_logger import logger
 
@@ -192,7 +192,9 @@ class TAAggregateClient:
         # Create the new aggregate to weed out unused indicators:
         agg = {}
         for user in get_whitelist():
-            alerts_data = UserConfiguration(user).load_alerts()
+            alerts_data = LocalUserConfiguration(user).load_alerts() \
+                if not USE_MONGO_DB else MongoDBUserConfiguration(user).load_alerts()
+
             for symbol, alerts in alerts_data.items():
                 if symbol not in agg.keys():
                     agg[symbol] = {}
@@ -349,7 +351,10 @@ class TaapiioProcess:
             return None
 
         for user in get_whitelist():
-            if UserConfiguration(user).admin_status():
+            admin = LocalUserConfiguration(user).admin_status() \
+                if not USE_MONGO_DB else MongoDBUserConfiguration(user).admin_status()
+
+            if admin:
                 requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
                               params={'chat_id': user, 'text': message})
 

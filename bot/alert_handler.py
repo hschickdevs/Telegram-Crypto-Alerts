@@ -1,8 +1,9 @@
 import time
 from datetime import datetime
 import os
+from typing import Union
 
-from .io_client import UserConfiguration, get_whitelist
+from .io_client import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
 from .custom_logger import logger
 from .static_config import *
 from .indicators import get_pair_price, TADatabaseClient, TAAggregateClient, get_24hr_price_change
@@ -32,7 +33,7 @@ class AlertHandler:
 
         :param tg_user_id: The Telegram user ID from the database
         """
-        configuration = UserConfiguration(tg_user_id)
+        configuration = LocalUserConfiguration(tg_user_id) if not USE_MONGO_DB else MongoDBUserConfiguration(tg_user_id)
         alerts_database = configuration.load_alerts()
         config = configuration.load_config()
 
@@ -103,17 +104,17 @@ class AlertHandler:
         """
         header_str = f"🔔 <b>ALERT:</b> 🔔\n"
         output = ([], [])
-        for group_id in channel_ids:
+        for g_id in channel_ids:
             try:
                 requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
-                              params={'chat_id': group_id, 'text': header_str + post, "parse_mode": "HTML"})
-                output[0].append(group_id)
+                              params={'chat_id': g_id, 'text': header_str + post, "parse_mode": "HTML"})
+                output[0].append(g_id)
             except:
-                output[1].append(group_id)
+                output[1].append(g_id)
 
         return output
 
-    def email_alert_sendgrid(self, post: str, configuration: UserConfiguration) -> None:
+    def email_alert_sendgrid(self, post: str, configuration: Union[LocalUserConfiguration, MongoDBUserConfiguration]) -> None:
         """
         Dynamically builds the email by formatting the string in email_template.html with the post
 
@@ -274,7 +275,9 @@ class AlertHandler:
 
     def alert_admins(self, message: str):
         for user in get_whitelist():
-            if UserConfiguration(user).admin_status():
+            admin = LocalUserConfiguration(user).admin_status() \
+                if USE_MONGO_DB else MongoDBUserConfiguration(user).admin_status()
+            if admin:
                 requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
                               params={'chat_id': user, 'text': message})
 
