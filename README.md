@@ -62,9 +62,11 @@ The bot utilizes Telegram's simple chat interface to provide users the following
 
 ## Getting Started
 
-**⚠️ RECOMMENDED ⚠️** Follow this comprehensive guide to learn how to set the bot up on a Linode VPS: 
+### Cloud Installation & Setup (Recommended)
 
-[**Linode Setup Guide**](./docs/linode_setup_guide.md)
+Follow this comprehensive guide to learn how to set the bot up on a Linode cloud VPS: 
+
+[**Linode Setup Guide**](./docs/linode_setup_guide.md) <- Click here
 
 ### Local Installation
 
