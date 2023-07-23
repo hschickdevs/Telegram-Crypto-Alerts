@@ -216,7 +216,9 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    ___
 
-   <pre><b>/newalert &lt;BASE/QUOTE> &lt;INDICATOR> &lt;TIMEFRAME> &lt;PARAMS> &lt;OUTPUT_VALUE> &lt;COMPARISON> &lt;TARGET></b></pre>
+   ```bash
+   /newalert <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS> <OUTPUT_VALUE> <COMPARISON> <TARGET>
+   ```
 
    > ⚠️ Create new alert for **technical indicators** ONLY (see [/indicators](https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/pancakeswap-integration/README%20copy.md#indicators))
 
