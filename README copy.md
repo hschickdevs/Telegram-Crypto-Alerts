@@ -216,9 +216,7 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    ___
 
-   ```bash
-   /newalert <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS> <OUTPUT_VALUE> <COMPARISON> <TARGET>
-   ```
+   #### `/newalert <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS> <OUTPUT_VALUE> <COMPARISON> <TARGET>`
 
    > ⚠️ Create new alert for **technical indicators** ONLY (see [/indicators](https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/pancakeswap-integration/README%20copy.md#indicators))
 
@@ -242,7 +240,7 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    #### `/cancelalert <BASE/QUOTE> <INDEX>`
    
-   Cancels the pair alert at the given index.
+   Cancels the pair alert at the given index
 
    | Parameter | Description |
    |-------------------|-------------|
@@ -255,79 +253,136 @@ Alternatively, follow the steps below to set it up on your local machine.
 
 - ### Pricing/Data Commands
 
-   ```bash
-   /getprice <base/quote>
-   # Get the current pair price from Binance
+   #### `/getprice <base/quote>`
+
+   | Parameter | Description |
+   |-------------------|-------------|
+   | base/quote | The base and quote currencies for the price data (e.g. BTC/USDT) |
+
+   _For example, if you want to get the current price of the BTC/USDT pair, you would use:_
+
+   `/getprice BTC/USDT`
+
+   ___
 
 
-   /priceall
-   # Get the current pair price for all pairs with active alerts.
+   #### `/priceall`
+
+   This command does not take any parameters. It gets the current pair price for all pairs with active alerts.
+
+   ___
+
+   #### `/getindicator <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS>`
+
+   | Parameter | Description |
+   |-------------------|-------------|
+   | BASE/QUOTE | The base and quote currencies for the alert (e.g. BTC/USDT) |
+   | INDICATOR | The ID for the technical indicator (e.g. BBANDS) |
+   | TIMEFRAME | The desired time interval for the indicator. Options: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 12h, 1d, or 1w |
+   | PARAMS | No-space-comma-separated list of param=value pairs for the indicator. E.g. period=10,stddev=3. Use "default" to use the default values for the indicator |
+
+   _For example, the following command gets the current value(s) of the Bollinger Bands indicator for the ETH/USDT pair on the 1d timeframe using the default parameters:_
+
+   `/getindicator ETH/USDT BBANDS 1d default`
+
+   ___
+
+- ### Configuration Commands
+
+   #### `/viewconfig`
+   
+   Returns the current general configuration for the bot
+
+   ___
+
+   #### `/setconfig <key>=<value> <key>=<value>`
+
+   Modify individual configuration settings. You can change multiple settings by separating them with a space.
+   
+   _For example, the following command sets the `send_email_alerts` config key to True:_
+
+   `/setconfig send_email_alerts=True`
+
+   ___
+
+   #### `/channels <ACTION> <TG_CHANNEL_ID,<TG_CHANNEL_ID>`
+
+   Allows you to view or modify the current list of Telegram channels set to receive alerts from the bot.
+
+   | Parameter | Description |
+   |-------------------|-------------|
+   | ACTION | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters: |
+   | | **VIEW** - Returns the current list of Telegram channels in which to send price alerts. This action does not require any additional parameters. |
+   | | **ADD** - Adds the specified Telegram channel IDs to the channel registry. The IDs should be separated by commas. For example: `/channels ADD 123456789,987654321` |
+   | | **REMOVE** - Removes the specified Telegram channel IDs from the channel registry. The IDs should be separated by commas. For example: `/channels REMOVE 123456789,987654321` |
+   | TG_CHANNEL_ID | This is a list of Telegram channel IDs (_separated by a comma no-spaces_). These channels will be added or removed from the channel registry based on the ACTION parameter. This parameter is not required when ACTION is `VIEW`. |
+
+   _For example, the following command adds two Telegram channels to the alerts registry:_
+
+   `/channels ADD 123456789,987654321`
+
+   ___
+
+   #### `/emails <ACTION> <EMAIL>,<EMAIL>`
+
+   Allows you to view or modify the current list of email addresses set to receive alerts from the bot.
+
+   > ⚠️ Registered emails will only be sent if you have configured the bot to use SendGrid for email alerts.
+
+   | Parameter | Description |
+   |-------------------|-------------|
+   | ACTION | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters: |
+   | | **VIEW** - Returns the current list of email addresses in which to send price alerts. This action does not require any additional parameters. |
+   | | **ADD** - Adds the specified email addresses to the email registry. The email addresses should be separated by commas. For example: `/emails ADD example1@email.com,example2@email.com` |
+   | | **REMOVE** - Removes the specified email addresses from the email registry. The email addresses should be separated by commas. For example: `/emails REMOVE example1@email.com,example2@email.com` |
+   | EMAIL | This is a list of email addresses (_separated by a comma no-spaces_). These email addresses will be added or removed from the email registry based on the ACTION parameter. This parameter is not required when ACTION is `VIEW`. |
+
+   _For example, the following command adds two email addresses to the alerts registry:_
+
+   `/emails ADD example1@email.com,example2@email.com`
 
    
-   /getindicator <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS>
-   # - BASE/QUOTE: The base currency for the alert (e.g. BTC/USDT)
-   # - INDICATOR: The ID for the technical indicator (e.g. BBANDS)
-   # - TIMEFRAME: The desired time interval for the indicator (Options: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 12h, 1d, or 1w)
-   # - PARAMS: No-space-comma-separated list of param=value pairs for the indicator (E.g. period=10,stddev=3) (use "default" to use the default values for the indicator)
-   
-   # Get the current value(s) of a technical indicator
-   # E.g. /getindicator ETH/USDT BBANDS 1d default
-   ```
-
-- ### Configuration
-
-   ```bash
-   /viewconfig
-   # Returns the current general configuration for the bot
-
-
-   /setconfig <key>=<value> <key>=<value>
-   # Modify individual configuration settings
-   # e.g. /setconfig send_email_alerts=True
-   # You can change multiple settings by separating them with a space
-
-
-   /channels VIEW/ADD/REMOVE <telegram_channel_id>,<telegram_channel_id>
-   # VIEW - Returns the current list of Telegram channels in which to send price alerts
-   # ADD - Adds each of the telegram channel ids (separated by a comma) to the channel registry. The <telegram_channel_id> parameter can be either a user's telegram id or a channel's telegram id
-   # REMOVE - Removes each of the telegram channel ids (separated by a comma) from the channel registry
-
-   # Interact with your channels alert output configuration
-   # e.g. /channels ADD 123456789,987654321
-
-
-   /emails VIEW/ADD/REMOVE <email@email.com>,<email@email.com>
-   # VIEW - Returns the current list of emails in which to send price alerts. If the send_email_alerts config is set to False, emails will not be sent.
-   # ADD - Adds each of the emails (separated by a comma) to the email registry. 
-   # REMOVE - Removes each of the emails (separated by a comma) from the channel registry
-
-   # Interact with your email alert output configuration  
-   # e.g. /channels ADD 123456789,987654321
-   ```
 - ### Administrator Only:
 
-   ```bash
-   /admins VIEW/ADD/REMOVE <telegram_user_id>,<telegram_user_id>
-   # VIEW - Returns the current list of admins from the registry
-   # ADD - Adds each of the telegram user ids (separated by a comma) to the admin registry
-   # REMOVE - Removes each of the telegram user ids (separated by a comma) from the admin registry
+   #### `/admins <ACTION> <TG_USER_ID,<TG_USER_ID>`
 
-   # Interact with the bot's administrator list
-   # e.g. /admins ADD -123456789,-987654321
+   Allows you to view or modify the current list of bot administrators.
 
+   | Parameter | Description |
+   |-------------------|-------------|
+   | ACTION | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters: |
+   | | **VIEW** - Returns the current list of administrators. This action does not require any additional parameters. |
+   | | **ADD** - Adds the specified Telegram user IDs to the administrators registry. The IDs should be separated by commas. For example: `/admins ADD 123456789,987654321` |
+   | | **REMOVE** - Removes the specified Telegram user IDs from the administrators registry. The IDs should be separated by commas. For example: `/admins REMOVE 123456789,987654321` |
+   | TG_USER_ID | This is a list of Telegram user IDs (_separated by a comma no-spaces_). These user IDs will be added or removed from the administrators registry based on the ACTION parameter. This parameter is not required when ACTION is `VIEW`. |
 
-   /whitelist VIEW/ADD/REMOVE <telegram_user_id>,<telegram_user_id>
-   # VIEW - Returns the current whitelist
-   # ADD - Adds each of the telegram user ids (separated by a comma) to the whitelist
-   # REMOVE - Removes each of the telegram user ids (separated by a comma) from the whitelist
+   _For example, the following command adds two administrators to the registry:_
 
-   # Interact with the bot's whitelist
-   # e.g. /whitelist ADD -123456789,-987654321
+   `/admins ADD 123456789,987654321`
 
+   ___
 
-   /getlogs
-   # Returns the current process logs
-   ```
+   #### `/whitelist <ACTION> <TG_USER_ID,<TG_USER_ID>`
+
+   Allows you to view or modify the bot's whitelist.
+
+   | Parameter | Description |
+   |-------------------|-------------|
+   | ACTION | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters: |
+   | | **VIEW** - Returns the current whitelist. This action does not require any additional parameters. |
+   | | **ADD** - Adds the specified Telegram user IDs to the whitelist. The IDs should be separated by commas. For example: `/whitelist ADD 123456789,987654321` |
+   | | **REMOVE** - Removes the specified Telegram user IDs from the whitelist. The IDs should be separated by commas. For example: `/whitelist REMOVE 123456789,987654321` |
+   | TG_USER_ID | This is a list of Telegram user IDs (_separated by a comma no-spaces_). These user IDs will be added or removed from the whitelist based on the ACTION parameter. This parameter is not required when ACTION is `VIEW`. |
+
+   _For example, the following command adds two users to the whitelist:_
+
+   `/whitelist ADD 123456789,987654321`
+
+   ___
+
+   #### `/getlogs`
+
+   Returns the current process logs
 
 ## How to Add Technical Indicators
 
