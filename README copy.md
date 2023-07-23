@@ -198,7 +198,7 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    #### `/newalert <BASE/QUOTE> <INDICATOR> <COMPARISON> <TARGET> <optional_ENTRY_PRICE>`
 
-   > ⚠️ Create new alert for **simple indicators** ONLY (see /indicators)
+   > ⚠️ Create new alert for **simple indicators** ONLY (see [/indicators](https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/pancakeswap-integration/README%20copy.md#indicators))
 
    Creates a new active simple indicator alert with the given parameters.
 
@@ -216,9 +216,11 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    ___
 
-   #### `/newalert <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS> <OUTPUT_VALUE> <COMPARISON> <TARGET>`
+   ```bash
+   /newalert <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS> <OUTPUT_VALUE> <COMPARISON> <TARGET>
+   ```
 
-   > ⚠️ Create new alert for **technical indicators** ONLY (see /indicators)
+   > ⚠️ Create new alert for **technical indicators** ONLY (see [/indicators](https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/pancakeswap-integration/README%20copy.md#indicators))
 
    Creates a new active technical indicator alert with the given parameters.
 
@@ -240,7 +242,7 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    #### `/cancelalert <BASE/QUOTE> <INDEX>`
    
-   Cancels the pair alert at the given index (use /viewalerts <base/quote> to see the indexes)
+   Cancels the pair alert at the given index.
 
    | Parameter | Description |
    |-------------------|-------------|
