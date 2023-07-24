@@ -91,8 +91,9 @@ Alternatively, follow the steps below to set it up on your local machine.
    - -> Edit Bot
    - -> Edit Commands
    - Paste and send the contents of [`commands.txt`](./commands.txt) into the chat
+   - From this point on, you will be using the new bot that you created for all commands. To access the new bot, click on the link that the BotFather sends you when generating the token where it says `@<YOUR_BOT_NAME_HERE>`.
 
-3. Ensure that you are in the repository _root_ directory
+3. Open a your command terminal and ensure that you are in the repository _root_ directory
 
    ```bash
    cd Telegram-Crypto-Alerts
