@@ -1,7 +1,7 @@
 ![made-with-python](https://img.shields.io/badge/Made%20with-Python3-yellow)
 
 <!-- PROJECT HEADER -->
-<div align="center">
+<div align="center" id="top">
   <img src="docs/img/logo.png" alt="Logo" width="300">
   <hr>
   <!-- <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2> -->
@@ -23,17 +23,6 @@
    ![screenshot](docs/img/demo.gif)
    </p>                      
 
-  <!-- <p align="center">
-    Python software that facilitates alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/">Telegram</a> using their open-source API, and optionally email as well.
-    <br>
-  </p>
-  <p align="center">
-    <h3><strong>Features Include:</strong></h3>
-    Simple Telegram command interface<br>
-    Live cryptocurrency pair prices from Binance<br>
-    Technical indicator alerts integrated using <a href="https://taapi.io/">Taapi.io</a><br>
-    Dynamic HTML styled email alerts using <a href="https://www.sendgrid.com">SendGrid</a><br>
-    State and configuration data stored in a local JSON database  -->
 </div>
 <br>
 
@@ -102,8 +91,9 @@ Alternatively, follow the steps below to set it up on your local machine.
    - -> Edit Bot
    - -> Edit Commands
    - Paste and send the contents of [`commands.txt`](./commands.txt) into the chat
+   - From this point on, you will be using the new bot that you created for all commands. To access the new bot, click on the link that the BotFather sends you when generating the token where it says `@<YOUR_BOT_NAME_HERE>`.
 
-3. Ensure that you are in the repository _root_ directory
+3. Open a your command terminal and ensure that you are in the repository _root_ directory
 
    ```bash
    cd Telegram-Crypto-Alerts
@@ -179,6 +169,8 @@ Alternatively, follow the steps below to set it up on your local machine.
    python3 -m bot
    ```
    You can either run this script on your local machine, or use a cloud computing service like [Heroku](https://devcenter.heroku.com/articles/getting-started-with-python) or [PythonAnywhere](https://www.pythonanywhere.com/).
+
+<p align="right">(<a href="#top">back to top</a>)</p>
 
 ## Telegram Bot Commands
 
@@ -384,6 +376,8 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    Returns the current process logs
 
+<p align="right">(<a href="#top">back to top</a>)</p>
+
 ## How to Add Technical Indicators
 
 As stated previously, the bot is designed to be easily extensible. View the currently available indicators by using the `/indicators` command on the bot. If your indicator is not listed, head over to [taapi.io/indicators](https://taapi.io/indicators/) and find the indicator you want to add. You can add any technical indicator that is supplied by taapi.io by following the steps below:
@@ -460,20 +454,21 @@ As stated previously, the bot is designed to be easily extensible. View the curr
 
       You may need to DYOR to ensure that the parameters that you are configuring will result in a valid response.
 
-## Contributing
+## Contribution
 
-Contributions are always welcome! To contribute to the project, please do one of the following:
+_Contributions are always welcome!_
 
-* Create a [new issue](https://github.com/hschickdevs/Telegram-Crypto-Alerts/issues/new) and describe your idea/suggestion in detail
-* Create a pull request
-   1. Fork the project
-   2. Create a branch for your new edits (E.g. new-indicator)
-   3. Implement and test your changes (test, test, test!)
-   4. [Submit your pull request](https://makeapullrequest.com/)
+To contribute to the project, please do the following:
+
+1. Create a [new issue](https://github.com/hschickdevs/Telegram-Crypto-Alerts/issues/new) and describe your idea/suggestion in detail
+2. Fork the project
+3. Create a branch for your new edits (E.g. new-indicator)
+4. Implement and test your changes (test, test, test!)
+5. [Submit your pull request](https://makeapullrequest.com/)
 
 I am actively maintaining this project, and I will respond to any issues or pull requests as soon as possible.
 
-> Please Star ⭐ the project if it helps you so that visibility increases to help others!
+Please Star ⭐ the project if it helps you so that visibility increases to help others!
 
 ## Contact
 
@@ -487,3 +482,5 @@ If you have any questions, feel free to reach out to me on [**Telegram**](https:
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
+
+<p align="right">(<a href="#top">back to top</a>)</p>
