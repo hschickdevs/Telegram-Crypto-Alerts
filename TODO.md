@@ -1,0 +1,4 @@
+- [X] Scale to multiple unique user configurations
+- [X] Build infrastructure to integrate indicators from [taapi.io](https://taapi.io/)
+- [ ] Add PancakeSwap as a data source to track swap prices
+- [ ] Dockerize the application

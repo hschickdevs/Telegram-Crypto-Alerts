@@ -476,8 +476,7 @@ If you have any questions, feel free to reach out to me on [**Telegram**](https:
 
 ## Roadmap
 
-- [X] Scale to multiple unique user configurations
-- [X] Build infrastructure to integrate indicators from [taapi.io](https://taapi.io/)
+See the future plans for the project [**🔗 Here**](TODO.md)
 
 ## License
 
