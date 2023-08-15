@@ -194,12 +194,12 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    Creates a new active simple indicator alert with the given parameters.
 
-   | Parameter | Description |
-   |-------------------|-------------|
-   | BASE/QUOTE        | The base and quote currencies for the alert (e.g. BTC/USDT) |
-   | INDICATOR         | The indicator for which you want to set an alert. In the current context, the only available simple indicator is "PRICE". |
-   | COMPARISON        | The comparison operator for the alert. Options are "ABOVE", "BELOW", "PCTCHG", or "24HRCHG". |
-   | TARGET            | The target value for the alert. For "PCTCHG" and "24HRCHG", this should be a percentage (e.g. for 10.5%, use 10.5). |
+   | Parameter            | Description                                                                                                                                          |
+   |----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | BASE/QUOTE           | The base and quote currencies for the alert (e.g. BTC/USDT)                                                                                          |
+   | INDICATOR            | The indicator for which you want to set an alert. In the current context, the only available simple indicator is "PRICE".                            |
+   | COMPARISON           | The comparison operator for the alert. Options are "ABOVE", "BELOW", "PCTCHG", or "24HRCHG".                                                         |
+   | TARGET               | The target % change or price value for the alert, depending on comparison type. (Use percentage pts for %, e.g. 10.5 for 10.5%).                     |
    | optional_ENTRY_PRICE | If using the "PCTCHG" comparison operator, you can specify this as an alternate entry price to the current price for calculating percentage changes. |
 
    _For example, the following command sets an alert for when the price of BTC/USDT changes by 10% relative to an entry price of 1200:_
@@ -214,15 +214,15 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    Creates a new active technical indicator alert with the given parameters.
 
-   | Parameter | Description |
-   |-------------------|-------------|
-   | BASE/QUOTE        | The base currency for the alert (e.g. BTC/USDT) |
-   | INDICATOR         | The ID for the technical indicator (e.g. RSI) |
-   | TIMEFRAME         | The desired time interval for the indicator. Options: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 12h, 1d, or 1w |
-   | PARAMS            | No-space-comma-separated list of param=value pairs for the indicator. E.g. period=10,stddev=3. Use "default" to skip passing params and use default values. See /indicators for available params |
-   | OUTPUT_VALUE      | The desired output value to monitor. See /indicators for available output values |
-   | COMPARISON        | The comparison operator for the alert. Options: ABOVE or BELOW |
-   | TARGET            | The target value of OUTPUT_VALUE for the alert to trigger |
+   | Parameter    | Description                                                                                                                                                                                      |
+   |--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | BASE/QUOTE   | The base currency for the alert (e.g. BTC/USDT)                                                                                                                                                  |
+   | INDICATOR    | The ID for the technical indicator (e.g. RSI)                                                                                                                                                    |
+   | TIMEFRAME    | The desired time interval for the indicator. Options: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 12h, 1d, or 1w                                                                                               |
+   | PARAMS       | No-space-comma-separated list of param=value pairs for the indicator. E.g. period=10,stddev=3. Use "default" to skip passing params and use default values. See /indicators for available params |
+   | OUTPUT_VALUE | The desired output value to monitor. See /indicators for available output values                                                                                                                 |
+   | COMPARISON   | The comparison operator for the alert. Options: ABOVE or BELOW                                                                                                                                   |
+   | TARGET       | The target value of OUTPUT_VALUE for the alert to trigger                                                                                                                                        |
 
    _For example, the following command sets an alert for the ETH/USDT pair that triggers when the value of the upper Bollinger Band (calculated on the 1d timeframe) is above 1500:_
 
@@ -234,10 +234,10 @@ Alternatively, follow the steps below to set it up on your local machine.
    
    Cancels the pair alert at the given index
 
-   | Parameter | Description |
-   |-------------------|-------------|
-   | BASE/QUOTE | The base and quote currencies for the alert (e.g. BTC/USDT) |
-   | INDEX | The index of the alert you want to cancel. You can see the indexes by using the `/viewalerts BASE/QUOTE` command. |
+   | Parameter  | Description                                                                                                       |
+   |------------|-------------------------------------------------------------------------------------------------------------------|
+   | BASE/QUOTE | The base and quote currencies for the alert (e.g. BTC/USDT)                                                       |
+   | INDEX      | The index of the alert you want to cancel. You can see the indexes by using the `/viewalerts BASE/QUOTE` command. |
 
    _For example, if you want to cancel the first alert of the BTC/USDT pair, you would use:_
    
@@ -266,12 +266,12 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    #### `/getindicator <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS>`
 
-   | Parameter | Description |
-   |-------------------|-------------|
-   | BASE/QUOTE | The base and quote currencies for the alert (e.g. BTC/USDT) |
-   | INDICATOR | The ID for the technical indicator (e.g. BBANDS) |
-   | TIMEFRAME | The desired time interval for the indicator. Options: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 12h, 1d, or 1w |
-   | PARAMS | No-space-comma-separated list of param=value pairs for the indicator. E.g. period=10,stddev=3. Use "default" to use the default values for the indicator |
+   | Parameter  | Description                                                                                                                                              |
+   |------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | BASE/QUOTE | The base and quote currencies for the alert (e.g. BTC/USDT)                                                                                              |
+   | INDICATOR  | The ID for the technical indicator (e.g. BBANDS)                                                                                                         |
+   | TIMEFRAME  | The desired time interval for the indicator. Options: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 12h, 1d, or 1w                                                       |
+   | PARAMS     | No-space-comma-separated list of param=value pairs for the indicator. E.g. period=10,stddev=3. Use "default" to use the default values for the indicator |
 
    _For example, the following command gets the current value(s) of the Bollinger Bands indicator for the ETH/USDT pair on the 1d timeframe using the default parameters:_
 
@@ -301,12 +301,12 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    Allows you to view or modify the current list of Telegram channels set to receive alerts from the bot.
 
-   | Parameter | Description |
-   |-------------------|-------------|
-   | ACTION | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters: |
-   | | **VIEW** - Returns the current list of Telegram channels in which to send price alerts. This action does not require any additional parameters. |
-   | | **ADD** - Adds the specified Telegram channel IDs to the channel registry. The IDs should be separated by commas. For example: `/channels ADD 123456789,987654321` |
-   | | **REMOVE** - Removes the specified Telegram channel IDs from the channel registry. The IDs should be separated by commas. For example: `/channels REMOVE 123456789,987654321` |
+   | Parameter     | Description                                                                                                                                                                                                                       |
+   |---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | ACTION        | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters:                                                                                                                                  |
+   |               | **VIEW** - Returns the current list of Telegram channels in which to send price alerts. This action does not require any additional parameters.                                                                                   |
+   |               | **ADD** - Adds the specified Telegram channel IDs to the channel registry. The IDs should be separated by commas. For example: `/channels ADD 123456789,987654321`                                                                |
+   |               | **REMOVE** - Removes the specified Telegram channel IDs from the channel registry. The IDs should be separated by commas. For example: `/channels REMOVE 123456789,987654321`                                                     |
    | TG_CHANNEL_ID | This is a list of Telegram channel IDs (_separated by a comma no-spaces_). These channels will be added or removed from the channel registry based on the ACTION parameter. This parameter is not required when ACTION is `VIEW`. |
 
    _For example, the following command adds two Telegram channels to the alerts registry:_
@@ -321,13 +321,13 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    > ⚠️ Registered emails will only be sent if you have configured the bot to use SendGrid for email alerts.
 
-   | Parameter | Description |
-   |-------------------|-------------|
-   | ACTION | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters: |
-   | | **VIEW** - Returns the current list of email addresses in which to send price alerts. This action does not require any additional parameters. |
-   | | **ADD** - Adds the specified email addresses to the email registry. The email addresses should be separated by commas. For example: `/emails ADD example1@email.com,example2@email.com` |
-   | | **REMOVE** - Removes the specified email addresses from the email registry. The email addresses should be separated by commas. For example: `/emails REMOVE example1@email.com,example2@email.com` |
-   | EMAIL | This is a list of email addresses (_separated by a comma no-spaces_). These email addresses will be added or removed from the email registry based on the ACTION parameter. This parameter is not required when ACTION is `VIEW`. |
+   | Parameter | Description                                                                                                                                                                                                                       |
+   |-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | ACTION    | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters:                                                                                                                                  |
+   |           | **VIEW** - Returns the current list of email addresses in which to send price alerts. This action does not require any additional parameters.                                                                                     |
+   |           | **ADD** - Adds the specified email addresses to the email registry. The email addresses should be separated by commas. For example: `/emails ADD example1@email.com,example2@email.com`                                           |
+   |           | **REMOVE** - Removes the specified email addresses from the email registry. The email addresses should be separated by commas. For example: `/emails REMOVE example1@email.com,example2@email.com`                                |
+   | EMAIL     | This is a list of email addresses (_separated by a comma no-spaces_). These email addresses will be added or removed from the email registry based on the ACTION parameter. This parameter is not required when ACTION is `VIEW`. |
 
    _For example, the following command adds two email addresses to the alerts registry:_
 
@@ -340,12 +340,12 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    Allows you to view or modify the current list of bot administrators.
 
-   | Parameter | Description |
-   |-------------------|-------------|
-   | ACTION | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters: |
-   | | **VIEW** - Returns the current list of administrators. This action does not require any additional parameters. |
-   | | **ADD** - Adds the specified Telegram user IDs to the administrators registry. The IDs should be separated by commas. For example: `/admins ADD 123456789,987654321` |
-   | | **REMOVE** - Removes the specified Telegram user IDs from the administrators registry. The IDs should be separated by commas. For example: `/admins REMOVE 123456789,987654321` |
+   | Parameter  | Description                                                                                                                                                                                                                           |
+   |------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | ACTION     | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters:                                                                                                                                      |
+   |            | **VIEW** - Returns the current list of administrators. This action does not require any additional parameters.                                                                                                                        |
+   |            | **ADD** - Adds the specified Telegram user IDs to the administrators registry. The IDs should be separated by commas. For example: `/admins ADD 123456789,987654321`                                                                  |
+   |            | **REMOVE** - Removes the specified Telegram user IDs from the administrators registry. The IDs should be separated by commas. For example: `/admins REMOVE 123456789,987654321`                                                       |
    | TG_USER_ID | This is a list of Telegram user IDs (_separated by a comma no-spaces_). These user IDs will be added or removed from the administrators registry based on the ACTION parameter. This parameter is not required when ACTION is `VIEW`. |
 
    _For example, the following command adds two administrators to the registry:_
@@ -358,12 +358,12 @@ Alternatively, follow the steps below to set it up on your local machine.
 
    Allows you to view or modify the bot's whitelist.
 
-   | Parameter | Description |
-   |-------------------|-------------|
-   | ACTION | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters: |
-   | | **VIEW** - Returns the current whitelist. This action does not require any additional parameters. |
-   | | **ADD** - Adds the specified Telegram user IDs to the whitelist. The IDs should be separated by commas. For example: `/whitelist ADD 123456789,987654321` |
-   | | **REMOVE** - Removes the specified Telegram user IDs from the whitelist. The IDs should be separated by commas. For example: `/whitelist REMOVE 123456789,987654321` |
+   | Parameter  | Description                                                                                                                                                                                                             |
+   |------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | ACTION     | This can be either `VIEW`, `ADD`, or `REMOVE`. Each action has different effects and parameters:                                                                                                                        |
+   |            | **VIEW** - Returns the current whitelist. This action does not require any additional parameters.                                                                                                                       |
+   |            | **ADD** - Adds the specified Telegram user IDs to the whitelist. The IDs should be separated by commas. For example: `/whitelist ADD 123456789,987654321`                                                               |
+   |            | **REMOVE** - Removes the specified Telegram user IDs from the whitelist. The IDs should be separated by commas. For example: `/whitelist REMOVE 123456789,987654321`                                                    |
    | TG_USER_ID | This is a list of Telegram user IDs (_separated by a comma no-spaces_). These user IDs will be added or removed from the whitelist based on the ACTION parameter. This parameter is not required when ACTION is `VIEW`. |
 
    _For example, the following command adds two users to the whitelist:_
