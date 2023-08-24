@@ -1,4 +1,6 @@
 ![made-with-python](https://img.shields.io/badge/Made%20with-Python3-yellow)
+![version](https://img.shields.io/badge/Version-1.2.3-blue)
+
 
 <!-- PROJECT HEADER -->
 <div align="center" id="top">
@@ -14,6 +16,7 @@
    <a href="#getting-started"><b>Getting Started</b></a> •
    <a href="#telegram-bot-commands"><b>Bot Commands</b></a> •
    <a href="#how-to-add-technical-indicators"><b>Add Indicators</b></a> •
+   <a href="docs/CHANGELOG.md"><b>Changelog</b></a> •
    <a href="#contributing"><b>Contribute</b></a> •
    <a href="#contact"><b>Contact</b></a>
    </p>
@@ -476,7 +479,7 @@ If you have any questions, feel free to reach out to me on [**Telegram**](https:
 
 ## Roadmap
 
-See the future plans for the project [**🔗 Here**](TODO.md)
+See the future plans for the project [**🔗 Here**](docs/TODO.md)
 
 ## License
 
