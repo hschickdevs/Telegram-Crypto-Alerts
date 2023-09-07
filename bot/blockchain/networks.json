@@ -1,0 +1,13 @@
+{
+    "ethereum": "Ethereum Mainnet",
+    "polygon": "Polygon (Matic) Mainnet",
+    "bnb": "BNB Chain",
+    "polygon-zkevm": "Polygon zkEVM",
+    "zksync-era": "zkSync Era",
+    "arbitrum": "Arbitrum Rollup",
+    "linea": "Linea Network",
+    "base": "Base Network",
+    "avalanche": "Avalanche",
+    "celo": "Celo"
+  }
+  

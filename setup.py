@@ -1,7 +1,7 @@
 import argparse
 
-from bot.io_client import LocalUserConfiguration, MongoDBUserConfiguration
-from bot.custom_logger import logger
+from bot.io_clients import LocalUserConfiguration, MongoDBUserConfiguration
+from bot._logger import logger
 from bot.static_config import USE_MONGO_DB
 
 parser = argparse.ArgumentParser()

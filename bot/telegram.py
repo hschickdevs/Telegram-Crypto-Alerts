@@ -2,8 +2,8 @@ import time
 from datetime import datetime
 from typing import Union
 
-from .custom_logger import logger
-from .io_client import LocalUserConfiguration, MongoDBUserConfiguration, get_logfile, get_help_command, get_whitelist
+from ._logger import logger
+from .io_clients import LocalUserConfiguration, MongoDBUserConfiguration, get_logfile, get_help_command, get_whitelist
 from .static_config import *
 from .indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
 

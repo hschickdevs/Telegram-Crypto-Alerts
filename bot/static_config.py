@@ -5,7 +5,6 @@ from os.path import isdir, join, dirname, abspath, isfile, exists
 """Alert Handler Configuration"""
 POLLING_PERIOD = 10  # Delay for the alert handler to pull prices and check alert conditions (in seconds)
 OUTPUT_VALUE_PRECISION = 3
-PRICE_DATA_SOURCES = ["binance", "pancakeswap", "uniswap"]  # Do not add more unless implemented
 SIMPLE_INDICATORS = ['PRICE']
 SIMPLE_INDICATOR_COMPARISONS = ['ABOVE', 'BELOW', 'PCTCHG', '24HRCHG']
 
@@ -18,13 +17,8 @@ BINANCE_24HR_URL = 'https://api.binance.com/api/v3/ticker/24hr'  # must be parse
 BINANCE_PRICE_URL_NEW = 'https://api.binance.com/api/v3/ticker?symbol={}&windowSize={}'  # (e.x. BTCUSDT, 1d)
 BINANCE_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "2h", "4h", "12h", "1d", '7d']
 
-"""PANCAKESWAP DATA CONFIG"""
-PANCAKESWAP_API_ENDPOINT = "https://data-platform.nodereal.io/graph/v1/{}/projects/pancakeswap"  # Format to your NodeReal APIKEY
-PANCAKESWAP_RATELIMIT = 6,   # Calls, Call Period (in seconds)
-
-"""UNISWAP DATA CONFIG"""
-UNISWAP_API_ENDPOINT = ""
-UNISWAP_CALL_DELAY = 450  # API CALL delay (in seconds) to handle rate limits
+"""SWAP DATA CONFIG"""
+SWAP_POLLING_DELAY = 30  # Swap polling delay (in seconds) to handle rate limits.
 
 """DATABASE PREFERENCES & PATHS"""
 USE_MONGO_DB = False

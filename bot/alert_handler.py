@@ -3,8 +3,8 @@ from datetime import datetime
 import os
 from typing import Union
 
-from .io_client import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
-from .custom_logger import logger
+from .io_clients import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
+from ._logger import logger
 from .static_config import *
 from .indicators import get_pair_price, TADatabaseClient, TAAggregateClient, get_24hr_price_change
 

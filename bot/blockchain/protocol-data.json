@@ -1,0 +1,67 @@
+{
+  "uniswap-v2": {
+    "chains": {
+      "ethereum": {
+        "rpc_url": "https://mainnet.infura.io/v3/YOUR_INFURA_KEY",
+        "factory": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+        "stablecoin": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+      },
+      "polygon": {
+        "rpc_url": "https://rpc-mainnet.maticvigil.com/",
+        "factory": "0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32",
+        "stablecoin": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+      },
+      "bnb": {
+        "rpc_url": "https://bsc-dataseed.binance.org/",
+        "factory": "",
+        "stablecoin": ""
+      },
+      "arbitrum": {
+        "rpc_url": "",
+        "factory": "",
+        "stablecoin": ""
+      }
+    },
+    "name": "Uniswap V2"
+  },
+  "pancakeswap": {
+    "chains": {
+      "bnb": {
+        "rpc_url": "https://bsc-dataseed.binance.org/",
+        "factory": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
+        "stablecoin": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
+      },
+      "ethereum": {
+        "rpc_url": "",
+        "factory": "",
+        "stablecoin": ""
+      },
+      "polygon-zkevm": {
+        "rpc_url": "",
+        "factory": "",
+        "stablecoin": ""
+      },
+      "zksync-era": {
+        "rpc_url": "",
+        "factory": "",
+        "stablecoin": ""
+      },
+      "arbitrum": {
+        "rpc_url": "",
+        "factory": "",
+        "stablecoin": ""
+      },
+      "linea": {
+        "rpc_url": "",
+        "factory": "",
+        "stablecoin": ""
+      },
+      "base": {
+        "rpc_url": "",
+        "factory": "",
+        "stablecoin": ""
+      }
+    },
+    "name": "PancakeSwap"
+  }
+}

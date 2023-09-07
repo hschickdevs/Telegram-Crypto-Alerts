@@ -3,10 +3,10 @@ from os import getenv
 from time import sleep
 
 from .alert_handler import AlertHandler
-from .telegram_handler import TelegramBot
-from .io_client import handle_env, get_whitelist
+from .telegram import TelegramBot
+from .io_clients import handle_env, get_whitelist
 from .indicators import TaapiioProcess
-from .custom_logger import logger
+from ._logger import logger
 
 if __name__ == "__main__":
     if len(get_whitelist()) == 0:

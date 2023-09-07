@@ -138,6 +138,7 @@ class LocalUserConfiguration:
 
 class MongoDBUserConfiguration(LocalUserConfiguration):
     """Simplifies interaction with the MongoDB NoSQL database system - overrides methods from class above"""
+
     def __init__(self, tg_user_id: str):
         """
         :param tg_user_id: The Telegram user ID of the bot user to locate their configuration
@@ -213,6 +214,8 @@ class MongoDBUserConfiguration(LocalUserConfiguration):
 
 
 """ -------------- UTILITIES -------------- """
+
+
 def get_logfile() -> str:
     """Get logfile path & create logs dir if it doesn't exist in the current working directory"""
     log_dir = join(getcwd(), 'logs')
@@ -234,6 +237,16 @@ def get_whitelist() -> list:
         return [_id for _id in listdir(WHITELIST_ROOT) if isdir(join(WHITELIST_ROOT, _id))]
     else:
         return [user['user_id'] for user in db_connection.collection.find()]
+
+
+def load_swap_networks() -> dict:
+    with open(join(dirname(__file__), "blockchain", "networks.json"), "r") as f:
+        return json.load(f)
+
+
+def load_swap_protocols() -> dict:
+    with open(join(dirname(__file__), "blockchain", "protocol-data.json"), "r") as f:
+        return json.load(f)
 
 
 def handle_env():
