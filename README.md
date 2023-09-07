@@ -1,5 +1,5 @@
 ![made-with-python](https://img.shields.io/badge/Made%20with-Python3-yellow)
-![version](https://img.shields.io/badge/Version-1.2.3-blue)
+![version](https://img.shields.io/badge/Version-2.0.0-blue)
 
 
 <!-- PROJECT HEADER -->
@@ -53,6 +53,8 @@ The bot utilizes Telegram's simple chat interface to provide users the following
 * Optional state and configuration data - Use a local JSON database or configure a MongoDB server!
 
 ## Getting Started
+
+For a detailed list of changes and updates, please see our **[🔗CHANGELOG](docs/CHANGELOG.md)**.
 
 ### Cloud Installation & Setup (Recommended)
 

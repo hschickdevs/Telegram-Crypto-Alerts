@@ -4,14 +4,27 @@ from os.path import isdir, join, dirname, abspath, isfile, exists
 
 """Alert Handler Configuration"""
 POLLING_PERIOD = 10  # Delay for the alert handler to pull prices and check alert conditions (in seconds)
-BINANCE_PRICE_URL = 'https://api.binance.com/api/v3/ticker/price?symbol={}'  # format to token pair (ex: BTCUSDT)
-BINANCE_24HR_URL = 'https://api.binance.com/api/v3/ticker/24hr'  # must be parsed to locate pair
+OUTPUT_VALUE_PRECISION = 3
+PRICE_DATA_SOURCES = ["binance", "pancakeswap", "uniswap"]  # Do not add more unless implemented
 SIMPLE_INDICATORS = ['PRICE']
 SIMPLE_INDICATOR_COMPARISONS = ['ABOVE', 'BELOW', 'PCTCHG', '24HRCHG']
-OUTPUT_VALUE_PRECISION = 3
 
 """Telegram Handler Configuration"""
 MAX_ALERTS_PER_USER = 10  # Integer or None (Should be set in a static configuration file)
+
+"""BINANCE DATA CONFIG"""
+BINANCE_API_ENDPOINT = 'https://api.binance.com/api/v3/ticker/price?symbol={}'  # format to token pair (ex: BTCUSDT)
+BINANCE_24HR_URL = 'https://api.binance.com/api/v3/ticker/24hr'  # must be parsed to locate pair
+BINANCE_PRICE_URL_NEW = 'https://api.binance.com/api/v3/ticker?symbol={}&windowSize={}'  # (e.x. BTCUSDT, 1d)
+BINANCE_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "2h", "4h", "12h", "1d", '7d']
+
+"""PANCAKESWAP DATA CONFIG"""
+PANCAKESWAP_API_ENDPOINT = "https://data-platform.nodereal.io/graph/v1/{}/projects/pancakeswap"  # Format to your NodeReal APIKEY
+PANCAKESWAP_RATELIMIT = 6,   # Calls, Call Period (in seconds)
+
+"""UNISWAP DATA CONFIG"""
+UNISWAP_API_ENDPOINT = ""
+UNISWAP_CALL_DELAY = 450  # API CALL delay (in seconds) to handle rate limits
 
 """DATABASE PREFERENCES & PATHS"""
 USE_MONGO_DB = False
@@ -24,5 +37,5 @@ AGG_DATA_LOCATION = join(dirname(abspath(__file__)), 'temp/ta_aggregate.json')
 INTERVALS = ["1m", "5m", "15m", "30m", "1h", "2h", "4h", "12h", "1d", '1w']
 DEFAULT_EXCHANGE = "binance"
 BULK_ENDPOINT = "https://api.taapi.io/bulk"
-RATE_LIMITS = (1, 20, 0.05)  # (requests per period in seconds, period in seconds, buffer percentage)
+RATE_LIMITS = 1, 20, 0.05  # (requests per period in seconds, period in seconds, buffer percentage)
 # TA_AGGREGATE_PPERIOD = 30  # TA Aggregate polling period, to poll technical indicators

@@ -169,7 +169,8 @@ class AlertHandler:
     #
     #     logger.info(f"Emails sent to: {emails}")
 
-    def get_simple_indicator(self, pair: str, alert: dict, pair_price: float = None) -> tuple[bool, float, str]:
+    @staticmethod
+    def get_simple_indicator(pair: str, alert: dict, pair_price: float = None) -> tuple[bool, float, str]:
         """
         Accounts for the 3 following simple price movement indicators:
         PCTCHG - Percent change in the price

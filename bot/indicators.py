@@ -1,6 +1,6 @@
 """
 Features Needed:
-* PathX taapi.io api key
+* taapi.io api key
 * Aggregate each symbol and indicator, then pull all available indicators using the taapi.io client
 * Allow the user to save indicator templates so that they don't have to enter long ones again
 * Message to telegram should be a list of indicators with their documentation hyperlinked:
@@ -42,7 +42,7 @@ def get_pair_price(token_pair: str, retry_delay: int = 2, maximum_retries: int =
     :return float: price of the token pair
     """
     try:
-        response = requests.get(BINANCE_PRICE_URL.format(token_pair))
+        response = requests.get(BINANCE_API_ENDPOINT.format(token_pair))
         response.raise_for_status()
         return float(response.json()['price'])
     except Exception as err:
