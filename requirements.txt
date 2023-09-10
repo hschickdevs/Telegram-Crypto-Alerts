@@ -4,4 +4,4 @@ python-dotenv
 ratelimit
 sendgrid
 pymongo
-web3
+web3>=6.9.0
