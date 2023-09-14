@@ -166,4 +166,16 @@ class TechnicalAlertProcess(BaseAlertProcess):
         return output
 
     def run(self):
-        pass
+        try:
+            logger.warn(f'{type(self).__name__} started at {datetime.utcnow()} UTC+0')
+            while True:
+                self.poll_all_alerts()
+        except NotImplementedError as exc:
+            logger.critical(exc_info=exc)
+            # self.alert_admins(str(exc))
+        except KeyboardInterrupt:
+            logger.critical("KeyboardInterrupt detected. Exiting...")
+            exit(0)
+        except Exception as exc:
+            logger.critical("An error has occurred in the technical alerts process. Trying again in 15 seconds...", exc_info=exc)
+            time.sleep(15)

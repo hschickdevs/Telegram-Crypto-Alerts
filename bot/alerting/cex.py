@@ -196,5 +196,5 @@ class CEXAlertProcess(BaseAlertProcess):
             logger.critical("KeyboardInterrupt detected. Exiting...")
             exit(0)
         except Exception as exc:
-            logger.critical("An error has occurred in the mainloop. Trying again in 15 seconds...", exc_info=exc)
+            logger.critical("An error has occurred in the CEX alert process. Trying again in 15 seconds...", exc_info=exc)
             time.sleep(15)
