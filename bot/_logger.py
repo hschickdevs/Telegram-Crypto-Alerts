@@ -1,6 +1,6 @@
 import logging
 
-from .io_clients import get_logfile
+from .user import get_logfile
 
 formatter = logging.Formatter('%(module)s : %(levelname)s : %(asctime)s : %(message)s')
 

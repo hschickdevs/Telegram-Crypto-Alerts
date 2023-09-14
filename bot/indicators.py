@@ -24,8 +24,8 @@ from typing import Union
 import os
 from math import ceil
 
-from .io_clients import get_whitelist, LocalUserConfiguration, MongoDBUserConfiguration
-from .static_config import *
+from .user import get_whitelist, LocalUserConfiguration, MongoDBUserConfiguration
+from .config import *
 from ._logger import logger
 
 import requests

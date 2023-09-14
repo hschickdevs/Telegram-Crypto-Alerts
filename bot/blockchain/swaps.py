@@ -2,8 +2,8 @@ import json
 import os
 from web3 import Web3
 
-from .blockchain.abi import *
-from .io_clients import load_swap_protocols
+from .abi import *
+from ..user import load_swap_protocols
 
 
 class SwapClient:
@@ -54,9 +54,16 @@ class SwapClient:
         # TODO: The metadata of pairs should be stored when alerts are created to make this process more efficient
         if not pair_contract_metadata:
             pair_contract_metadata = self.get_pair(base_token_address, quote_token_address)
+            
+        # Construct the pair string:
+        # pair_string = f"{pair_contract_metadata['token0']['symbol']}-{pair_contract_metadata['token1']['symbol']}"
+        # print("Fetching price for pair:", pair_string)
 
-        contract = self.w3.eth.contract(address=pair_contract_metadata['address'], abi=UNISWAPV2_PAIR_ABI)
-        reserves = contract.functions.getReserves().call()
+        reserves = self.get_pair_reserves(pair_contract_metadata['address'])
+
+        # Get the decimals for each token
+        base_decimals = pair_contract_metadata["token0"]["decimals"]
+        quote_decimals = pair_contract_metadata["token1"]["decimals"]
 
         # Determine the order of reserves based on the tokens
         if pair_contract_metadata["token0"]["address"] == Web3.to_checksum_address(base_token_address):
@@ -73,15 +80,26 @@ class SwapClient:
 
         # Calculate the price based on the reserves
         price = reserve_quote / reserve_base
-        if in_usd:
+
+        # Adjust the price for the different decimals between the base and quote tokens
+        price *= 10 ** (quote_decimals - base_decimals)
+
+        if in_usd and quote_token_address != self.usd_stablecoin_address:
             usd_price = self.get_pair_price(base_token_address=self.usd_stablecoin_address,
                                             quote_token_address=quote_token_address)
             price *= usd_price
 
         return price
+    
+    def get_pair_reserves(self, pair_address: str) -> dict:
+        contract = self.w3.eth.contract(address=Web3.to_checksum_address(pair_address), abi=UNISWAPV2_PAIR_ABI)
+
+        return contract.functions.getReserves().call()
 
     def get_pair(self, base_token_address: str, quote_token_address: str) -> dict:
-        """Gets the pair metadata for the given base and quote tokens
+        """
+        Gets the pair metadata for the given base and quote tokens
+        > Should be called before get_pair_price() if needed to avoid redundant calls to the blockchain
         REF: https://github.com/Uniswap/v2-core/blob/master/contracts/UniswapV2Pair.sol
 
         Args:
@@ -112,8 +130,8 @@ class SwapClient:
 
         return {
             "address": Web3.to_checksum_address(pair_address),
-            "token0": {"address": Web3.to_checksum_address(token0_address), "symbol": token0_symbol},
-            "token1": {"address": Web3.to_checksum_address(token1_address), "symbol": token1_symbol}
+            "token0": {"address": Web3.to_checksum_address(token0_address), "symbol": token0_symbol, "decimals": self.get_token_decimals(token0_address)},
+            "token1": {"address": Web3.to_checksum_address(token1_address), "symbol": token1_symbol, "decimals": self.get_token_decimals(token1_address)}
         }
 
     def get_token_symbol(self, token_address: str) -> str:
@@ -125,7 +143,19 @@ class SwapClient:
         Returns:
             str: Token symbol
         """
-
-        contract = self.w3.eth.contract(address=Web3.to_checksum_address(token_address), abi=GET_SYMBOL_ABI)
+        contract = self.w3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
 
         return contract.functions.symbol().call()
+    
+    def get_token_decimals(self, token_address: str) -> int:
+        """Returns the ERC20 token decimals.
+
+        Args:
+            token_address (str): Token address
+
+        Returns:
+            int: Token decimals
+        """
+        contract = self.w3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
+
+        return contract.functions.decimals().call()

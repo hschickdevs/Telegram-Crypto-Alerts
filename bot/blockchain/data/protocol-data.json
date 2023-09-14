@@ -1,0 +1,102 @@
+{
+  "uniswap-v2": {
+    "chains": {
+      "ethereum": {
+        "rpc_url": "https://mainnet.infura.io/v3/YOUR_INFURA_KEY",
+        "factory": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+        "stablecoin": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "name": "Ethereum"
+      },
+      "polygon": {
+        "rpc_url": "https://rpc-mainnet.maticvigil.com/",
+        "factory": "0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32",
+        "stablecoin": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "name": "Polygon"
+      },
+      "bnb": {
+        "rpc_url": "https://bsc-dataseed.binance.org/",
+        "factory": "",
+        "stablecoin": "",
+        "name": "Binance Smart Chain"
+      },
+      "arbitrum": {
+        "rpc_url": "",
+        "factory": "",
+        "stablecoin": "",
+        "name": "Arbitrum One"
+      },
+      "avalanche": {
+        "rpc_url": null,
+        "factory": "",
+        "stablecoin": "",
+        "name": "Avalanche"
+      },
+      "celo": {
+        "rpc_url": null,
+        "factory": "",
+        "stablecoin": "",
+        "name": "Celo"
+      },
+      "base": {
+        "rpc_url": null,
+        "factory": "",
+        "stablecoin": "",
+        "name": "Base"
+      },
+      "optimism": {
+        "rpc_url": null,
+        "factory": "",
+        "stablecoin": "",
+        "name": "Optimism"
+      }
+    },
+    "name": "Uniswap V2"
+  },
+  "pancakeswap": {
+    "chains": {
+      "bnb": {
+        "rpc_url": "https://bsc-dataseed.binance.org/",
+        "factory": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
+        "stablecoin": "0x55d398326f99059fF775485246999027B3197955",
+        "name": "Binance Smart Chain"
+      },
+      "ethereum": {
+        "rpc_url": null,
+        "factory": "0x1097053Fd2ea711dad45caCcc45EfF7548fCB362",
+        "stablecoin": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "name": "Ethereum Mainnet"
+      },
+      "zkevm": {
+        "rpc_url": null,
+        "factory": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
+        "stablecoin": "0x1E4a5963aBFD975d8c9021ce480b42188849D41d",
+        "name": "Polygon zkEVM"
+      },
+      "zksync": {
+        "rpc_url": null,
+        "factory": "0xd03D8D566183F0086d8D09A84E1e30b58Dd5619d",
+        "stablecoin": "0x493257fD37EDB34451f62EDf8D2a0C418852bA4C",
+        "name": "zkSync ERA"
+      },
+      "arbitrum": {
+        "rpc_url": null,
+        "factory": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
+        "stablecoin": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "name": "Arbitrum One"
+      },
+      "linea": {
+        "rpc_url": null,
+        "factory": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
+        "stablecoin": "0xA219439258ca9da29E9Cc4cE5596924745e12B93",
+        "name": "Linea Mainnet"
+      },
+      "base": {
+        "rpc_url": null,
+        "factory": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
+        "stablecoin": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
+        "name": "Base"
+      }
+    },
+    "name": "PancakeSwap"
+  }
+}

@@ -1,8 +1,8 @@
 import argparse
 
-from bot.io_clients import LocalUserConfiguration, MongoDBUserConfiguration
+from bot.user import LocalUserConfiguration, MongoDBUserConfiguration
 from bot._logger import logger
-from bot.static_config import USE_MONGO_DB
+from bot.config import USE_MONGO_DB
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--id', type=str, required=True,

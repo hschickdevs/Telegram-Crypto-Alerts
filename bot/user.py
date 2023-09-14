@@ -4,7 +4,7 @@ import json
 from dotenv import find_dotenv, load_dotenv
 import shutil
 
-from .static_config import *
+from .config import *
 from .mongo import MongoDBConnection
 
 # Activate mongo DB connection if needed

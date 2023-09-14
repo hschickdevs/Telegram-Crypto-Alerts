@@ -3,7 +3,9 @@ from os.path import isdir, join, dirname, abspath, isfile, exists
 
 
 """Alert Handler Configuration"""
-POLLING_PERIOD = 10  # Delay for the alert handler to pull prices and check alert conditions (in seconds)
+CEX_POLLING_PERIOD = 10  # Delay for the CEX alert handler to pull prices and check alert conditions (in seconds)
+DEX_POLLING_PERIOD = 15
+TECHNICAL_POLLING_PERIOD = 10  # Delay for the technical alert handler to pull prices and check alert conditions (in seconds)
 OUTPUT_VALUE_PRECISION = 3
 SIMPLE_INDICATORS = ['PRICE']
 SIMPLE_INDICATOR_COMPARISONS = ['ABOVE', 'BELOW', 'PCTCHG', '24HRCHG']

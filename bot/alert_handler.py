@@ -3,9 +3,9 @@ from datetime import datetime
 import os
 from typing import Union
 
-from .io_clients import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
+from .user import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
 from ._logger import logger
-from .static_config import *
+from .config import *
 from .indicators import get_pair_price, TADatabaseClient, TAAggregateClient, get_24hr_price_change
 
 import requests
@@ -84,7 +84,7 @@ class AlertHandler:
             logger.info(f'Bot polling for next alert...')
 
     @sleep_and_retry
-    @limits(calls=1, period=POLLING_PERIOD)
+    @limits(calls=1, period=TECHNICAL_POLLING_PERIOD)
     def poll_all_alerts(self) -> None:
         """
         1. Aggregate pairs across all users

@@ -124,7 +124,7 @@ Alternatively, follow the steps below to set it up on your local machine.
    <img src="https://cdn.icon-icons.com/icons2/2415/PNG/512/mongodb_original_wordmark_logo_icon_146425.png" width="100" style="margin-right: 20px;"/>
    <p>As of 7/16/2023, this bot now supports MongoDB as a database backend to enable data persistence. If you'd like to use a MongoDB server to store your data, instead of the local JSON database default, follow the steps below:</p>
 
-   First, set the `USE_MONGO_DB` config variable to `True` in the static configuration file: [`/bot/config.py`](/bot/static_config.py)
+   First, set the `USE_MONGO_DB` config variable to `True` in the static configuration file: [`/bot/config.py`](/bot/config.py)
 
    Next, you will need to create a MongoDB Atlas account. You can sign up [here](https://www.mongodb.com/cloud/atlas/register).
 

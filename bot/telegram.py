@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Union
 
 from ._logger import logger
-from .io_clients import LocalUserConfiguration, MongoDBUserConfiguration, get_logfile, get_help_command, get_whitelist
-from .static_config import *
+from .user import LocalUserConfiguration, MongoDBUserConfiguration, get_logfile, get_help_command, get_whitelist
+from .config import *
 from .indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
 
 from telebot import TeleBot

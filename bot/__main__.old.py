@@ -2,7 +2,7 @@ import threading
 from os import getenv
 from time import sleep
 
-from .alerting import CEXAlertProcess, DEXAlertProcess, TechnicalAlertProcess
+from .alert_handler import AlertHandler
 from .telegram import TelegramBot
 from .user import handle_env, get_whitelist
 from .indicators import TaapiioProcess
@@ -18,24 +18,19 @@ if __name__ == "__main__":
 
     # Run the Taapi.io process in a daemon thread
     threading.Thread(target=TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'),
-                                           telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run,
+                                           telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run, 
                      daemon=True).start()
 
-    # Run the TechnicalAlertProcess in a daemon thread
-    threading.Thread(target=TechnicalAlertProcess(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run,
+    # Run the AlertHandler() in a daemon thread
+    threading.Thread(target=AlertHandler(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN'),
+                                         sendgrid_apikey=getenv(
+                                             'SENDGRID_APIKEY'),
+                                         alert_email=getenv('ALERTS_EMAIL')).run, 
                      daemon=True).start()
-
-    # Run the CEXAlertProcess in a daemon thread
-    threading.Thread(target=CEXAlertProcess(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run,
-                     daemon=True).start()
-
-    # # Run the DEXAlertProcess in a daemon thread
-    # threading.Thread(target=DEXAlertProcess(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run,
-    #                  daemon=True).start()
 
     # Run the TG bot in a daemon thread
     threading.Thread(target=TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
-                                        taapiio_apikey=getenv('TAAPIIO_APIKEY2')).run,
+                                        taapiio_apikey=getenv('TAAPIIO_APIKEY2')).run, 
                      daemon=True).start()
 
     # Keep the main thread alive

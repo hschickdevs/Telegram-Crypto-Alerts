@@ -154,7 +154,8 @@ cython_debug/
 #.idea/
 
 # Project Specific
-testing.*
+testing.py
+testing2.py
 logs/log.txt
 bot/whitelist/*
 bot/temp/*
