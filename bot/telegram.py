@@ -15,11 +15,11 @@ BaseConfig = LocalUserConfiguration if not USE_MONGO_DB else MongoDBUserConfigur
 
 
 class TelegramBot(TeleBot):
-    def __init__(self, bot_token: str, taapiio_apikey: str = None):
+    def __init__(self, bot_token: str, taapiio_process: TaapiioProcess):
         super().__init__(token=bot_token)
         self.indicators_ref_cli = TADatabaseClient()
         self.indicators_db = self.indicators_ref_cli.fetch_ref()
-        self.taapiio_cli = None if taapiio_apikey is None else TaapiioProcess(taapiio_apikey)
+        self.taapiio_cli = taapiio_process
 
         @self.message_handler(commands=['id'])
         def on_id(message):

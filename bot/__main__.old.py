@@ -15,10 +15,18 @@ if __name__ == "__main__":
 
     # Process environment variables
     handle_env()
+    
+    # Create global Taapi.io process for the aggregator and telegram bot to sync calls
+    taapiio_process = TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'),
+                                     telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN'))
 
     # Run the Taapi.io process in a daemon thread
-    threading.Thread(target=TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'),
-                                           telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run, 
+    threading.Thread(target=taapiio_process.run, 
+                     daemon=True).start()
+    
+    # Run the TG bot in a daemon thread
+    threading.Thread(target=TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
+                                        taapiio_process=taapiio_process).run, 
                      daemon=True).start()
 
     # Run the AlertHandler() in a daemon thread
@@ -28,13 +36,8 @@ if __name__ == "__main__":
                                          alert_email=getenv('ALERTS_EMAIL')).run, 
                      daemon=True).start()
 
-    # Run the TG bot in a daemon thread
-    threading.Thread(target=TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
-                                        taapiio_apikey=getenv('TAAPIIO_APIKEY2')).run, 
-                     daemon=True).start()
-
     # Keep the main thread alive
-    logger.info("Bot started - use Ctrl+C to stop the bot.")
+    logger.info("Bot process started - use Ctrl+C to stop the bot.")
     while True:
         try:
             sleep(0.5)
