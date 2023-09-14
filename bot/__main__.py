@@ -16,6 +16,15 @@ if __name__ == "__main__":
     # Process environment variables
     handle_env()
 
+    # Create global Taapi.io process for the aggregator and telegram bot to sync calls
+    taapiio_process = TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'),
+                                     telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN'))
+
+    # Run the TG bot in a daemon thread
+    threading.Thread(target=TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
+                                        taapiio_process=taapiio_process).run,
+                     daemon=True).start()
+
     # Run the Taapi.io process in a daemon thread
     threading.Thread(target=TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'),
                                            telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run,
@@ -33,12 +42,7 @@ if __name__ == "__main__":
     # threading.Thread(target=DEXAlertProcess(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run,
     #                  daemon=True).start()
 
-    # Run the TG bot in a daemon thread
-    threading.Thread(target=TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
-                                        taapiio_apikey=getenv('TAAPIIO_APIKEY2')).run,
-                     daemon=True).start()
-
-    # Keep the main thread alive
+    # Keep the main thread alive to listen to interrupt
     logger.info("Bot started - use Ctrl+C to stop the bot.")
     while True:
         try:
