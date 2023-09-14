@@ -3,9 +3,11 @@ from datetime import datetime
 from typing import Union
 
 from ._logger import logger
-from .user import LocalUserConfiguration, MongoDBUserConfiguration, get_logfile, get_help_command, get_whitelist
+from .user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
+from .util import get_logfile, get_help_command
 from .config import *
-from .indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
+from .indicators import TADatabaseClient, TaapiioProcess
+from .models import TechnicalAlert, DEXAlert, CEXAlert
 
 from telebot import TeleBot
 import requests
@@ -574,7 +576,7 @@ class TelegramBot(TeleBot):
             raise Exception(
                 f'An unexpected error has occurred when trying to fetch the price of {pair} on Binance - {exc}')
 
-    def get_technical_indicator(self, indicator: TechnicalIndicator) -> dict:
+    def get_technical_indicator(self, indicator: TechnicalAlert) -> dict:
         # Message should first be parsed, and have the technical indicator returned.
 
         # Prepare the params for the taapi.io single call GET request:
@@ -595,7 +597,7 @@ class TelegramBot(TeleBot):
                 err_msg += f" - {r['error']}"
             raise Exception(err_msg)
 
-    def parse_technical_indicator_message(self, message: str) -> Union[TechnicalIndicator, None]:
+    def parse_technical_indicator_message(self, message: str) -> Union[TechnicalAlert, None]:
         """
         Message should follow the following format:
         /getindicator BASE/QUOTE INDICATOR TIMEFRAME kwarg,kwarg
@@ -650,9 +652,9 @@ class TelegramBot(TeleBot):
         # params["symbol"] = pair
         # params["interval"] = interval
 
-        return TechnicalIndicator(pair, indicator_id, interval, params, output, indicator['endpoint'], indicator['name'])
+        return TechnicalAlert(pair, indicator_id, interval, params, output, indicator['endpoint'], indicator['name'])
 
-    def parse_simple_indicator_message(self, message: str) -> SimpleIndicator:
+    def parse_simple_indicator_message(self, message: str) -> CEXAlert:
         msg = self.split_message(message)
         pair = msg[0].upper()
         indicator = msg[1].upper()
@@ -660,13 +662,13 @@ class TelegramBot(TeleBot):
         assert comparison in SIMPLE_INDICATOR_COMPARISONS, f'{comparison} is an invalid simple indicator comparison operator.\n' \
                                                            f'Options: {SIMPLE_INDICATOR_COMPARISONS}'
 
-        return SimpleIndicator(pair, indicator)
+        return CEXAlert(pair, indicator)
 
     def run(self):
         logger.warn(f'{self.get_me().username} started at {datetime.utcnow()} UTC+0')
         while True:
             try:
-                self.polling()
+                self.polling(non_stop=True)
             except KeyboardInterrupt:
                 break
             except ReadTimeout:

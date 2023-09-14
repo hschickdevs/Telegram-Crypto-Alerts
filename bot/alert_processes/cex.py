@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 from typing import Union
 
-from ..user import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
+from ..user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
 from .._logger import logger
 from ..config import *
 from .base import BaseAlertProcess

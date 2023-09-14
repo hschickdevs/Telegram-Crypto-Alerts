@@ -142,9 +142,6 @@ class MongoDBUserConfiguration(LocalUserConfiguration):
     def __init__(self, tg_user_id: str):
         """
         :param tg_user_id: The Telegram user ID of the bot user to locate their configuration
-        :param connection_string: The full connection string used to connect to your Mongo database
-        :param database: The name of the database to connect to
-        :param collection: The name of the collection in your database to connect to
         """
         # Initialize LocalUserConfiguration & MongoClient superclasses and connect to database
         super().__init__(tg_user_id=tg_user_id)
@@ -213,22 +210,6 @@ class MongoDBUserConfiguration(LocalUserConfiguration):
         db_connection.collection.update_one(self.filter, {"$set": {"config": data}}, upsert=True)
 
 
-""" -------------- UTILITIES -------------- """
-
-
-def get_logfile() -> str:
-    """Get logfile path & create logs dir if it doesn't exist in the current working directory"""
-    log_dir = join(getcwd(), 'logs')
-    if not isdir(log_dir):
-        mkdir(log_dir)
-    return join(log_dir, 'log.txt')
-
-
-def get_help_command() -> str:
-    with open(join(dirname(abspath(__file__)), 'resources/help_command.txt'), 'r') as help_file:
-        return help_file.read()
-
-
 def get_whitelist() -> list:
     if not USE_MONGO_DB:
         if not isdir(WHITELIST_ROOT):
@@ -237,28 +218,3 @@ def get_whitelist() -> list:
         return [_id for _id in listdir(WHITELIST_ROOT) if isdir(join(WHITELIST_ROOT, _id))]
     else:
         return [user['user_id'] for user in db_connection.collection.find()]
-
-
-def load_swap_networks() -> dict:
-    with open(join(dirname(__file__), "blockchain", "networks.json"), "r") as f:
-        return json.load(f)
-
-
-def load_swap_protocols() -> dict:
-    with open(join(dirname(__file__), "blockchain", "protocol-data.json"), "r") as f:
-        return json.load(f)
-
-
-def handle_env():
-    """Checks if the .env file exists in the current working dir, and imports the variables if so"""
-    try:
-        envpath = find_dotenv(raise_error_if_not_found=True, usecwd=True)
-        load_dotenv(dotenv_path=envpath)
-    except:
-        pass
-    finally:
-        mandatory_vars = ['TELEGRAM_BOT_TOKEN']
-        for var in mandatory_vars:
-            val = getenv(var)
-            if val is None:
-                raise ValueError(f"Missing environment variable: {var}")

@@ -3,7 +3,7 @@ import os
 from web3 import Web3
 
 from .abi import *
-from ..user import load_swap_protocols
+from ..util import load_swap_protocols
 
 
 class SwapClient:

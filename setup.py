@@ -1,6 +1,6 @@
 import argparse
 
-from bot.user import LocalUserConfiguration, MongoDBUserConfiguration
+from bot.user_configuration import LocalUserConfiguration, MongoDBUserConfiguration
 from bot._logger import logger
 from bot.config import USE_MONGO_DB
 

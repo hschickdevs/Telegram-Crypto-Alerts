@@ -2,9 +2,10 @@ import threading
 from os import getenv
 from time import sleep
 
-from .alerting import CEXAlertProcess, DEXAlertProcess, TechnicalAlertProcess
+from .alert_processes import CEXAlertProcess, DEXAlertProcess, TechnicalAlertProcess
 from .telegram import TelegramBot
-from .user import handle_env, get_whitelist
+from .user_configuration import get_whitelist
+from .util import handle_env
 from .indicators import TaapiioProcess
 from ._logger import logger
 
@@ -26,8 +27,7 @@ if __name__ == "__main__":
                      daemon=True).start()
 
     # Run the Taapi.io process in a daemon thread
-    threading.Thread(target=TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'),
-                                           telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run,
+    threading.Thread(target=taapiio_process.run,
                      daemon=True).start()
 
     # Run the TechnicalAlertProcess in a daemon thread

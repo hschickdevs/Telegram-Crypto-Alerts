@@ -8,45 +8,45 @@
         "name": "Ethereum"
       },
       "polygon": {
-        "rpc_url": "https://rpc-mainnet.maticvigil.com/",
-        "factory": "0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32",
-        "stablecoin": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "rpc_url": null,
+        "factory": null,
+        "stablecoin": null,
         "name": "Polygon"
       },
       "bnb": {
-        "rpc_url": "https://bsc-dataseed.binance.org/",
-        "factory": "",
-        "stablecoin": "",
+        "rpc_url": null,
+        "factory": null,
+        "stablecoin": null,
         "name": "Binance Smart Chain"
       },
       "arbitrum": {
-        "rpc_url": "",
-        "factory": "",
-        "stablecoin": "",
+        "rpc_url": null,
+        "factory": null,
+        "stablecoin": null,
         "name": "Arbitrum One"
       },
       "avalanche": {
         "rpc_url": null,
-        "factory": "",
-        "stablecoin": "",
+        "factory": null,
+        "stablecoin": null,
         "name": "Avalanche"
       },
       "celo": {
         "rpc_url": null,
-        "factory": "",
-        "stablecoin": "",
+        "factory": null,
+        "stablecoin": null,
         "name": "Celo"
       },
       "base": {
         "rpc_url": null,
-        "factory": "",
-        "stablecoin": "",
+        "factory": null,
+        "stablecoin": null,
         "name": "Base"
       },
       "optimism": {
         "rpc_url": null,
-        "factory": "",
-        "stablecoin": "",
+        "factory": null,
+        "stablecoin": null,
         "name": "Optimism"
       }
     },

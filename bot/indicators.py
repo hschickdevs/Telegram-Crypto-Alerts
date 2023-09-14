@@ -24,60 +24,12 @@ from typing import Union
 import os
 from math import ceil
 
-from .user import get_whitelist, LocalUserConfiguration, MongoDBUserConfiguration
+from .user_configuration import get_whitelist, LocalUserConfiguration, MongoDBUserConfiguration
 from .config import *
 from ._logger import logger
 
 import requests
 from ratelimit import limits, sleep_and_retry
-
-
-def get_pair_price(token_pair: str, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
-    """
-    Make a request to Binance API and return the response
-    :param token_pair: token pair without the slash (e.g. BTCUSDT)
-    :param _try: The current try for recursive retries
-    :param retry_delay: seconds delay between retries
-    :param maximum_retries: Maxiumum number of retries
-    :return float: price of the token pair
-    """
-    try:
-        response = requests.get(BINANCE_API_ENDPOINT.format(token_pair))
-        response.raise_for_status()
-        return float(response.json()['price'])
-    except Exception as err:
-        if _try == maximum_retries:
-            raise ConnectionAbortedError(f'Binance request failed after {_try} retries - Error: {err}')
-        else:
-            sleep(retry_delay)
-            return get_pair_price(token_pair, _try=_try + 1)
-
-
-def get_24hr_price_change(token_pair: str, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
-    """
-    Make a request to Binance API and return the 24 hour % change for a token pair
-    :param token_pair: token pair without the slash (e.g. BTCUSDT)
-    :param _try: The current try for recursive retries
-    :param retry_delay: seconds delay between retries
-    :param maximum_retries: Maxiumum number of retries
-    :return float: The percent change of the token pair (expressed as a percentage, i.e. -3.8 for -3.8%)
-    """
-    try:
-        response = requests.get(BINANCE_24HR_URL.format(token_pair))
-        response.raise_for_status()
-        # return float(response.json()['price'])
-    except Exception as err:
-        if _try == maximum_retries:
-            raise ConnectionAbortedError(f'Binance request failed after {_try} retries - Error: {err}')
-        else:
-            sleep(retry_delay)
-            return get_24hr_price_change(token_pair, _try=_try + 1)
-
-    for pair in response.json():
-        if pair['symbol'].upper() == token_pair.upper():
-            return float(pair['priceChangePercent'])
-    else:
-        raise KeyError(f'Could not match token pair ({token_pair}) in Binance response.')
 
 
 class TADatabaseClient:
@@ -370,23 +322,3 @@ class TaapiioProcess:
                                       f"(Restarting in {restart_period} seconds) - {exc}")
             sleep(restart_period)
             return self.run()
-
-
-@dataclass
-class TechnicalIndicator:
-    pair: str
-    indicator: str
-    interval: str
-    params: dict
-    output_vals: list
-    endpoint: str
-    name: str
-    type: str = 't'
-
-
-@dataclass
-class SimpleIndicator:
-    pair: str
-    indicator: str
-    params: dict = None
-    type: str = 's'

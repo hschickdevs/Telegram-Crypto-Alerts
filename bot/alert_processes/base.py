@@ -1,7 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Union
-
-from ..user import LocalUserConfiguration, MongoDBUserConfiguration
 
 
 class BaseAlertProcess(ABC):
