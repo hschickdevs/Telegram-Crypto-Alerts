@@ -1,9 +1,20 @@
 import json
 import os
+from typing import Any, Callable
 from web3 import Web3
+from ratelimiter import RateLimiter
 
 from .abi import *
-from ..util import load_swap_protocols
+from ..util import load_swap_protocols, load_swap_networks
+
+
+# Define rate limiter decorator - should be applied to functions with contract calls
+def rate_limited(func):
+    def wrapper(self, *args, **kwargs):
+        with self.rpc_rate_limiter:
+            print(f"Calling function inside ratelimiter ...")
+            return func(self, *args, **kwargs)
+    return wrapper
 
 
 class SwapClient:
@@ -11,24 +22,29 @@ class SwapClient:
     Provides the functionality to track the price of any pair in a Uniswap V2 fork
     - Fork's Pair contract must implement the getReserves() method
     """
-
-    def __init__(self, protocol: str, network: str):
+    def __init__(self, protocol: str, network: str, rate_limiter: RateLimiter):
         """
         Args:
             protocol (str): The protocol you are interested in (e.g. "uniswap-v2"), see ./blockchain/protocol-data.json
             network (str): The network abbreviation you are interested in (e.g. "bnb"), see ./blockchain/networks.json
+            rate_limiter (RateLimiter): Should be the RateLimiter instance declared for the given network
         """
         try:
             protocol = load_swap_protocols()[protocol]
         except KeyError:
-            raise KeyError(f"Protocol {protocol} not found in protocol-data.json. Add it or check the spelling.")
+            raise KeyError(f"Protocol {protocol} not found in protocols.yml. Add it or check the spelling.")
+
+        try:
+            networks = load_swap_networks()
+        except Exception as err:
+            raise Exception(f"Could not load networks: {err}")
 
         try:
             chain = protocol['chains'][network]
         except KeyError:
             raise KeyError(f"Network {network} not found in networks.json. Add it or check the spelling.")
 
-        self.w3 = Web3(Web3.HTTPProvider(chain['rpc_url']))
+        self.w3 = self._connect(networks[network]["rpc"])
         assert self.w3.is_connected(), "Web3 cannot connect to the RPC URL."
 
         self.factory_address = Web3.to_checksum_address(chain['factory'])
@@ -38,23 +54,36 @@ class SwapClient:
         assert self.w3.eth.get_code(
             self.usd_stablecoin_address) != "0x", "Stablecoin address is not a valid contract address."
 
-    def get_pair_price(self, base_token_address: str, quote_token_address: str, in_usd: bool = False,
-                       pair_contract_metadata: dict = None) -> float:
+        self.rpc_rate_limiter = rate_limiter
+
+    def _connect(self, rpc_url: str) -> Web3:
+        return Web3(Web3.HTTPProvider(rpc_url))
+
+    @rate_limited
+    def _call(self, contract_function: Callable[..., Any], *args, **kwargs) -> Any:
+        """Method used to ratelimit all contract calls to respect RPC ratelimits"""
+        return contract_function(*args, **kwargs).call()
+
+    @rate_limited
+    def _call_raw(self, token_address: str, function_signature: bytes) -> bytes:
+        """Method used to ratelimit raw contract calls to respect RPC ratelimits"""
+        return self.w3.eth.call({'to': token_address, 'data': function_signature.hex()})
+
+    def get_pair_price(self, base_token_address: str, quote_token_address: str, pair_contract_metadata: dict = None) -> float:
         """Gets the price of the pair in the quote token
 
         Args:
             base_token_address (str, optional): Token address for the base token when fetching pair price
             quote_token_address (str, optional): Token address for the quote token when fetching pair price
-            in_usd (bool, optional): Whether to return the pair price converted to USD (uses the quote-usd_stablecoin pair). Defaults to False.
             pair_contract_metadata (dict, optional): Include the pair contract metadata if it already exists for efficiency
 
         Returns:
             float: The computed pair price in the quote token or USD, in the direction of base_token_address -> quote_token_address
         """
-        # TODO: The metadata of pairs should be stored when alerts are created to make this process more efficient
         if not pair_contract_metadata:
+            # This function call adds 7 web3 calls, so this data should be stored or cached and provided to the func
             pair_contract_metadata = self.get_pair(base_token_address, quote_token_address)
-            
+
         # Construct the pair string:
         # pair_string = f"{pair_contract_metadata['token0']['symbol']}-{pair_contract_metadata['token1']['symbol']}"
         # print("Fetching price for pair:", pair_string)
@@ -74,27 +103,27 @@ class SwapClient:
             reserve_quote = reserves[0]
 
         if reserve_base == 0:
-            raise ValueError("Reserve for base token is zero, cannot calculate pair price.")
+            return 0
+            # raise ValueError("Reserve for base token is zero, cannot calculate pair price.")
         if reserve_quote == 0:
-            raise ValueError("Reserve for quote token is zero, cannot calculate pair price.")
+            return 0
+            # raise ValueError("Reserve for quote token is zero, cannot calculate pair price.")
 
         # Calculate the price based on the reserves
+        # print("reserve_quote:", reserve_quote)
+        # print("reserve_base:", reserve_base)
         price = reserve_quote / reserve_base
 
         # Adjust the price for the different decimals between the base and quote tokens
-        price *= 10 ** (quote_decimals - base_decimals)
-
-        if in_usd and quote_token_address != self.usd_stablecoin_address:
-            usd_price = self.get_pair_price(base_token_address=self.usd_stablecoin_address,
-                                            quote_token_address=quote_token_address)
-            price *= usd_price
+        # price *= 10 ** (quote_decimals - base_decimals)
+        price = price * 10 ** (base_decimals - quote_decimals)  # ATTEMPTED FIX
 
         return price
-    
+
     def get_pair_reserves(self, pair_address: str) -> dict:
         contract = self.w3.eth.contract(address=Web3.to_checksum_address(pair_address), abi=UNISWAPV2_PAIR_ABI)
 
-        return contract.functions.getReserves().call()
+        return self._call(contract.functions.getReserves)
 
     def get_pair(self, base_token_address: str, quote_token_address: str) -> dict:
         """
@@ -118,14 +147,20 @@ class SwapClient:
         contract = self.w3.eth.contract(address=Web3.to_checksum_address(self.factory_address), abi=GET_PAIR_ABI)
 
         # Check if the pair exists:
-        pair_address = contract.functions.getPair(Web3.to_checksum_address(base_token_address),
-                                                  Web3.to_checksum_address(quote_token_address)).call()
+        pair_address = self._call(contract.functions.getPair,
+                                  Web3.to_checksum_address(base_token_address),
+                                  Web3.to_checksum_address(quote_token_address))
+        # pair_address = contract.functions.getPair(Web3.to_checksum_address(base_token_address),
+        #                                           Web3.to_checksum_address(quote_token_address)).call()
+
         pair_contract = self.w3.eth.contract(address=Web3.to_checksum_address(pair_address), abi=UNISWAPV2_PAIR_ABI)
 
         # Get the token pair metadata
-        token0_address = pair_contract.functions.token0().call()
+        # token0_address = pair_contract.functions.token0().call()
+        token0_address = self._call(pair_contract.functions.token0)
         token0_symbol = self.get_token_symbol(token0_address)
-        token1_address = pair_contract.functions.token1().call()
+        # token1_address = pair_contract.functions.token1().call()
+        token1_address = self._call(pair_contract.functions.token1)
         token1_symbol = self.get_token_symbol(token1_address)
 
         return {
@@ -145,8 +180,32 @@ class SwapClient:
         """
         contract = self.w3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
 
-        return contract.functions.symbol().call()
-    
+        try:
+            # First, try the regular call
+            symbol_value = self._call(contract.functions.symbol)
+
+            # Check if the result is bytes (indicating bytes32 return type)
+            if isinstance(symbol_value, bytes):
+                return symbol_value.decode('utf-8').rstrip('\x00')
+            else:
+                return symbol_value
+
+        # Handle the rare case that a token will use bytes32 instead of string for symbol() output value
+        except Exception as e:
+            # If the regular call fails, try the raw call
+            print(f"Regular symbol call failed with error: {e}. Retrying with raw call...")
+
+            # Generate the function signature for the `symbol` function
+            symbol_function_signature = self.w3.keccak(text="symbol()")[:10]
+
+            # Make a raw call to the contract
+            result = self._call_raw(token_address, symbol_function_signature)
+
+            # Decode the result. If it's bytes32, it will have trailing null bytes which we remove.
+            symbol = result.decode('utf-8').rstrip('\x00')
+
+            return symbol
+
     def get_token_decimals(self, token_address: str) -> int:
         """Returns the ERC20 token decimals.
 
@@ -158,4 +217,5 @@ class SwapClient:
         """
         contract = self.w3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
 
-        return contract.functions.decimals().call()
+        # return contract.functions.decimals().call()
+        return self._call(contract.functions.decimals)

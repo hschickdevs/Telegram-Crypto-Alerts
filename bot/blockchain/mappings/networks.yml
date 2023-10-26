@@ -1,0 +1,75 @@
+ethereum:
+  name: Ethereum Mainnet
+  rpc: "https://mainnet.infura.io/v3/2f7f30cd957c49d9a7a464a3fb449ba8"
+  ratelimit:
+    requests: 99999  # Number of requests allowed per period
+    period: 86400  # period in seconds
+
+polygon:
+  name: Polygon (Matic) Mainnet
+  rpc: null
+  ratelimit:
+    requests: 1000  # Number of requests allowed per period
+    period: 60    # period in seconds
+
+bnb:
+  name: BNB Chain
+  rpc: "https://bsc-dataseed.binance.org/"
+  ratelimit:
+    requests: 9999  # Number of requests allowed per period
+    period: 300   # period in seconds
+zkevm:
+  name: Polygon zkEVM
+  rpc: null
+  ratelimit:
+    requests: 1000  # Number of requests allowed per period
+    period: 60    # period in seconds
+
+zksync:
+  name: zkSync Era
+  rpc: null
+  ratelimit:
+    requests: 1000  # Number of requests allowed per period
+    period: 60    # period in seconds
+
+arbitrum:
+  name: Arbitrum Rollup
+  rpc: null
+  ratelimit:
+    requests: 1000  # Number of requests allowed per period
+    period: 60    # period in seconds
+
+linea:
+  name: Linea Network
+  rpc: null
+  ratelimit:
+    requests: 1000  # Number of requests allowed per period
+    period: 60    # period in seconds
+
+base:
+  name: Base Network
+  rpc: null
+  ratelimit:
+    requests: 1000  # Number of requests allowed per period
+    period: 60    # period in seconds
+
+avalanche:
+  name: Avalanche
+  rpc: null
+  ratelimit:
+    requests: 1000  # Number of requests allowed per period
+    period: 60    # period in seconds
+
+celo:
+  name: Celo
+  rpc: null
+  ratelimit:
+    requests: 1000  # Number of requests allowed per period
+    period: 60    # period in seconds
+
+Optimism:
+  name: Optimism
+  rpc: null
+  ratelimit:
+    requests: 1000  # Number of requests allowed per period
+    period: 60    # period in seconds

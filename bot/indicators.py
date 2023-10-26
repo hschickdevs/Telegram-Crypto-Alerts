@@ -273,7 +273,7 @@ class TaapiioProcess:
                                                                    "interval": interval, "indicators": indicators_query}}
                     r = self.call_api(endpoint=BULK_ENDPOINT, params=query)
                     try:
-                        responses = r["data"]
+                        responses = r["mappings"]
                     except KeyError:
                         # if "error" in r.keys():
                         #     logger.warn(f"Taapio error occurred when building aggregate: {r['error']}")

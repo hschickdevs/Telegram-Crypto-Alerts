@@ -62,15 +62,15 @@ This bot is designed to be easily extensible and deployable on a variety of plat
 
 I will choose the most cost-efficient and performant platform and deploy the bot for you. I will then manage the bot for a small fee. Please go to and fill out the form below to request a quote:
 
-> [🔗**Managed Hosting Request Form**](https://forms.gle/hCVQsYDjRWx5CZJh7)
+> Click Here: [🔗**Managed Hosting Request Form**](https://forms.gle/hCVQsYDjRWx5CZJh7)
 
 ### Self Hosting
 
 If you are confident in your technical abilities and would like to self host the bot, you can follow the steps below to set it up on your own machine or cloud server. Click the link corresponding to your setup preference:
 
-> [🔗**Cloud Deployment**](./docs/linode_setup_guide.md)
+> Click Here: [🔗**Cloud Deployment**](./docs/linode_setup_guide.md)
 
-> [🔗**Local Deployment**](./docs/local_setup.md)
+> Click Here: [🔗**Local Deployment**](./docs/local_setup.md)
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>

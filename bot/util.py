@@ -2,6 +2,7 @@ from os import mkdir, getcwd, getenv, listdir
 from os.path import isdir, join, dirname, abspath, isfile, exists
 import json
 from dotenv import find_dotenv, load_dotenv
+import yaml
 
 """ -------------- UTILITIES -------------- """
 
@@ -20,13 +21,13 @@ def get_help_command() -> str:
 
 
 def load_swap_networks() -> dict:
-    with open(join(dirname(__file__), "blockchain", "data", "networks.json"), "r") as f:
-        return json.load(f)
+    with open(join(dirname(__file__), "blockchain", "mappings", "networks.yml"), "r") as f:
+        return yaml.safe_load(f)
 
 
 def load_swap_protocols() -> dict:
-    with open(join(dirname(__file__), "blockchain", "data", "protocol-data.json"), "r") as f:
-        return json.load(f)
+    with open(join(dirname(__file__), "blockchain", "mappings", "protocols.yml"), "r") as f:
+        return yaml.safe_load(f)
 
 
 def handle_env():
