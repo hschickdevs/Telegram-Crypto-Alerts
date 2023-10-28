@@ -18,13 +18,17 @@ if __name__ == "__main__":
     handle_env()
 
     # Create global Taapi.io process for the aggregator and telegram bot to sync calls
-    taapiio_process = TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'),
-                                     telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN'))
+    taapiio_process = TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'))
+    
+    # Create the Telegram bot to listen to commands and send messages
+    telegram_bot = TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'), 
+                               taapiio_process=taapiio_process)
 
     # Run the TG bot in a daemon thread
-    threading.Thread(target=TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
-                                        taapiio_process=taapiio_process).run,
-                     daemon=True).start()
+    # threading.Thread(target=TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
+    #                                     taapiio_process=taapiio_process).run,
+    #                  daemon=True).start()
+    threading.Thread(target=telegram_bot.run, daemon=True).start()
 
     # Run the Taapi.io process in a daemon thread
     threading.Thread(target=taapiio_process.run,

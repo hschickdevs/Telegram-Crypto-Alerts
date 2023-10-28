@@ -4,6 +4,7 @@ from typing import Any, Callable
 from web3 import Web3
 from ratelimiter import RateLimiter
 
+from .network import Network
 from .abi import *
 from ..util import load_swap_protocols, load_swap_networks
 
@@ -22,42 +23,34 @@ class SwapClient:
     Provides the functionality to track the price of any pair in a Uniswap V2 fork
     - Fork's Pair contract must implement the getReserves() method
     """
-    def __init__(self, protocol: str, network: str, rate_limiter: RateLimiter):
+    def __init__(self, protocol: str, network: Network):
         """
         Args:
             protocol (str): The protocol you are interested in (e.g. "uniswap-v2"), see ./blockchain/protocol-data.json
             network (str): The network abbreviation you are interested in (e.g. "bnb"), see ./blockchain/networks.json
             rate_limiter (RateLimiter): Should be the RateLimiter instance declared for the given network
         """
+        self.network = network
+        
         try:
             protocol = load_swap_protocols()[protocol]
         except KeyError:
             raise KeyError(f"Protocol {protocol} not found in protocols.yml. Add it or check the spelling.")
 
         try:
-            networks = load_swap_networks()
-        except Exception as err:
-            raise Exception(f"Could not load networks: {err}")
-
-        try:
             chain = protocol['chains'][network]
         except KeyError:
             raise KeyError(f"Network {network} not found in networks.json. Add it or check the spelling.")
 
-        self.w3 = self._connect(networks[network]["rpc"])
-        assert self.w3.is_connected(), "Web3 cannot connect to the RPC URL."
-
         self.factory_address = Web3.to_checksum_address(chain['factory'])
-        assert self.w3.eth.get_code(self.factory_address) != "0x", "Factory address is not a valid contract address."
+        assert self.network.w3.eth.get_code(self.factory_address) != "0x", "Factory address is not a valid contract address."
 
         self.usd_stablecoin_address = Web3.to_checksum_address(chain['stablecoin'])
-        assert self.w3.eth.get_code(
+        assert self.network.w3.eth.get_code(
             self.usd_stablecoin_address) != "0x", "Stablecoin address is not a valid contract address."
 
-        self.rpc_rate_limiter = rate_limiter
-
-    def _connect(self, rpc_url: str) -> Web3:
-        return Web3(Web3.HTTPProvider(rpc_url))
+        # This should be instantiated on the network level, and then passed to the SwapClient
+        self.rpc_rate_limiter = self.network.ratelimiter
 
     @rate_limited
     def _call(self, contract_function: Callable[..., Any], *args, **kwargs) -> Any:
@@ -67,7 +60,7 @@ class SwapClient:
     @rate_limited
     def _call_raw(self, token_address: str, function_signature: bytes) -> bytes:
         """Method used to ratelimit raw contract calls to respect RPC ratelimits"""
-        return self.w3.eth.call({'to': token_address, 'data': function_signature.hex()})
+        return self.network.w3.eth.call({'to': token_address, 'data': function_signature.hex()})
 
     def get_pair_price(self, base_token_address: str, quote_token_address: str, pair_contract_metadata: dict = None) -> float:
         """Gets the price of the pair in the quote token
@@ -121,7 +114,7 @@ class SwapClient:
         return price
 
     def get_pair_reserves(self, pair_address: str) -> dict:
-        contract = self.w3.eth.contract(address=Web3.to_checksum_address(pair_address), abi=UNISWAPV2_PAIR_ABI)
+        contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(pair_address), abi=UNISWAPV2_PAIR_ABI)
 
         return self._call(contract.functions.getReserves)
 
@@ -144,7 +137,7 @@ class SwapClient:
             Where token0 is the base token in the pair contract,
             and token1 is the quote token in the pair contract
         """
-        contract = self.w3.eth.contract(address=Web3.to_checksum_address(self.factory_address), abi=GET_PAIR_ABI)
+        contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(self.factory_address), abi=GET_PAIR_ABI)
 
         # Check if the pair exists:
         pair_address = self._call(contract.functions.getPair,
@@ -153,7 +146,7 @@ class SwapClient:
         # pair_address = contract.functions.getPair(Web3.to_checksum_address(base_token_address),
         #                                           Web3.to_checksum_address(quote_token_address)).call()
 
-        pair_contract = self.w3.eth.contract(address=Web3.to_checksum_address(pair_address), abi=UNISWAPV2_PAIR_ABI)
+        pair_contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(pair_address), abi=UNISWAPV2_PAIR_ABI)
 
         # Get the token pair metadata
         # token0_address = pair_contract.functions.token0().call()
@@ -178,7 +171,7 @@ class SwapClient:
         Returns:
             str: Token symbol
         """
-        contract = self.w3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
+        contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
 
         try:
             # First, try the regular call
@@ -196,7 +189,7 @@ class SwapClient:
             print(f"Regular symbol call failed with error: {e}. Retrying with raw call...")
 
             # Generate the function signature for the `symbol` function
-            symbol_function_signature = self.w3.keccak(text="symbol()")[:10]
+            symbol_function_signature = self.network.w3.keccak(text="symbol()")[:10]
 
             # Make a raw call to the contract
             result = self._call_raw(token_address, symbol_function_signature)
@@ -215,7 +208,7 @@ class SwapClient:
         Returns:
             int: Token decimals
         """
-        contract = self.w3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
+        contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
 
         # return contract.functions.decimals().call()
         return self._call(contract.functions.decimals)

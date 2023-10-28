@@ -6,17 +6,20 @@ from .._logger import logger
 from .base import BaseAlertProcess
 from ..config import *
 from ..user_configuration import get_whitelist
-from ..blockchain.swaps import SwapClient
+from ..blockchain.swap import SwapClient
 
 import requests
 from ratelimit import limits, sleep_and_retry
 
 
 class DEXAlertProcess(BaseAlertProcess):
-    def __init__(self, telegram_bot_token: str):
+    def __init__(self):
         self.polling = False  # Temporary variable to manage alerts
-        self.tg_bot_token = telegram_bot_token
+        self.tg_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
         super().__init__()
+        
+    def create_network_connections(self):
+        pass
 
     # TODO: FIX THIS <--------------------------------
     def poll_user_alerts(self, tg_user_id: str) -> None:

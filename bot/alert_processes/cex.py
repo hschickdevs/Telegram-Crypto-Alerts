@@ -7,15 +7,16 @@ from ..user_configuration import LocalUserConfiguration, MongoDBUserConfiguratio
 from .._logger import logger
 from ..config import *
 from .base import BaseAlertProcess
+from ..telegram import TelegramBot
 
 import requests
 from ratelimit import limits, sleep_and_retry
 
 
 class CEXAlertProcess(BaseAlertProcess):
-    def __init__(self, telegram_bot_token: str):
+    def __init__(self, telegram_bot: TelegramBot):
         self.polling = False  # Temporary variable to manage alerts
-        self.tg_bot_token = telegram_bot_token
+        self.telegram_bot = telegram_bot  # Telegram bot object instatiated in __main__.py
         super().__init__()
 
     def poll_user_alerts(self, tg_user_id: str) -> None:
@@ -176,8 +177,9 @@ class CEXAlertProcess(BaseAlertProcess):
         output = ([], [])
         for g_id in channel_ids:
             try:
-                requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
-                              params={'chat_id': g_id, 'text': header_str + post, "parse_mode": "HTML"})
+                # requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
+                #               params={'chat_id': g_id, 'text': header_str + post, "parse_mode": "HTML"})
+                self.telegram_bot.send_message(chat_id=g_id, text=header_str + post, parse_mode="HTML")
                 output[0].append(g_id)
             except:
                 output[1].append(g_id)
