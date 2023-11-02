@@ -10,14 +10,14 @@ class Network:
     It will be used to manage the ratelimits and protocols on the network.
     """
     def __init__(self, network: str):
-        self.network = network
+        self.id = network
         
         # Load the network details from the networks.yml file
         self.meta = load_swap_networks()[network]
         
         # Attempt to connect to the network
         self.w3 = Web3
-        self._connect(network)
+        self._connect()
         
         # Create rate limiter
         self.ratelimiter = self._get_ratelimiter()
@@ -25,10 +25,7 @@ class Network:
         
         
     def _get_ratelimiter(self) -> RateLimiter:
-        """Returns a RateLimiter object for the specified network"""
-        
-        network = load_swap_networks()[network]
-        
+        """Returns a RateLimiter object for the specified network"""    
         return RateLimiter(
             max_calls=self.meta['ratelimit']['requests'],
             period=self.meta['ratelimit']['period'],

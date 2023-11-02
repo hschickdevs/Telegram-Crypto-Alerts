@@ -38,7 +38,7 @@ class SwapClient:
             raise KeyError(f"Protocol {protocol} not found in protocols.yml. Add it or check the spelling.")
 
         try:
-            chain = protocol['chains'][network]
+            chain = protocol['chains'][network.id]
         except KeyError:
             raise KeyError(f"Network {network} not found in networks.json. Add it or check the spelling.")
 
