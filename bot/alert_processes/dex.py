@@ -19,6 +19,7 @@ class DEXAlertProcess(BaseAlertProcess):
         super().__init__()
         
     def create_network_connections(self):
+        # WILL NEED TO INSTIANTIATE CONNECTIONS FOR ALL NETWORKS REGISTERED IN THE CONFIG
         pass
 
     # TODO: FIX THIS <--------------------------------
@@ -31,48 +32,8 @@ class DEXAlertProcess(BaseAlertProcess):
 
         :param tg_user_id: The Telegram user ID from the database
         """
-        configuration = LocalUserConfiguration(tg_user_id) if not USE_MONGO_DB else MongoDBUserConfiguration(tg_user_id)
-        alerts_database = configuration.load_alerts()
-        config = configuration.load_config()
-
-        do_update = False  # If any changes are made, update the database
-        post_queue = []
-        for pair in alerts_database.copy().keys():
-
-            remove_queue = []
-            for alert in alerts_database[pair]:
-                if alert['alerted']:
-                    remove_queue.append(alert)
-                    do_update = True  # Since the alert needs to be removed from the database, signal do_update
-                    continue
-
-                if alert['type'] == "s":
-                    condition, value, post_string = self.get_simple_indicator(pair, alert)
-
-                    if condition:  # If there is a condition satisfied
-                        post_queue.append(post_string)
-                        alert['alerted'] = True
-                        do_update = True  # Since the alert needs to be updated in the database, signal do_update
-
-            for item in remove_queue:
-                alerts_database[pair].remove(item)
-                if len(alerts_database[pair]) == 0:
-                    alerts_database.pop(pair)
-
-        if do_update:
-            configuration.update_alerts(alerts_database)
-
-        if len(post_queue) > 0:
-            self.polling = False
-            for post in post_queue:
-                logger.info(post)
-                status = self.tg_alert(post=post, channel_ids=config['channels'])
-                if len(status[1]) > 0:
-                    logger.warn(f"Failed to send Telegram alert ({post}) to the following IDs: {status[1]}")
-
-        if not self.polling:
-            self.polling = True
-            logger.info(f'Bot polling for next alert...')
+        # SEE THE CEX IMPLEMENTATION
+        raise NotImplementedError
 
     @sleep_and_retry
     @limits(calls=1, period=DEX_POLLING_PERIOD)
