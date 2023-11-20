@@ -7,8 +7,11 @@
   <img src="docs/img/logo.png" alt="Logo" width="300">
   <hr>
   <!-- <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2> -->
+   <p align="center">
+    <i>The most popular open-source cryptocurrency alerting tool for Telegram!</i>
+   </p>
   <p align="center">
-    Python software that facilitates alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/"><b>Telegram</b></a> using their open-source API, and optionally email as well.
+    This Python software facilitates alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/"><b>Telegram</b></a> using their open-source API.
     <br />
    </p>
    <p align="center">
