@@ -6,7 +6,7 @@
 
 <!-- PROJECT HEADER -->
 <div align="center" id="top">
-  <img src="docs/img/logo.png" alt="Logo" width="300">
+  <img src="docs/img/logo2.png" alt="Logo" width="350">
   <hr>
   <!-- <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2> -->
    <p align="center">
