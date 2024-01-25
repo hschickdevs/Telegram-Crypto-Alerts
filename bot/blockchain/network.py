@@ -1,40 +1,43 @@
-from ratelimiter import RateLimiter
+from ratelimit import limits, RateLimitException, sleep_and_retry
 from web3 import Web3
+from typing import Callable, Any
+from functools import wraps
+from threading import Lock
 
 from ..util import load_swap_networks
 
-
 class Network:
     """
-    This class is responsible for managing the network Web3 RPC connections for the bot. 
-    It will be used to manage the ratelimits and protocols on the network.
+    This class is responsible for managing the network Web3 RPC connections for the bot.
+    It will be used to manage the rate limits and protocols on the network.
     """
     def __init__(self, network: str):
         self.id = network
-        
-        # Load the network details from the networks.yml file
         self.meta = load_swap_networks()[network]
-        
-        # Attempt to connect to the network
         self.w3 = Web3
         self._connect()
-        
-        # Create rate limiter
-        self.ratelimiter = self._get_ratelimiter()
-        
-        
-        
-    def _get_ratelimiter(self) -> RateLimiter:
-        """Returns a RateLimiter object for the specified network"""    
-        return RateLimiter(
-            max_calls=self.meta['ratelimit']['requests'],
-            period=self.meta['ratelimit']['period'],
-        )
-        
+        self.max_calls, self.period = self.meta['ratelimit']['requests'], self.meta['ratelimit']['period']
+        self.lock = Lock()
+        self.rate_limited_call = self._create_rate_limited_call()
+
     def _connect(self):
-        """
-        Connect to the network RPC and return the Web3 object
-        """
         self.w3 = Web3(Web3.HTTPProvider(self.meta['rpc']))
         assert self.w3.is_connected(), "Web3 cannot connect to the RPC URL."
-        
+
+    def _create_rate_limited_call(self):
+        @sleep_and_retry
+        @limits(calls=self.max_calls, period=self.period)
+        def rate_limited_func(func, *args, **kwargs):
+            print(f"Calling rate limited function {getattr(func, '__name__', 'Unknown')} with {self.max_calls} "
+                  f"max_calls and {self.period} period.")
+            return func(*args, **kwargs)
+        return rate_limited_func
+
+    def call(self, contract_function: Callable[..., Any], *args, **kwargs) -> Any:
+        with self.lock:  # Ensuring thread safety
+            return self.rate_limited_call(contract_function, *args, **kwargs).call()
+
+    def call_raw(self, token_address: str, function_signature: bytes) -> bytes:
+        with self.lock:  # Ensuring thread safety
+            return self.rate_limited_call(self.w3.eth.call, {'to': token_address, 'data': function_signature.hex()})
+

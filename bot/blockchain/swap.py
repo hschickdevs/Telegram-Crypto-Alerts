@@ -2,20 +2,10 @@ import json
 import os
 from typing import Any, Callable
 from web3 import Web3
-from ratelimiter import RateLimiter
 
 from .network import Network
 from .abi import *
 from ..util import load_swap_protocols, load_swap_networks
-
-
-# Define rate limiter decorator - should be applied to functions with contract calls
-def rate_limited(func):
-    def wrapper(self, *args, **kwargs):
-        with self.rpc_rate_limiter:
-            print(f"Calling function inside ratelimiter ...")
-            return func(self, *args, **kwargs)
-    return wrapper
 
 
 class SwapClient:
@@ -23,6 +13,7 @@ class SwapClient:
     Provides the functionality to track the price of any pair in a Uniswap V2 fork
     - Fork's Pair contract must implement the getReserves() method
     """
+
     def __init__(self, protocol: str, network: Network):
         """
         Args:
@@ -31,7 +22,7 @@ class SwapClient:
             rate_limiter (RateLimiter): Should be the RateLimiter instance declared for the given network
         """
         self.network = network
-        
+
         try:
             protocol = load_swap_protocols()[protocol]
         except KeyError:
@@ -43,26 +34,15 @@ class SwapClient:
             raise KeyError(f"Network {network} not found in networks.json. Add it or check the spelling.")
 
         self.factory_address = Web3.to_checksum_address(chain['factory'])
-        assert self.network.w3.eth.get_code(self.factory_address) != "0x", "Factory address is not a valid contract address."
+        assert self.network.w3.eth.get_code(
+            self.factory_address) != "0x", "Factory address is not a valid contract address."
 
         self.usd_stablecoin_address = Web3.to_checksum_address(chain['stablecoin'])
         assert self.network.w3.eth.get_code(
             self.usd_stablecoin_address) != "0x", "Stablecoin address is not a valid contract address."
 
-        # This should be instantiated on the network level, and then passed to the SwapClient
-        self.rpc_rate_limiter = self.network.ratelimiter
-
-    @rate_limited
-    def _call(self, contract_function: Callable[..., Any], *args, **kwargs) -> Any:
-        """Method used to ratelimit all contract calls to respect RPC ratelimits"""
-        return contract_function(*args, **kwargs).call()
-
-    @rate_limited
-    def _call_raw(self, token_address: str, function_signature: bytes) -> bytes:
-        """Method used to ratelimit raw contract calls to respect RPC ratelimits"""
-        return self.network.w3.eth.call({'to': token_address, 'data': function_signature.hex()})
-
-    def get_pair_price(self, base_token_address: str, quote_token_address: str, pair_contract_metadata: dict = None) -> float:
+    def get_pair_price(self, base_token_address: str, quote_token_address: str,
+                       pair_contract_metadata: dict = None) -> float:
         """Gets the price of the pair in the quote token
 
         Args:
@@ -116,7 +96,7 @@ class SwapClient:
     def get_pair_reserves(self, pair_address: str) -> dict:
         contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(pair_address), abi=UNISWAPV2_PAIR_ABI)
 
-        return self._call(contract.functions.getReserves)
+        return self.network.call(contract.functions.getReserves)
 
     def get_pair(self, base_token_address: str, quote_token_address: str) -> dict:
         """
@@ -137,29 +117,33 @@ class SwapClient:
             Where token0 is the base token in the pair contract,
             and token1 is the quote token in the pair contract
         """
-        contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(self.factory_address), abi=GET_PAIR_ABI)
+        contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(self.factory_address),
+                                                abi=GET_PAIR_ABI)
 
         # Check if the pair exists:
-        pair_address = self._call(contract.functions.getPair,
-                                  Web3.to_checksum_address(base_token_address),
-                                  Web3.to_checksum_address(quote_token_address))
+        pair_address = self.network.call(contract.functions.getPair,
+                                         Web3.to_checksum_address(base_token_address),
+                                         Web3.to_checksum_address(quote_token_address))
         # pair_address = contract.functions.getPair(Web3.to_checksum_address(base_token_address),
         #                                           Web3.to_checksum_address(quote_token_address)).call()
 
-        pair_contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(pair_address), abi=UNISWAPV2_PAIR_ABI)
+        pair_contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(pair_address),
+                                                     abi=UNISWAPV2_PAIR_ABI)
 
         # Get the token pair metadata
         # token0_address = pair_contract.functions.token0().call()
-        token0_address = self._call(pair_contract.functions.token0)
+        token0_address = self.network.call(pair_contract.functions.token0)
         token0_symbol = self.get_token_symbol(token0_address)
         # token1_address = pair_contract.functions.token1().call()
-        token1_address = self._call(pair_contract.functions.token1)
+        token1_address = self.network.call(pair_contract.functions.token1)
         token1_symbol = self.get_token_symbol(token1_address)
 
         return {
             "address": Web3.to_checksum_address(pair_address),
-            "token0": {"address": Web3.to_checksum_address(token0_address), "symbol": token0_symbol, "decimals": self.get_token_decimals(token0_address)},
-            "token1": {"address": Web3.to_checksum_address(token1_address), "symbol": token1_symbol, "decimals": self.get_token_decimals(token1_address)}
+            "token0": {"address": Web3.to_checksum_address(token0_address), "symbol": token0_symbol,
+                       "decimals": self.get_token_decimals(token0_address)},
+            "token1": {"address": Web3.to_checksum_address(token1_address), "symbol": token1_symbol,
+                       "decimals": self.get_token_decimals(token1_address)}
         }
 
     def get_token_symbol(self, token_address: str) -> str:
@@ -175,7 +159,7 @@ class SwapClient:
 
         try:
             # First, try the regular call
-            symbol_value = self._call(contract.functions.symbol)
+            symbol_value = self.network.call(contract.functions.symbol)
 
             # Check if the result is bytes (indicating bytes32 return type)
             if isinstance(symbol_value, bytes):
@@ -192,7 +176,7 @@ class SwapClient:
             symbol_function_signature = self.network.w3.keccak(text="symbol()")[:10]
 
             # Make a raw call to the contract
-            result = self._call_raw(token_address, symbol_function_signature)
+            result = self.network.call_raw(token_address, symbol_function_signature)
 
             # Decode the result. If it's bytes32, it will have trailing null bytes which we remove.
             symbol = result.decode('utf-8').rstrip('\x00')
@@ -211,4 +195,4 @@ class SwapClient:
         contract = self.network.w3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
 
         # return contract.functions.decimals().call()
-        return self._call(contract.functions.decimals)
+        return self.network.call(contract.functions.decimals)

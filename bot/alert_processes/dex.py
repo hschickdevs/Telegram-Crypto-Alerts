@@ -19,7 +19,7 @@ class DEXAlertProcess(BaseAlertProcess):
         super().__init__()
         
     def create_network_connections(self):
-        # WILL NEED TO INSTIANTIATE CONNECTIONS FOR ALL NETWORKS REGISTERED IN THE CONFIG
+        # WILL NEED TO INSTANTIATE CONNECTIONS FOR ALL NETWORKS REGISTERED IN THE CONFIG
         pass
 
     # TODO: FIX THIS <--------------------------------

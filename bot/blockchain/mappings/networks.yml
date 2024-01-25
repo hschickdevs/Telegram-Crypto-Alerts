@@ -2,8 +2,8 @@ ethereum:
   name: Ethereum Mainnet
   rpc: "https://mainnet.infura.io/v3/2f7f30cd957c49d9a7a464a3fb449ba8"
   ratelimit:
-    requests: 99999  # Number of requests allowed per period
-    period: 86400  # period in seconds
+    requests: 99999  # Number of requests allowed per period (default 99999)
+    period: 86400  # period in seconds (default 86400)
 
 polygon:
   name: Polygon (Matic) Mainnet
