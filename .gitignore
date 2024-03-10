@@ -157,6 +157,6 @@ cython_debug/
 testing.py
 testing2.py
 logs/log.txt
-bot/whitelist/*
-bot/temp/*
+src/whitelist/*
+src/temp/*
 dev_notes.txt
