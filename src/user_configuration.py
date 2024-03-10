@@ -1,7 +1,4 @@
-from os import mkdir, getcwd, getenv, listdir
-from os.path import isdir, join, dirname, abspath, isfile, exists
 import json
-from dotenv import find_dotenv, load_dotenv
 import shutil
 
 from .config import *
@@ -23,9 +20,6 @@ class LocalUserConfiguration:
         self.user_config_root = join(WHITELIST_ROOT, f'{self.user_id}')
         self.config_path = join(WHITELIST_ROOT, f'{self.user_id}', 'config.json')
         self.alerts_path = join(WHITELIST_ROOT, f'{self.user_id}', 'alerts.json')
-
-        # Should be changed to allow user to use new alert template later
-        self.email_template_path = join(RESOURCES_ROOT, 'email_template.html')
 
         # Utility Paths:
         self.default_alerts_path = join(RESOURCES_ROOT, 'default_alerts.json')
@@ -87,28 +81,6 @@ class LocalUserConfiguration:
             self.update_config(config)
         return config['is_admin']
 
-    def get_emails(self) -> list[str]:
-        return self.load_config()['emails']
-
-    def add_emails(self, emails: list[str]) -> None:
-        config = self.load_config()
-        for email in emails:
-            if email not in config['emails']:
-                config['emails'].append(email)
-        self.update_config(config)
-
-    def remove_emails(self, emails: list[str]) -> list[str]:
-        """Attempts to remove emails from config, and returns fails"""
-        config = self.load_config()
-        fail = []
-        for email in emails:
-            if email in config['emails']:
-                config['emails'].remove(email)
-            else:
-                fail.append(email)
-        self.update_config(config)
-        return fail
-
     def get_channels(self) -> list[str]:
         return self.load_config()['channels']
 
@@ -130,10 +102,6 @@ class LocalUserConfiguration:
                 fail.append(channel)
         self.update_config(config)
         return fail
-
-    def get_email_template(self) -> str:
-        with open(self.email_template_path, 'r') as template:
-            return template.read()
 
 
 class MongoDBUserConfiguration(LocalUserConfiguration):

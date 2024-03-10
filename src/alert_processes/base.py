@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from ..telegram import TelegramBot
+
 
 class BaseAlertProcess(ABC):
     """
@@ -9,6 +11,8 @@ class BaseAlertProcess(ABC):
     
     This functionality allows standardized creation of new alert types/assets when needed by facilitating polymorphism.
     """
+    def __init__(self, telegram_bot: TelegramBot):
+        self.telegram_bot = telegram_bot
 
     @abstractmethod
     def poll_user_alerts(self, tg_user_id: str) -> None:

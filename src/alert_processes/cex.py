@@ -4,7 +4,7 @@ import os
 from typing import Union
 
 from ..user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
-from .._logger import logger
+from ..logger import logger
 from ..config import *
 from .base import BaseAlertProcess
 from ..telegram import TelegramBot
@@ -15,9 +15,8 @@ from ratelimit import limits, sleep_and_retry
 
 class CEXAlertProcess(BaseAlertProcess):
     def __init__(self, telegram_bot: TelegramBot):
+        super().__init__(telegram_bot)
         self.polling = False  # Temporary variable to manage alerts
-        self.telegram_bot = telegram_bot  # Telegram bot object instatiated in __main__.py
-        super().__init__()
 
     def poll_user_alerts(self, tg_user_id: str) -> None:
         """

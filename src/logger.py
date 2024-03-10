@@ -1,6 +1,6 @@
 import logging
 
-from .util import get_logfile
+from .utils import get_logfile
 
 formatter = logging.Formatter('%(module)s : %(levelname)s : %(asctime)s : %(message)s')
 

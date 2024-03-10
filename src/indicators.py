@@ -15,18 +15,14 @@ Features Needed:
       SIN (Vector Trigonometric Sin)
 * Need a combination of indicators (AND/OR)
 """
-from dataclasses import dataclass
 import json
 from time import time, sleep
-from os import getcwd, mkdir
-from os.path import join, isdir, dirname, abspath
 from typing import Union
 import os
-from math import ceil
 
 from .user_configuration import get_whitelist, LocalUserConfiguration, MongoDBUserConfiguration
 from .config import *
-from ._logger import logger
+from .logger import logger
 
 import requests
 from ratelimit import limits, sleep_and_retry

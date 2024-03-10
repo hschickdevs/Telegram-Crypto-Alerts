@@ -5,18 +5,18 @@ from typing import Union
 
 from .base import BaseAlertProcess
 from ..user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
-from .._logger import logger
+from ..logger import logger
 from ..config import *
 from ..indicators import TADatabaseClient, TAAggregateClient
+from ..telegram import TelegramBot
 
-import requests
 from ratelimit import limits, sleep_and_retry
 
 
 class TechnicalAlertProcess(BaseAlertProcess):
-    def __init__(self, telegram_bot_token: str):
+    def __init__(self, telegram_bot: TelegramBot):
+        super().__init__(telegram_bot)
         self.polling = False  # Temporary variable to manage alerts
-        self.tg_bot_token = telegram_bot_token
         self.ta_db = TADatabaseClient().fetch_ref()
         self.ta_agg_cli = TAAggregateClient()
 
@@ -157,8 +157,9 @@ class TechnicalAlertProcess(BaseAlertProcess):
         output = ([], [])
         for g_id in channel_ids:
             try:
-                requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
-                              params={'chat_id': g_id, 'text': header_str + post, "parse_mode": "HTML"})
+                # requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
+                #               params={'chat_id': g_id, 'text': header_str + post, "parse_mode": "HTML"})
+                self.telegram_bot.send_message(chat_id=g_id, text=header_str + post, parse_mode="HTML")
                 output[0].append(g_id)
             except:
                 output[1].append(g_id)

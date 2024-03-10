@@ -25,9 +25,3 @@ class CEXAlert:
     indicator: str
     params: dict = None
     type: str = 's'
-
-
-@dataclass
-class DEXAlert:
-    pair: str
-    metadata: dict

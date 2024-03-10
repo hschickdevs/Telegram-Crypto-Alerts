@@ -1,0 +1,39 @@
+{
+  "ETH/USDT": [
+    {
+      "type": "s",
+      "indicator": "PRICE",
+      "comparison": "ABOVE",
+      "target": 1500,
+      "params": {},
+      "alerted": false
+    },
+    {
+      "type": "s",
+      "indicator": "PRICE",
+      "comparison": "BELOW",
+      "target": 1,
+      "params": {},
+      "alerted": false
+    },
+    {
+      "type": "s",
+      "indicator": "PRICE",
+      "comparison": "PCTCHG",
+      "entry": 2000,
+      "target": 10.0,
+      "params": {},
+      "alerted": false
+    },
+    {
+      "type": "t",
+      "indicator": "MA",
+      "comparison": "ABOVE",
+      "alerted": false,
+      "interval": "1d",
+      "params": {"period": 30},
+      "output_value": "value",
+      "target": 1000.00
+    }
+  ]
+}

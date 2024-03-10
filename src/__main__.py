@@ -2,12 +2,12 @@ import threading
 from os import getenv
 from time import sleep
 
-from .alert_processes import CEXAlertProcess, DEXAlertProcess, TechnicalAlertProcess
+from .alert_processes import CEXAlertProcess, TechnicalAlertProcess
 from .telegram import TelegramBot
 from .user_configuration import get_whitelist
-from .util import handle_env
+from .utils import handle_env
 from .indicators import TaapiioProcess
-from ._logger import logger
+from .logger import logger
 
 if __name__ == "__main__":
     if len(get_whitelist()) == 0:
@@ -35,11 +35,11 @@ if __name__ == "__main__":
                      daemon=True).start()
 
     # Run the TechnicalAlertProcess in a daemon thread
-    threading.Thread(target=TechnicalAlertProcess(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run,
+    threading.Thread(target=TechnicalAlertProcess(telegram_bot=telegram_bot).run,
                      daemon=True).start()
 
     # Run the CEXAlertProcess in a daemon thread
-    threading.Thread(target=CEXAlertProcess(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run,
+    threading.Thread(target=CEXAlertProcess(telegram_bot=telegram_bot).run,
                      daemon=True).start()
 
     # # Run the DEXAlertProcess in a daemon thread

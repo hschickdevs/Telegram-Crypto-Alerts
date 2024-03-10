@@ -1,6 +1,5 @@
 from os import mkdir, getcwd, getenv, listdir
 from os.path import isdir, join, dirname, abspath, isfile, exists
-import json
 from dotenv import find_dotenv, load_dotenv
 import yaml
 
@@ -21,16 +20,6 @@ def get_help_command() -> str:
         return help_file.read()
 
 
-def load_swap_networks() -> dict:
-    with open(join(dirname(__file__), "blockchain", "mappings", "networks.yml"), "r") as f:
-        return yaml.safe_load(f)
-
-
-def load_swap_protocols() -> dict:
-    with open(join(dirname(__file__), "blockchain", "mappings", "protocols.yml"), "r") as f:
-        return yaml.safe_load(f)
-
-
 def handle_env():
     """Checks if the .env file exists in the current working dir, and imports the variables if so"""
     try:
@@ -44,3 +33,19 @@ def handle_env():
             val = getenv(var)
             if val is None:
                 raise ValueError(f"Missing environment variable: {var}")
+
+
+def get_commands() -> dict:
+    """Fetches the commands from the templates for the help command"""
+    commands = {}
+
+    # Define the path to the commands.txt file
+    file_path = join(dirname(abspath(__file__)), 'resources', 'commands.txt')
+
+    with open(file_path, 'r') as f:
+        for line in f.readlines():
+            # Splitting at the first '-' to separate command and description
+            command, description = line.strip().split(' - ', 1)
+            commands[command.strip()] = description.strip()
+
+    return commands

@@ -2,14 +2,14 @@ import time
 from datetime import datetime
 from typing import Union
 
-from ._logger import logger
+from .logger import logger
 from .user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
-from .util import get_logfile, get_help_command
+from .utils import get_logfile, get_help_command, get_commands
 from .config import *
 from .indicators import TADatabaseClient, TaapiioProcess
-from .models import TechnicalAlert, DEXAlert, CEXAlert
+from .models import TechnicalAlert, CEXAlert
 
-from telebot import TeleBot
+from telebot import TeleBot, types
 import requests
 from requests.exceptions import ReadTimeout
 
@@ -22,6 +22,12 @@ class TelegramBot(TeleBot):
         self.indicators_ref_cli = TADatabaseClient()
         self.indicators_db = self.indicators_ref_cli.fetch_ref()
         self.taapiio_cli = taapiio_process
+
+        # Set the bot commands:
+        logger.info("Setting bot commands ...")
+        user_commands = [types.BotCommand(command=command, description=description)
+                         for command, description in get_commands().items()]
+        self.set_my_commands(user_commands)
 
         @self.message_handler(commands=['id'])
         def on_id(message):
@@ -369,7 +375,7 @@ class TelegramBot(TeleBot):
                         self.reply_to(message, f"Failed to remove channel(s): {', '.join(fails)}")
 
                     self.reply_to(message, f"Successfully removed channel(s): "
-                                           f"{', '.join([email for email in rm_channels if email not in fails])}")
+                                           f"{', '.join([channel for channel in rm_channels if channel not in fails])}")
                 else:
                     channels = configuration.get_channels()
                     if len(channels) == 0:
@@ -382,39 +388,6 @@ class TelegramBot(TeleBot):
                     self.reply_to(message, msg)
             except IndexError:
                 self.reply_to(message, "Invalid formatting - Use /channels VIEW/ADD/REMOVE ID,ID,ID")
-            except Exception as exc:
-                self.reply_to(message, f"An unexpected error occurred - {exc}")
-
-        @self.message_handler(commands=['emails'])
-        @self.is_whitelisted
-        def on_emails(message):
-            splt_msg = self.split_message(message.text)
-            try:
-                configuration = BaseConfig(str(message.from_user.id))
-                if splt_msg[0].lower() == "add":
-                    new_emails = splt_msg[1].split(",")
-                    configuration.add_emails(new_emails)
-                    self.reply_to(message, f"Successfully added email(s): {', '.join(new_emails)}")
-                elif splt_msg[0].lower() == "remove":
-                    rm_emails = splt_msg[1].split(",")
-                    fails = configuration.remove_emails(rm_emails)
-                    if len(fails) > 0:
-                        self.reply_to(message, f"Failed to remove email(s): {', '.join(fails)}")
-
-                    self.reply_to(message, f"Successfully removed email(s): "
-                                           f"{', '.join([email for email in rm_emails if email not in fails])}")
-                else:
-                    emails = configuration.get_emails()
-                    if len(emails) == 0:
-                        self.reply_to(message, 'No emails registered. Use /emails ADD email@email.com,email@email.com')
-                        return
-
-                    msg = "Current Email Recipients:\n\n"
-                    for email in emails:
-                        msg += f"{email}\n"
-                    self.reply_to(message, msg)
-            except IndexError:
-                self.reply_to(message, "Invalid formatting - Use /emails VIEW/ADD/REMOVE email@email.com")
             except Exception as exc:
                 self.reply_to(message, f"An unexpected error occurred - {exc}")
 
@@ -443,20 +416,6 @@ class TelegramBot(TeleBot):
                 self.reply_to(message, "Invalid formatting - Use /whitelist VIEW/ADD/REMOVE TG_USER_ID,TG_USER_ID")
             except Exception as exc:
                 self.reply_to(message, f"An unexpected error occurred - {exc}")
-
-        # @self.message_handler(commands=['blacklist'])
-        # @self.is_admin
-        # def on_blacklist(message):
-        #     splt_msg = self.split_message(message.text)
-        #     try:
-        #         rm_users = splt_msg[0].split(",")
-        #         for user in rm_users:
-        #             UserConfiguration(user).blacklist_user()
-        #         self.reply_to(message, f"Blacklisted Users: {', '.join(rm_users)}")
-        #     except IndexError:
-        #         self.reply_to(message, "Invalid formatting - Use /blacklist TG_USER_ID,TG_USER_ID")
-        #     except Exception as exc:
-        #         self.reply_to(message, f"An unexpected error occurred - {exc}")
 
         @self.message_handler(commands=['getlogs'])
         @self.is_admin
@@ -562,7 +521,8 @@ class TelegramBot(TeleBot):
                 return False
         return wrapper
 
-    def get_binance_price(self, pair):
+    @staticmethod
+    def get_binance_price(pair):
         try:
             return round(float(
                 requests.get(f'https://api.binance.com/api/v3/ticker/price?symbol={pair.replace("/", "")}').json()[
