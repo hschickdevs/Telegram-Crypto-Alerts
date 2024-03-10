@@ -199,7 +199,7 @@ class TAAggregateClient:
     def load_agg(self) -> dict:
         try:
             with open(AGG_DATA_LOCATION, 'r') as infile:
-                return json.load(infile)
+                return json.loads(infile.read())
         except FileNotFoundError:
             self.dump_agg({})
             return self.load_agg()
@@ -268,8 +268,9 @@ class TaapiioProcess:
                     query = {"secret": self.apikey, "construct": {"exchange": DEFAULT_EXCHANGE, "symbol": symbol,
                                                                    "interval": interval, "indicators": indicators_query}}
                     r = self.call_api(endpoint=BULK_ENDPOINT, params=query)
+                    print("TAAPI.IO RESPONSE:", r)
                     try:
-                        responses = r["mappings"]
+                        responses = r["data"]
                     except KeyError:
                         # if "error" in r.keys():
                         #     logger.warn(f"Taapio error occurred when building aggregate: {r['error']}")
