@@ -35,8 +35,8 @@ CMD ["python3", "-m", "src"]
 
 # docker run -d --name telegram-crypto-alerts \
 #   -e TELEGRAM_USER_ID=<YOUR_ID> \
-#   -e TELEGRAM_BOT_TOKEN=<YOUR_TELEGRAM_BOT_TOKEN> \
-#   -e TAAPIIO_APIKEY=<LLM-MODEL> \
+#   -e TELEGRAM_BOT_TOKEN=<YOUR_TOKEN> \
+#   -e TAAPIIO_APIKEY=<YOUR_KEY> \
 #   hschickdevs/telegram-crypto-alerts
 
 # docker attach telegram-crypto-alerts
