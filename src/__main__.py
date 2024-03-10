@@ -8,14 +8,15 @@ from .user_configuration import get_whitelist
 from .utils import handle_env
 from .indicators import TaapiioProcess
 from .logger import logger
+from .setup import do_setup
 
 if __name__ == "__main__":
-    if len(get_whitelist()) == 0:
-        raise Exception("Setup not complete. "
-                        "Please run the setup.py script to initialize the bot using 'python setup.py --id your_tg_id'")
-
     # Process environment variables
     handle_env()
+
+    # Do the setup process if the bot is not set up
+    if len(get_whitelist()) == 0:
+        do_setup()
 
     # Create global Taapi.io process for the aggregator and telegram bot to sync calls
     taapiio_process = TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'))

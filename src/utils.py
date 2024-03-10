@@ -28,7 +28,7 @@ def handle_env():
     except:
         pass
     finally:
-        mandatory_vars = ['TELEGRAM_BOT_TOKEN']
+        mandatory_vars = ['TELEGRAM_USER_ID', 'TELEGRAM_BOT_TOKEN']
         for var in mandatory_vars:
             val = getenv(var)
             if val is None:
