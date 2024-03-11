@@ -38,7 +38,7 @@ class LocalUserConfiguration:
         try:
             # Make default configuration:
             with open(self.default_config_path, 'r') as _in:
-                default_config = json.load(_in)
+                default_config = json.loads(_in.read())
             default_config["channels"].append(self.user_id)
             if is_admin:
                 default_config["is_admin"] = True
@@ -60,7 +60,7 @@ class LocalUserConfiguration:
     def load_alerts(self) -> dict:
         """Load the database contents and return it in JSON format"""
         with open(self.alerts_path, 'r') as infile:
-            return json.load(infile)
+            return json.loads(infile.read())
 
     def update_alerts(self, data: dict) -> None:
         with open(self.alerts_path, 'w') as outfile:
@@ -68,7 +68,7 @@ class LocalUserConfiguration:
 
     def load_config(self) -> dict:
         with open(self.config_path, 'r') as infile:
-            return json.load(infile)
+            return json.loads(infile.read())
 
     def update_config(self, data: dict) -> None:
         with open(self.config_path, 'w') as outfile:
@@ -129,7 +129,7 @@ class MongoDBUserConfiguration(LocalUserConfiguration):
         try:
             # Make default configuration:
             with open(self.default_config_path, 'r') as _in:
-                default_config = json.load(_in)
+                default_config = json.loads(_in.read())
             default_config["channels"].append(self.user_id)
             if is_admin:
                 default_config["is_admin"] = True
@@ -137,7 +137,7 @@ class MongoDBUserConfiguration(LocalUserConfiguration):
 
             # Make default alerts
             with open(self.default_alerts_path, 'r') as _in:
-                user_document['alerts'] = json.load(_in)
+                user_document['alerts'] = json.loads(_in.read())
         except Exception as exc:
             self.blacklist_user()
             raise Exception(f"Could not prepare user document for MongoDB - {exc}")

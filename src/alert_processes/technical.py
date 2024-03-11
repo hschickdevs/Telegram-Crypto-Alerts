@@ -48,7 +48,7 @@ class TechnicalAlertProcess(BaseAlertProcess):
                     condition, value, post_string = self.get_technical_indicator(pair, alert)
 
                     if condition:  # If there is a condition satisfied
-                        post_queue.append(post_string)
+                        post_queue.append((post_string, pair))
                         alert['alerted'] = True
                         do_update = True  # Since the alert needs to be updated in the database, signal do_update
 
@@ -62,9 +62,9 @@ class TechnicalAlertProcess(BaseAlertProcess):
 
         if len(post_queue) > 0:
             self.polling = False
-            for post in post_queue:
+            for post, pair in post_queue:
                 logger.info(post)
-                status = self.tg_alert(post=post, channel_ids=config['channels'])
+                status = self.tg_alert(post=post, channel_ids=config['channels'], pair=pair)
                 if len(status[1]) > 0:
                     logger.warn(f"Failed to send Telegram alert ({post}) to the following IDs: {status[1]}")
 
@@ -145,21 +145,25 @@ class TechnicalAlertProcess(BaseAlertProcess):
         else:
             return null_output
 
-    def tg_alert(self, post: str, channel_ids: list[str]) -> tuple:
+    def tg_alert(self, post: str, channel_ids: list[str], pair: str) -> tuple:
         """
         Sends the post (price alert) to each registered user of the Telegram bot
 
         :param post: A message to send to each registered bot user
         :param channel_ids: All group ids to send the alert to (self.config_client.load_config()['channels'])
+        :param pair: The binance pair corresponding to the alert (for showing chart)
         :return: Tuple = ([successful group ids], [unsuccessful group ids])
         """
-        header_str = f"🔔 <b>TECHNICAL ALERT:</b> 🔔\n"
+        post = f"🔔 <b>TECHNICAL ALERT:</b> 🔔\n\n" + post
+        if pair:
+            pair_fmt = pair.replace('/', '_')
+            post += f"\n\n<a href='https://www.binance.com/en/trade/{pair_fmt}?type=spot'><b>View {pair} Chart</b></a>"
         output = ([], [])
         for g_id in channel_ids:
             try:
                 # requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
                 #               params={'chat_id': g_id, 'text': header_str + post, "parse_mode": "HTML"})
-                self.telegram_bot.send_message(chat_id=g_id, text=header_str + post, parse_mode="HTML")
+                self.telegram_bot.send_message(chat_id=g_id, text=post, parse_mode="HTML", disable_web_page_preview=True)
                 output[0].append(g_id)
             except:
                 output[1].append(g_id)

@@ -38,7 +38,7 @@ class BaseAlertProcess(ABC):
         pass
 
     @abstractmethod
-    def tg_alert(self, post: str, channel_ids: list[str]):
+    def tg_alert(self, post: str, channel_ids: list[str], pair: str):
         """
         Sends a Telegram alert to the user.
         
