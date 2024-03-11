@@ -1,13 +1,20 @@
-![made-with-python](https://img.shields.io/badge/Made%20with-Python3-yellow)
-![version](https://img.shields.io/badge/Version-2.0.0-blue)
+<!-- ![made-with-python](https://img.shields.io/badge/Made%20with-Python3-yellow) -->
+<!-- ![version](https://img.shields.io/badge/Version-3.0.0-blue) -->
+<p align="center">
+  <img src="https://img.shields.io/badge/Made%20with-Python3-yellow?style=for-the-badge" alt="Made with Python3" />
+  <a href="https://github.com/hschickdevs/Telegram-Crypto-Alerts/stargazers"><img src="https://img.shields.io/github/stars/hschickdevs/Telegram-Crypto-Alerts.svg?style=for-the-badge&color=219ED9" alt="Stargazers" /></a>
+  <a href="https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/main/LICENSE"><img src="https://img.shields.io/github/license/hschickdevs/Telegram-Crypto-Alerts.svg?style=for-the-badge&color=E81E61" alt="GPLv3 License" /></a>
+</p>
 
 <!-- TODO: ADD STARS BADGE -->
 
 
 <!-- PROJECT HEADER -->
 <div align="center" id="top">
-  <img src="docs/img/logo.png" alt="Logo" width="400">
-  <hr>
+  <img src="docs/img/logo3.png" alt="Logo" width="200">
+
+  <h1>Telegram Crypto Alerts</h1>
+  <!-- <hr> --> 
   <!-- <h2 align="center"><strong>Telegram-Crypto-Alerts</strong></h2> -->
    <p align="center">
     <i>The most popular open-source cryptocurrency alerting tool for Telegram!</i>
