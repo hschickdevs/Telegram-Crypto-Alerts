@@ -17,11 +17,15 @@ BaseConfig = LocalUserConfiguration if not USE_MONGO_DB else MongoDBUserConfigur
 
 
 class TelegramBot(TeleBot):
-    def __init__(self, bot_token: str, taapiio_process: TaapiioProcess):
+    def __init__(self, bot_token: str, taapiio_process: TaapiioProcess = None):
         super().__init__(token=bot_token)
+        self.taapiio_cli = None
         self.indicators_ref_cli = TADatabaseClient()
         self.indicators_db = self.indicators_ref_cli.fetch_ref()
-        self.taapiio_cli = taapiio_process
+        if taapiio_process is None:
+            logger.warning("Taapi.io APIKEY not set - Technical indicator requests will be unavailable.")
+        else:
+            self.taapiio_cli = taapiio_process
 
         # Set the bot commands:
         logger.info("Setting bot commands ...")
@@ -54,6 +58,12 @@ class TelegramBot(TeleBot):
 
                     indicator_instance = self.parse_simple_indicator_message(message.text)
                 elif indicator in technical_indicators:
+                    if self.taapiio_cli is None:
+                        self.reply_to(message,
+                                      "Technical alerts are currently unavailable. Set the environment variable `TAAPIIO_APIKEY` to enable.",
+                                      parse_mode="Markdown")
+                        return
+
                     self.reply_to(message, "Attempting to verify parameters with taapi.io and add alert to database...")
 
                     # Verify accurate formatting:
@@ -63,7 +73,7 @@ class TelegramBot(TeleBot):
                     indicator_instance = self.parse_technical_indicator_message(message.text)
                     if indicator_instance is None:
                         self.reply_to(message, "Could not match passed parameters to valid technical indicator in the database.\n"
-                                               "Please check your formatting with /indicators")
+                                               "Please check your formatting with `/indicators`", parse_mode="Markdown")
                         return
 
                     # Verify that no errors are returned by the indicator on taapi.io:
@@ -232,7 +242,9 @@ class TelegramBot(TeleBot):
         def on_getindicator(message):
             """/getindicator BASE/QUOTE INTERVAL TIMEFRAME kwarg,kwarg"""
             if self.taapiio_cli is None:
-                self.reply_to(message, "Indicator requests unavailable. Please set the Taapi.io APIKEY parameter.")
+                self.reply_to(message,
+                              "Technical indicators are currently unavailable. Set the environment variable `TAAPIIO_APIKEY` to enable.",
+                              parse_mode="Markdown")
                 return
 
             indicator = self.parse_technical_indicator_message(message.text)
@@ -290,7 +302,7 @@ class TelegramBot(TeleBot):
                     output += f"      - <b><i>{output_val}</i></b>\n"
                 output += "\n"
 
-            self.reply_to(message, output, parse_mode="HTML")
+            self.reply_to(message, output, parse_mode="HTML", disable_web_page_preview=True)
 
         @self.message_handler(commands=['viewconfig'])
         @self.is_whitelisted

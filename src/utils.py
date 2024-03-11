@@ -1,10 +1,17 @@
 from os import mkdir, getcwd, getenv, listdir
 from os.path import isdir, join, dirname, abspath, isfile, exists
 from dotenv import find_dotenv, load_dotenv
-import yaml
+from functools import wraps
+from ratelimit import limits, sleep_and_retry
 
+from .config import SUBSCRIPTION_TIERS
 
 """ -------------- UTILITIES -------------- """
+
+
+def get_ratelimits() -> tuple:
+    """Get the rate limits for the current tier"""
+    return SUBSCRIPTION_TIERS[getenv('TAAPIIO_TIER', 'free').lower()]
 
 
 def get_logfile() -> str:
@@ -28,7 +35,7 @@ def handle_env():
     except:
         pass
     finally:
-        mandatory_vars = ['TELEGRAM_USER_ID', 'TELEGRAM_BOT_TOKEN']
+        mandatory_vars = ['TELEGRAM_USER_ID', 'TELEGRAM_BOT_TOKEN', "LOCATION"]
         for var in mandatory_vars:
             val = getenv(var)
             if val is None:

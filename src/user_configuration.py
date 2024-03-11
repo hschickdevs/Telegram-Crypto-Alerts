@@ -60,7 +60,8 @@ class LocalUserConfiguration:
     def load_alerts(self) -> dict:
         """Load the database contents and return it in JSON format"""
         with open(self.alerts_path, 'r') as infile:
-            return json.loads(infile.read())
+            contents = infile.read()
+            return json.loads(contents)
 
     def update_alerts(self, data: dict) -> None:
         with open(self.alerts_path, 'w') as outfile:
@@ -68,7 +69,8 @@ class LocalUserConfiguration:
 
     def load_config(self) -> dict:
         with open(self.config_path, 'r') as infile:
-            return json.loads(infile.read())
+            contents = infile.read()
+            return json.loads(contents)
 
     def update_config(self, data: dict) -> None:
         with open(self.config_path, 'w') as outfile:

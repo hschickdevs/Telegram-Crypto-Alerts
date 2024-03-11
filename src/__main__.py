@@ -17,35 +17,31 @@ if __name__ == "__main__":
     # Do the setup process if the bot is not set up
     if len(get_whitelist()) == 0:
         do_setup()
+        logger.info("Waiting for initialization ..."); sleep(2)
 
-    # Create global Taapi.io process for the aggregator and telegram bot to sync calls
-    taapiio_process = TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'))
+    taapiio_process = None
+    if getenv('TAAPIIO_APIKEY'):
+        # Create global Taapi.io process for the aggregator and telegram bot to sync calls
+        taapiio_process = TaapiioProcess(taapiio_apikey=getenv('TAAPIIO_APIKEY'))
     
     # Create the Telegram bot to listen to commands and send messages
     telegram_bot = TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'), 
                                taapiio_process=taapiio_process)
 
     # Run the TG bot in a daemon thread
-    # threading.Thread(target=TelegramBot(bot_token=getenv('TELEGRAM_BOT_TOKEN'),
-    #                                     taapiio_process=taapiio_process).run,
-    #                  daemon=True).start()
     threading.Thread(target=telegram_bot.run, daemon=True).start()
 
-    # Run the Taapi.io process in a daemon thread
-    threading.Thread(target=taapiio_process.run,
-                     daemon=True).start()
-
-    # Run the TechnicalAlertProcess in a daemon thread
-    threading.Thread(target=TechnicalAlertProcess(telegram_bot=telegram_bot).run,
-                     daemon=True).start()
-
     # Run the CEXAlertProcess in a daemon thread
-    threading.Thread(target=CEXAlertProcess(telegram_bot=telegram_bot).run,
-                     daemon=True).start()
+    threading.Thread(target=CEXAlertProcess(telegram_bot=telegram_bot).run, daemon=True).start()
 
-    # # Run the DEXAlertProcess in a daemon thread
-    # threading.Thread(target=DEXAlertProcess(telegram_bot_token=getenv('TELEGRAM_BOT_TOKEN')).run,
-    #                  daemon=True).start()
+    if taapiio_process:
+        # Run the Taapi.io process in a daemon thread
+        threading.Thread(target=taapiio_process.run,
+                         daemon=True).start()
+
+        # Run the TechnicalAlertProcess in a daemon thread
+        threading.Thread(target=TechnicalAlertProcess(telegram_bot=telegram_bot).run,
+                         daemon=True).start()
 
     # Keep the main thread alive to listen to interrupt
     logger.info("Bot started - use Ctrl+C to stop the bot.")

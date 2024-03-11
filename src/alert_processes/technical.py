@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 import os
-from typing import Union
+from functools import wraps
 
 from .base import BaseAlertProcess
 from ..user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
@@ -9,8 +9,6 @@ from ..logger import logger
 from ..config import *
 from ..indicators import TADatabaseClient, TAAggregateClient
 from ..telegram import TelegramBot
-
-from ratelimit import limits, sleep_and_retry
 
 
 class TechnicalAlertProcess(BaseAlertProcess):
@@ -72,8 +70,6 @@ class TechnicalAlertProcess(BaseAlertProcess):
             self.polling = True
             logger.info(f'Bot polling for next alert...')
 
-    @sleep_and_retry
-    @limits(calls=1, period=TECHNICAL_POLLING_PERIOD)
     def poll_all_alerts(self) -> None:
         """
         1. Aggregate pairs across all users
@@ -157,7 +153,7 @@ class TechnicalAlertProcess(BaseAlertProcess):
         post = f"🔔 <b>TECHNICAL ALERT:</b> 🔔\n\n" + post
         if pair:
             pair_fmt = pair.replace('/', '_')
-            post += f"\n\n<a href='https://www.binance.com/en/trade/{pair_fmt}?type=spot'><b>View {pair} Chart</b></a>"
+            post += f"\n<a href='https://www.binance.com/en/trade/{pair_fmt}?type=spot'><b>View {pair} Chart</b></a>"
         output = ([], [])
         for g_id in channel_ids:
             try:
@@ -175,6 +171,7 @@ class TechnicalAlertProcess(BaseAlertProcess):
             logger.warn(f'{type(self).__name__} started at {datetime.utcnow()} UTC+0')
             while True:
                 self.poll_all_alerts()
+                time.sleep(TECHNICAL_POLLING_PERIOD)
         except NotImplementedError as exc:
             logger.critical(exc_info=exc)
             # self.alert_admins(str(exc))

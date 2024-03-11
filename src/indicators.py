@@ -23,6 +23,7 @@ import os
 from .user_configuration import get_whitelist, LocalUserConfiguration, MongoDBUserConfiguration
 from .config import *
 from .logger import logger
+from .utils import get_ratelimits
 
 import requests
 from ratelimit import limits, sleep_and_retry
@@ -199,7 +200,8 @@ class TAAggregateClient:
     def load_agg(self) -> dict:
         try:
             with open(AGG_DATA_LOCATION, 'r') as infile:
-                return json.loads(infile.read())
+                contents = infile.read()
+                return json.loads(contents)
         except FileNotFoundError:
             self.dump_agg({})
             return self.load_agg()
@@ -223,7 +225,8 @@ class TaapiioProcess:
         self.tg_bot_token = telegram_bot_token  # Can be left blank, but the process wont be able to report errors
 
     @sleep_and_retry
-    @limits(calls=1, period=round(RATE_LIMITS[1] * (1 + RATE_LIMITS[2]), 1))
+    @limits(calls=get_ratelimits()[0], period=round(get_ratelimits()[1] * (1 + REQUEST_BUFFER), 1))
+    # @tiered_rate_limit()
     def call_api(self, endpoint: str, params: dict, r_type: str = "POST") -> dict:
         """
         Calls the taapi.io API and returned the response in JSON format
@@ -262,13 +265,13 @@ class TaapiioProcess:
                     num_indicators += len(indicators)  # For logging
 
                     # Prepare the bulk query for the API
-                    EXCLUDE_INDICATOR_KEYS = ["values", "last_update"]
-                    indicators_query = [{k: v for k, v in indicator.items() if k not in EXCLUDE_INDICATOR_KEYS}
+                    exclude_keys = ["values", "last_update"]
+                    indicators_query = [{k: v for k, v in indicator.items() if k not in exclude_keys}
                                         for indicator in indicators]
                     query = {"secret": self.apikey, "construct": {"exchange": DEFAULT_EXCHANGE, "symbol": symbol,
-                                                                   "interval": interval, "indicators": indicators_query}}
+                                                                  "interval": interval, "indicators": indicators_query}}
                     r = self.call_api(endpoint=BULK_ENDPOINT, params=query)
-                    print("TAAPI.IO RESPONSE:", r)
+                    # print("TAAPI.IO RESPONSE:", r)
                     try:
                         responses = r["data"]
                     except KeyError:

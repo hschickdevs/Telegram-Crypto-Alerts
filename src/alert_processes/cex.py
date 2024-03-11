@@ -1,13 +1,13 @@
 import time
 from datetime import datetime
 import os
-from typing import Union
 
 from ..user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
 from ..logger import logger
 from ..config import *
 from .base import BaseAlertProcess
 from ..telegram import TelegramBot
+from ..models import BinancePriceResponse
 
 import requests
 from ratelimit import limits, sleep_and_retry
@@ -15,8 +15,16 @@ from ratelimit import limits, sleep_and_retry
 
 class CEXAlertProcess(BaseAlertProcess):
     def __init__(self, telegram_bot: TelegramBot):
+        """
+        :param telegram_bot: The Telegram bot instance
+        """
         super().__init__(telegram_bot)
         self.polling = False  # Temporary variable to manage alerts
+
+        self.location = os.getenv('LOCATION').lower()
+        assert self.location in ['us', 'global'], "Location must be 'us' or 'global' for the Binance exchange."
+
+        self.endpoint = BINANCE_PRICE_URL_US if self.location.lower() == 'us' else BINANCE_PRICE_URL_GLOBAL
 
     def poll_user_alerts(self, tg_user_id: str) -> None:
         """
@@ -82,10 +90,12 @@ class CEXAlertProcess(BaseAlertProcess):
         PCTCHG - Percent change in the price
         ABOVE - Price above the target
         BELOW - Price below the target
+
         :param pair: The crypto pair
         :param pair_price: The current price of the crypto pair.
                            Get the pair price before calling the self.get_pair_price() function
         :param alert: An alert data dictionary as returned by src.io_handler.UserConfiguration.load_alerts()
+
         :returns: Tuple:
                   (Boolean) True if the indicator is satisfied, False if not
                   (Float) The current value of the indicator
@@ -95,7 +105,7 @@ class CEXAlertProcess(BaseAlertProcess):
         # indicator = alert["indicator"]
         comparison = alert['comparison']
         if pair_price is None:
-            pair_price = self.get_pair_price(token_pair=pair.replace("/", ""))
+            pair_price = self.get_latest_price(token_pair=pair.replace("/", ""))
 
         if comparison == 'PCTCHG':
             entry = alert['entry']
@@ -106,7 +116,7 @@ class CEXAlertProcess(BaseAlertProcess):
                 pct_chg = ((entry - pair_price) / entry) * 100
                 return True, pct_chg, f"{pair} DOWN {pct_chg:.1f}% FROM {entry} AT {pair_price}"
         elif comparison == '24HRCHG':
-            pct_change = self.get_24hr_price_change(pair.replace("/", ""))
+            pct_change = self.get_pct_change(pair.replace("/", ""))
             if abs(pct_change) >= alert['target']:
                 return True, pct_change, f"{pair} 24HR CHANGE {pct_change:.1f}% AT {pair_price}"
         elif comparison == 'ABOVE':
@@ -118,51 +128,57 @@ class CEXAlertProcess(BaseAlertProcess):
 
         return False, pair_price, ""
 
-    def get_pair_price(self, token_pair: str, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
+    def get_latest_price(self, token_pair: str, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
         """
         Make a request to Binance API and return the response
+
         :param token_pair: token pair without the slash (e.g. BTCUSDT)
         :param _try: The current try for recursive retries
         :param retry_delay: seconds delay between retries
-        :param maximum_retries: Maxiumum number of retries
+        :param maximum_retries: Maximum number of retries
+
         :return float: price of the token pair
         """
+        url = self.endpoint.format(token_pair, BINANCE_TIMEFRAMES[0])
         try:
-            response = requests.get(BINANCE_API_ENDPOINT.format(token_pair))
+
+            response = requests.get(url)
             response.raise_for_status()
-            return float(response.json()['price'])
+
+            return BinancePriceResponse(response.json()).lastPrice
         except Exception as err:
             if _try == maximum_retries:
-                raise ConnectionAbortedError(f'Binance request failed after {_try} retries - Error: {err}')
+                raise ConnectionAbortedError(f'Binance request ({url}) failed after {_try} retries - Error: {err}')
             else:
                 time.sleep(retry_delay)
-                return self.get_pair_price(token_pair, _try=_try + 1)
+                return self.get_latest_price(token_pair, _try=_try + 1)
 
-    def get_24hr_price_change(self, token_pair: str, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
+    def get_pct_change(self, token_pair: str, window: str, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
         """
         Make a request to Binance API and return the 24 hour % change for a token pair
+
         :param token_pair: token pair without the slash (e.g. BTCUSDT)
+        :param window: The time window for the price change (e.g. 1d for 1 day)
         :param _try: The current try for recursive retries
         :param retry_delay: seconds delay between retries
         :param maximum_retries: Maxiumum number of retries
+
         :return float: The percent change of the token pair (expressed as a percentage, i.e. -3.8 for -3.8%)
         """
+        assert window in BINANCE_TIMEFRAMES, (f'Invalid window ({window}) for Binance API. '
+                                              f'Must be one of {BINANCE_TIMEFRAMES}')
+        url = self.endpoint.format(token_pair, window)
         try:
-            response = requests.get(BINANCE_24HR_URL.format(token_pair))
+            response = requests.get(url)
             response.raise_for_status()
-            # return float(response.json()['price'])
+
+            return BinancePriceResponse(response.json()).priceChangePercent
         except Exception as err:
             if _try == maximum_retries:
-                raise ConnectionAbortedError(f'Binance request failed after {_try} retries - Error: {err}')
+                raise ConnectionAbortedError(f'Binance request ({url}) failed after {_try} retries - Error: {err}')
             else:
                 time.sleep(retry_delay)
-                return self.get_24hr_price_change(token_pair, _try=_try + 1)
-
-        for pair in response.json():
-            if pair['symbol'].upper() == token_pair.upper():
-                return float(pair['priceChangePercent'])
-        else:
-            raise KeyError(f'Could not match token pair ({token_pair}) in Binance response.')
+                return self.get_pct_change(token_pair, window, _try=_try + 1)
     
     def tg_alert(self, post: str, channel_ids: list[str], pair: str = None) -> tuple:
         """
@@ -171,6 +187,7 @@ class CEXAlertProcess(BaseAlertProcess):
         :param post: A message to send to each registered bot user
         :param channel_ids: All group ids to send the alert to (self.config_client.load_config()['channels'])
         :param pair: The binance pair corresponding to the alert (for showing chart)
+
         :return: Tuple = ([successful group ids], [unsuccessful group ids])
         """
         post = f"🔔 <b>CEX ALERT:</b> 🔔\n\n" + post
@@ -190,6 +207,9 @@ class CEXAlertProcess(BaseAlertProcess):
         return output
     
     def run(self):
+        """
+        Start the CEX alert process and run in an infinite loop
+        """
         try:
             logger.warn(f'{type(self).__name__} started at {datetime.utcnow()} UTC+0')
             while True:

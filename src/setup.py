@@ -18,11 +18,11 @@ def do_setup():
         else:
             MongoDBUserConfiguration(user_id).whitelist_user(is_admin=True)
 
-            # Create empty aggregate as placeholder if it doesn't already exist:
-            if not os.path.isdir(os.path.dirname(AGG_DATA_LOCATION)):
-                os.mkdir(os.path.dirname(AGG_DATA_LOCATION))
-                with open(AGG_DATA_LOCATION, 'w') as outfile:
-                    outfile.write("{}")
+        # Create empty aggregate as placeholder if it doesn't already exist:
+        if not os.path.isdir(os.path.dirname(AGG_DATA_LOCATION)):
+            os.mkdir(os.path.dirname(AGG_DATA_LOCATION))
+            with open(AGG_DATA_LOCATION, 'w') as outfile:
+                outfile.write("{}")
 
         logger.info("Setup complete! You can now run the bot module using: python3 -m bot")
     except Exception as exc:

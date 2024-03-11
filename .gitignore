@@ -154,7 +154,7 @@ cython_debug/
 #.idea/
 
 # Project Specific
-testing.py
+testing.*
 testing2.py
 logs/log.txt
 src/whitelist/*
