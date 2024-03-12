@@ -77,7 +77,7 @@ I will choose the most cost-efficient and performant platform and deploy the bot
 
 ### Self Deployment
 
-If you are confident in your technical abilities and would like to self host the bot, you can follow the steps below to set it up on your own machine or cloud server. Click the link corresponding to your setup preference:
+If you have advanced technical abilities and would like to self host the bot, you can follow the steps below to set it up on your own machine or cloud server. Click the link corresponding to your setup preference:
 
 > Click Here: [🔗**Deploy from Docker**](./docs/docker_setup.md)
 
