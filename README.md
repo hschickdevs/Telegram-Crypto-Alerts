@@ -1,10 +1,5 @@
 <!-- ![made-with-python](https://img.shields.io/badge/Made%20with-Python3-yellow) -->
 <!-- ![version](https://img.shields.io/badge/Version-3.0.0-blue) -->
-<!-- > 📦 **NOTE:** Major version 3.0.0 has launched! See the **[🔗CHANGELOG](docs/CHANGELOG.md)** for more details. -->
-
-<div style="background-color:#219ED9; color:white; padding:10px; text-align:center; font-size:18px; border-radius: 8px; margin-bottom: 20px;">
-  📦 Major version 3.0.0 has launched! See the <a href="docs/CHANGELOG.md" style="color:white; text-decoration:underline;"><strong>🔗CHANGELOG</strong></a> for more details.
-</div>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Made%20with-Python3-yellow?style=for-the-badge" alt="Made with Python3" />
@@ -46,7 +41,9 @@
    </p>                      
 
 </div>
-<br>
+
+> 📦 **NOTE:** Major version 3.0.0 has launched! See the **[🔗CHANGELOG](docs/CHANGELOG.md)** for more details.
+
 
 ## About the Project
 
