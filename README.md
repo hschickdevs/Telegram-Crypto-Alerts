@@ -1,13 +1,17 @@
 <!-- ![made-with-python](https://img.shields.io/badge/Made%20with-Python3-yellow) -->
 <!-- ![version](https://img.shields.io/badge/Version-3.0.0-blue) -->
-> 📦 **NOTE:** Major version 3.0.0 has launched! See the **[🔗CHANGELOG](docs/CHANGELOG.md)** for more details.
+<!-- > 📦 **NOTE:** Major version 3.0.0 has launched! See the **[🔗CHANGELOG](docs/CHANGELOG.md)** for more details. -->
 
+<div style="background-color:#219ED9; color:white; padding:10px; text-align:center; font-size:18px; border-radius: 8px; margin-bottom: 20px;">
+  📦 Major version 3.0.0 has launched! See the <a href="docs/CHANGELOG.md" style="color:white; text-decoration:underline;"><strong>🔗CHANGELOG</strong></a> for more details.
+</div>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Made%20with-Python3-yellow?style=for-the-badge" alt="Made with Python3" />
   <a href="https://github.com/hschickdevs/Telegram-Crypto-Alerts/stargazers"><img src="https://img.shields.io/github/stars/hschickdevs/Telegram-Crypto-Alerts.svg?style=for-the-badge&color=E81E61" alt="Stargazers" /></a>
   <a href="https://github.com/hschickdevs/Telegram-Crypto-Alerts/commits/main"><img src="https://img.shields.io/github/last-commit/hschickdevs/Telegram-Crypto-Alerts?style=for-the-badge&color=219ED9" alt="Last Commit" /></a>
 </p>
+<br/>
 
 <!-- TODO: ADD STARS BADGE -->
 
