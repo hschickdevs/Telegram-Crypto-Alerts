@@ -1,10 +1,7 @@
-from os import mkdir, getcwd, getenv, listdir
-from os.path import isdir, join, dirname, abspath, isfile, exists
 import json
-from dotenv import find_dotenv, load_dotenv
 import shutil
 
-from .static_config import *
+from .config import *
 from .mongo import MongoDBConnection
 
 # Activate mongo DB connection if needed
@@ -24,9 +21,6 @@ class LocalUserConfiguration:
         self.config_path = join(WHITELIST_ROOT, f'{self.user_id}', 'config.json')
         self.alerts_path = join(WHITELIST_ROOT, f'{self.user_id}', 'alerts.json')
 
-        # Should be changed to allow user to use new alert template later
-        self.email_template_path = join(RESOURCES_ROOT, 'email_template.html')
-
         # Utility Paths:
         self.default_alerts_path = join(RESOURCES_ROOT, 'default_alerts.json')
         self.default_config_path = join(RESOURCES_ROOT, 'default_config.json')
@@ -44,7 +38,7 @@ class LocalUserConfiguration:
         try:
             # Make default configuration:
             with open(self.default_config_path, 'r') as _in:
-                default_config = json.load(_in)
+                default_config = json.loads(_in.read())
             default_config["channels"].append(self.user_id)
             if is_admin:
                 default_config["is_admin"] = True
@@ -66,7 +60,8 @@ class LocalUserConfiguration:
     def load_alerts(self) -> dict:
         """Load the database contents and return it in JSON format"""
         with open(self.alerts_path, 'r') as infile:
-            return json.load(infile)
+            contents = infile.read()
+            return json.loads(contents)
 
     def update_alerts(self, data: dict) -> None:
         with open(self.alerts_path, 'w') as outfile:
@@ -74,7 +69,8 @@ class LocalUserConfiguration:
 
     def load_config(self) -> dict:
         with open(self.config_path, 'r') as infile:
-            return json.load(infile)
+            contents = infile.read()
+            return json.loads(contents)
 
     def update_config(self, data: dict) -> None:
         with open(self.config_path, 'w') as outfile:
@@ -86,28 +82,6 @@ class LocalUserConfiguration:
             config['is_admin'] = new_value
             self.update_config(config)
         return config['is_admin']
-
-    def get_emails(self) -> list[str]:
-        return self.load_config()['emails']
-
-    def add_emails(self, emails: list[str]) -> None:
-        config = self.load_config()
-        for email in emails:
-            if email not in config['emails']:
-                config['emails'].append(email)
-        self.update_config(config)
-
-    def remove_emails(self, emails: list[str]) -> list[str]:
-        """Attempts to remove emails from config, and returns fails"""
-        config = self.load_config()
-        fail = []
-        for email in emails:
-            if email in config['emails']:
-                config['emails'].remove(email)
-            else:
-                fail.append(email)
-        self.update_config(config)
-        return fail
 
     def get_channels(self) -> list[str]:
         return self.load_config()['channels']
@@ -131,19 +105,13 @@ class LocalUserConfiguration:
         self.update_config(config)
         return fail
 
-    def get_email_template(self) -> str:
-        with open(self.email_template_path, 'r') as template:
-            return template.read()
-
 
 class MongoDBUserConfiguration(LocalUserConfiguration):
     """Simplifies interaction with the MongoDB NoSQL database system - overrides methods from class above"""
+
     def __init__(self, tg_user_id: str):
         """
         :param tg_user_id: The Telegram user ID of the bot user to locate their configuration
-        :param connection_string: The full connection string used to connect to your Mongo database
-        :param database: The name of the database to connect to
-        :param collection: The name of the collection in your database to connect to
         """
         # Initialize LocalUserConfiguration & MongoClient superclasses and connect to database
         super().__init__(tg_user_id=tg_user_id)
@@ -163,7 +131,7 @@ class MongoDBUserConfiguration(LocalUserConfiguration):
         try:
             # Make default configuration:
             with open(self.default_config_path, 'r') as _in:
-                default_config = json.load(_in)
+                default_config = json.loads(_in.read())
             default_config["channels"].append(self.user_id)
             if is_admin:
                 default_config["is_admin"] = True
@@ -171,7 +139,7 @@ class MongoDBUserConfiguration(LocalUserConfiguration):
 
             # Make default alerts
             with open(self.default_alerts_path, 'r') as _in:
-                user_document['alerts'] = json.load(_in)
+                user_document['alerts'] = json.loads(_in.read())
         except Exception as exc:
             self.blacklist_user()
             raise Exception(f"Could not prepare user document for MongoDB - {exc}")
@@ -212,20 +180,6 @@ class MongoDBUserConfiguration(LocalUserConfiguration):
         db_connection.collection.update_one(self.filter, {"$set": {"config": data}}, upsert=True)
 
 
-""" -------------- UTILITIES -------------- """
-def get_logfile() -> str:
-    """Get logfile path & create logs dir if it doesn't exist in the current working directory"""
-    log_dir = join(getcwd(), 'logs')
-    if not isdir(log_dir):
-        mkdir(log_dir)
-    return join(log_dir, 'log.txt')
-
-
-def get_help_command() -> str:
-    with open(join(dirname(abspath(__file__)), 'resources/help_command.txt'), 'r') as help_file:
-        return help_file.read()
-
-
 def get_whitelist() -> list:
     if not USE_MONGO_DB:
         if not isdir(WHITELIST_ROOT):
@@ -234,18 +188,3 @@ def get_whitelist() -> list:
         return [_id for _id in listdir(WHITELIST_ROOT) if isdir(join(WHITELIST_ROOT, _id))]
     else:
         return [user['user_id'] for user in db_connection.collection.find()]
-
-
-def handle_env():
-    """Checks if the .env file exists in the current working dir, and imports the variables if so"""
-    try:
-        envpath = find_dotenv(raise_error_if_not_found=True, usecwd=True)
-        load_dotenv(dotenv_path=envpath)
-    except:
-        pass
-    finally:
-        mandatory_vars = ['TELEGRAM_BOT_TOKEN']
-        for var in mandatory_vars:
-            val = getenv(var)
-            if val is None:
-                raise ValueError(f"Missing environment variable: {var}")

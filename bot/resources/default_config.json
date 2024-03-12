@@ -1,8 +1,0 @@
-{
-  "settings": {
-    "send_email_alerts": false
-  },
-  "emails": [],
-  "channels": [],
-  "is_admin": false
-}

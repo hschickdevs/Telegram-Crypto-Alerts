@@ -7,13 +7,13 @@
     <br>
 </div>
 
-# Set up the Telegram Crypto Alerts bot on Linode
+# Deploy the bot to the Cloud Using Linode
 
 This guide is designed to teach you how to set up the Telegram Crypto Alerts bot on a Linode cloud server. It will walk you through the process of creating a Linode account, creating a Debian 11 VM, and installing the bot on the VM, and starting the bot.
 
 1. To get started, follow this guide to create an account on Linode and create a Debian 11 VM.
 
-    https://scribehow.com/shared/How_to_Spin_Up_a_Debian_11_VM_on_Linode_Cloud_to_Host_the_Telegram_Crypto_Alerts_Bot__J8AKtJsSTIKH3MsWoOoO4Q
+    [🔗**Follow the Guide Here**](https://scribehow.com/shared/How_to_Spin_Up_a_Debian_11_VM_on_Linode_Cloud_to_Host_the_Telegram_Crypto_Alerts_Bot__J8AKtJsSTIKH3MsWoOoO4Q)
 
 2. Once you have created the VM, you should still be in the popup console window, and logged in (see step 11 & 12 in the previous guide)
 

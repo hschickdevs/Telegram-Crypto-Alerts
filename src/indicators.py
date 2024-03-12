@@ -1,6 +1,6 @@
 """
 Features Needed:
-* PathX taapi.io api key
+* taapi.io api key
 * Aggregate each symbol and indicator, then pull all available indicators using the taapi.io client
 * Allow the user to save indicator templates so that they don't have to enter long ones again
 * Message to telegram should be a list of indicators with their documentation hyperlinked:
@@ -15,69 +15,18 @@ Features Needed:
       SIN (Vector Trigonometric Sin)
 * Need a combination of indicators (AND/OR)
 """
-from dataclasses import dataclass
 import json
 from time import time, sleep
-from os import getcwd, mkdir
-from os.path import join, isdir, dirname, abspath
 from typing import Union
 import os
-from math import ceil
 
-from .io_client import get_whitelist, LocalUserConfiguration, MongoDBUserConfiguration
-from .static_config import *
-from .custom_logger import logger
+from .user_configuration import get_whitelist, LocalUserConfiguration, MongoDBUserConfiguration
+from .config import *
+from .logger import logger
+from .utils import get_ratelimits
 
 import requests
 from ratelimit import limits, sleep_and_retry
-
-
-def get_pair_price(token_pair: str, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
-    """
-    Make a request to Binance API and return the response
-    :param token_pair: token pair without the slash (e.g. BTCUSDT)
-    :param _try: The current try for recursive retries
-    :param retry_delay: seconds delay between retries
-    :param maximum_retries: Maxiumum number of retries
-    :return float: price of the token pair
-    """
-    try:
-        response = requests.get(BINANCE_PRICE_URL.format(token_pair))
-        response.raise_for_status()
-        return float(response.json()['price'])
-    except Exception as err:
-        if _try == maximum_retries:
-            raise ConnectionAbortedError(f'Binance request failed after {_try} retries - Error: {err}')
-        else:
-            sleep(retry_delay)
-            return get_pair_price(token_pair, _try=_try + 1)
-
-
-def get_24hr_price_change(token_pair: str, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
-    """
-    Make a request to Binance API and return the 24 hour % change for a token pair
-    :param token_pair: token pair without the slash (e.g. BTCUSDT)
-    :param _try: The current try for recursive retries
-    :param retry_delay: seconds delay between retries
-    :param maximum_retries: Maxiumum number of retries
-    :return float: The percent change of the token pair (expressed as a percentage, i.e. -3.8 for -3.8%)
-    """
-    try:
-        response = requests.get(BINANCE_24HR_URL.format(token_pair))
-        response.raise_for_status()
-        # return float(response.json()['price'])
-    except Exception as err:
-        if _try == maximum_retries:
-            raise ConnectionAbortedError(f'Binance request failed after {_try} retries - Error: {err}')
-        else:
-            sleep(retry_delay)
-            return get_24hr_price_change(token_pair, _try=_try + 1)
-
-    for pair in response.json():
-        if pair['symbol'].upper() == token_pair.upper():
-            return float(pair['priceChangePercent'])
-    else:
-        raise KeyError(f'Could not match token pair ({token_pair}) in Binance response.')
 
 
 class TADatabaseClient:
@@ -251,7 +200,8 @@ class TAAggregateClient:
     def load_agg(self) -> dict:
         try:
             with open(AGG_DATA_LOCATION, 'r') as infile:
-                return json.load(infile)
+                contents = infile.read()
+                return json.loads(contents)
         except FileNotFoundError:
             self.dump_agg({})
             return self.load_agg()
@@ -275,7 +225,8 @@ class TaapiioProcess:
         self.tg_bot_token = telegram_bot_token  # Can be left blank, but the process wont be able to report errors
 
     @sleep_and_retry
-    @limits(calls=1, period=round(RATE_LIMITS[1] * (1 + RATE_LIMITS[2]), 1))
+    @limits(calls=get_ratelimits()[0], period=round(get_ratelimits()[1] * (1 + REQUEST_BUFFER), 1))
+    # @tiered_rate_limit()
     def call_api(self, endpoint: str, params: dict, r_type: str = "POST") -> dict:
         """
         Calls the taapi.io API and returned the response in JSON format
@@ -314,12 +265,13 @@ class TaapiioProcess:
                     num_indicators += len(indicators)  # For logging
 
                     # Prepare the bulk query for the API
-                    EXCLUDE_INDICATOR_KEYS = ["values", "last_update"]
-                    indicators_query = [{k: v for k, v in indicator.items() if k not in EXCLUDE_INDICATOR_KEYS}
+                    exclude_keys = ["values", "last_update"]
+                    indicators_query = [{k: v for k, v in indicator.items() if k not in exclude_keys}
                                         for indicator in indicators]
                     query = {"secret": self.apikey, "construct": {"exchange": DEFAULT_EXCHANGE, "symbol": symbol,
-                                                                   "interval": interval, "indicators": indicators_query}}
+                                                                  "interval": interval, "indicators": indicators_query}}
                     r = self.call_api(endpoint=BULK_ENDPOINT, params=query)
+                    # print("TAAPI.IO RESPONSE:", r)
                     try:
                         responses = r["data"]
                     except KeyError:
@@ -370,23 +322,3 @@ class TaapiioProcess:
                                       f"(Restarting in {restart_period} seconds) - {exc}")
             sleep(restart_period)
             return self.run()
-
-
-@dataclass
-class TechnicalIndicator:
-    pair: str
-    indicator: str
-    interval: str
-    params: dict
-    output_vals: list
-    endpoint: str
-    name: str
-    type: str = 't'
-
-
-@dataclass
-class SimpleIndicator:
-    pair: str
-    indicator: str
-    params: dict = None
-    type: str = 's'

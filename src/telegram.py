@@ -2,12 +2,14 @@ import time
 from datetime import datetime
 from typing import Union
 
-from .custom_logger import logger
-from .io_client import LocalUserConfiguration, MongoDBUserConfiguration, get_logfile, get_help_command, get_whitelist
-from .static_config import *
-from .indicators import TADatabaseClient, TaapiioProcess, TechnicalIndicator, SimpleIndicator
+from .logger import logger
+from .user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
+from .utils import get_logfile, get_help_command, get_commands
+from .config import *
+from .indicators import TADatabaseClient, TaapiioProcess
+from .models import TechnicalAlert, CEXAlert
 
-from telebot import TeleBot
+from telebot import TeleBot, types
 import requests
 from requests.exceptions import ReadTimeout
 
@@ -15,11 +17,21 @@ BaseConfig = LocalUserConfiguration if not USE_MONGO_DB else MongoDBUserConfigur
 
 
 class TelegramBot(TeleBot):
-    def __init__(self, bot_token: str, taapiio_apikey: str = None):
+    def __init__(self, bot_token: str, taapiio_process: TaapiioProcess = None):
         super().__init__(token=bot_token)
+        self.taapiio_cli = None
         self.indicators_ref_cli = TADatabaseClient()
         self.indicators_db = self.indicators_ref_cli.fetch_ref()
-        self.taapiio_cli = None if taapiio_apikey is None else TaapiioProcess(taapiio_apikey)
+        if taapiio_process is None:
+            logger.warning("Taapi.io APIKEY not set - Technical indicator requests will be unavailable.")
+        else:
+            self.taapiio_cli = taapiio_process
+
+        # Set the bot commands:
+        logger.info("Setting bot commands ...")
+        user_commands = [types.BotCommand(command=command, description=description)
+                         for command, description in get_commands().items()]
+        self.set_my_commands(user_commands)
 
         @self.message_handler(commands=['id'])
         def on_id(message):
@@ -31,10 +43,10 @@ class TelegramBot(TeleBot):
         def on_help(message):
             self.reply_to(message, get_help_command())
 
-        @self.message_handler(commands=['newalert'])
+        @self.message_handler(commands=['new_alert'])
         @self.is_whitelisted
         def on_new_alert(message):
-            """/newalert PAIR/PAIR INDICATOR TARGET optional_ENTRY_PRICE"""
+            """/new_alert PAIR/PAIR INDICATOR TARGET optional_ENTRY_PRICE"""
             simple_indicators = ["PRICE"]
             technical_indicators = list(self.indicators_db.keys())
             try:
@@ -46,6 +58,12 @@ class TelegramBot(TeleBot):
 
                     indicator_instance = self.parse_simple_indicator_message(message.text)
                 elif indicator in technical_indicators:
+                    if self.taapiio_cli is None:
+                        self.reply_to(message,
+                                      "Technical alerts are currently unavailable. Set the environment variable `TAAPIIO_APIKEY` to enable.",
+                                      parse_mode="Markdown")
+                        return
+
                     self.reply_to(message, "Attempting to verify parameters with taapi.io and add alert to database...")
 
                     # Verify accurate formatting:
@@ -55,7 +73,7 @@ class TelegramBot(TeleBot):
                     indicator_instance = self.parse_technical_indicator_message(message.text)
                     if indicator_instance is None:
                         self.reply_to(message, "Could not match passed parameters to valid technical indicator in the database.\n"
-                                               "Please check your formatting with /indicators")
+                                               "Please check your formatting with `/indicators`", parse_mode="Markdown")
                         return
 
                     # Verify that no errors are returned by the indicator on taapi.io:
@@ -85,9 +103,9 @@ class TelegramBot(TeleBot):
                               'Invalid message formatting.\n'
                               'Please verify that your request follows the format corresponding to your desired indicator type:\n'
                               '\n<b>Simple Indicator:</b>\n'
-                              '/newalert PAIR/PAIR INDICATOR COMPARISON TARGET optional_ENTRY_PRICE\n'
+                              '/new_alert PAIR/PAIR INDICATOR COMPARISON TARGET optional_ENTRY_PRICE\n'
                               '\n<b>Technical Indicator:</b>\n'
-                              '/newalert BASE/QUOTE INDICATOR TIMEFRAME PARAMS OUTPUT_VALUE COMPARISON TARGET\n'
+                              '/new_alert BASE/QUOTE INDICATOR TIMEFRAME PARAMS OUTPUT_VALUE COMPARISON TARGET\n'
                               '\nUse the /help command for more information on command formatting.',
                               parse_mode="HTML")
                 return
@@ -147,10 +165,10 @@ class TelegramBot(TeleBot):
                               f'An error occurred:\n{exc}')
                 return
 
-        @self.message_handler(commands=['cancelalert'])
+        @self.message_handler(commands=['cancel_alert'])
         @self.is_whitelisted
         def on_cancel_alert(message):
-            """/cancelalert PAIR/PAIR alert_index"""
+            """/cancel_alert PAIR/PAIR alert_index"""
             try:
                 pair, alert_index = self.split_message(message.text)
                 pair = pair.upper()
@@ -158,7 +176,7 @@ class TelegramBot(TeleBot):
             except Exception as exc:
                 self.reply_to(message,
                               f'Invalid message formatting. Please ensure that your message follows this format:\n'
-                              f'/cancelalert TOKEN1/TOKEN2 alert_index')
+                              f'/cancel_alert TOKEN1/TOKEN2 alert_index')
                 return
 
             try:
@@ -175,10 +193,10 @@ class TelegramBot(TeleBot):
             except Exception as exc:
                 self.reply_to(message, f'An error occurred when trying to cancel the alert:\n{exc}')
 
-        @self.message_handler(commands=['viewalerts'])
+        @self.message_handler(commands=['view_alerts'])
         @self.is_whitelisted
         def on_view_alerts(message):
-            """/viewalerts PAIR (<- optional)"""
+            """/view_alerts PAIR (<- optional)"""
             try:
                 alerts_pair = self.split_message(message.text)[0].upper()
             except IndexError:
@@ -204,27 +222,29 @@ class TelegramBot(TeleBot):
                     output += "\n\n"
             self.reply_to(message, output if len(output) > 0 else "Found 0 matching alerts.", parse_mode="HTML")
 
-        @self.message_handler(commands=['getprice'])
+        @self.message_handler(commands=['get_price'])
         @self.is_whitelisted
         def on_get_price(message):
-            """/getprice PAIR/PAIR"""
+            """/get_price PAIR/PAIR"""
             try:
                 pair = self.split_message(message.text)[0]
             except:
                 self.reply_to(message, f'Invalid message formatting. Please use the following format:\n'
-                                       f'/getprice TOKEN1/TOKEN2')
+                                       f'/get_price TOKEN1/TOKEN2')
                 return
             try:
                 self.reply_to(message, f'{pair}: {self.get_binance_price(pair.replace("/", "").upper())}')
             except Exception as exc:
                 self.reply_to(message, str(exc))
 
-        @self.message_handler(commands=['getindicator'])
+        @self.message_handler(commands=['get_indicator'])
         @self.is_whitelisted
-        def on_getindicator(message):
-            """/getindicator BASE/QUOTE INTERVAL TIMEFRAME kwarg,kwarg"""
+        def on_get_indicator(message):
+            """/get_indicator BASE/QUOTE INTERVAL TIMEFRAME kwarg,kwarg"""
             if self.taapiio_cli is None:
-                self.reply_to(message, "Indicator requests unavailable. Please set the Taapi.io APIKEY parameter.")
+                self.reply_to(message,
+                              "Technical indicators are currently unavailable. Set the environment variable `TAAPIIO_APIKEY` to enable.",
+                              parse_mode="Markdown")
                 return
 
             indicator = self.parse_technical_indicator_message(message.text)
@@ -247,10 +267,10 @@ class TelegramBot(TeleBot):
                 msg += f"<b>{k}:</b> {v}\n"
             self.reply_to(message, msg, parse_mode="HTML")
 
-        @self.message_handler(commands=['priceall'])
+        @self.message_handler(commands=['price_all'])
         @self.is_whitelisted
         def on_price_all(message):
-            """/priceall - Gets the price of all tokens with alerts set"""
+            """/price_all - Gets the price of all tokens with alerts set"""
             configuration = BaseConfig(str(message.from_user.id))
             tokens = [f'{key}: {self.get_binance_price(key.replace("/", "").upper())}' for key
                       in configuration.load_alerts().keys()]
@@ -282,12 +302,12 @@ class TelegramBot(TeleBot):
                     output += f"      - <b><i>{output_val}</i></b>\n"
                 output += "\n"
 
-            self.reply_to(message, output, parse_mode="HTML")
+            self.reply_to(message, output, parse_mode="HTML", disable_web_page_preview=True)
 
-        @self.message_handler(commands=['viewconfig'])
+        @self.message_handler(commands=['view_config'])
         @self.is_whitelisted
-        def on_viewconfig(message):
-            """Returns the current configuration of the bot (used as reference for /setconfig)"""
+        def on_view_config(message):
+            """Returns the current configuration of the bot (used as reference for /set_config)"""
             try:
                 configuration = BaseConfig(str(message.from_user.id))
                 config = configuration.load_config()['settings']
@@ -299,12 +319,12 @@ class TelegramBot(TeleBot):
                     # msg += '\n'
                 self.reply_to(message, msg)
             except Exception as exc:
-                logger.exception('Could not call /viewconfig', exc_info=exc)
+                logger.exception('Could not call /view_config', exc_info=exc)
                 self.reply_to(message, str(exc))
 
-        @self.message_handler(commands=['setconfig'])
+        @self.message_handler(commands=['set_config'])
         @self.is_whitelisted
-        def on_setconfig(message):
+        def on_set_config(message):
             """Used to change configuration variables of the bot"""
             msg = ""
             failed = []
@@ -367,7 +387,7 @@ class TelegramBot(TeleBot):
                         self.reply_to(message, f"Failed to remove channel(s): {', '.join(fails)}")
 
                     self.reply_to(message, f"Successfully removed channel(s): "
-                                           f"{', '.join([email for email in rm_channels if email not in fails])}")
+                                           f"{', '.join([channel for channel in rm_channels if channel not in fails])}")
                 else:
                     channels = configuration.get_channels()
                     if len(channels) == 0:
@@ -380,39 +400,6 @@ class TelegramBot(TeleBot):
                     self.reply_to(message, msg)
             except IndexError:
                 self.reply_to(message, "Invalid formatting - Use /channels VIEW/ADD/REMOVE ID,ID,ID")
-            except Exception as exc:
-                self.reply_to(message, f"An unexpected error occurred - {exc}")
-
-        @self.message_handler(commands=['emails'])
-        @self.is_whitelisted
-        def on_emails(message):
-            splt_msg = self.split_message(message.text)
-            try:
-                configuration = BaseConfig(str(message.from_user.id))
-                if splt_msg[0].lower() == "add":
-                    new_emails = splt_msg[1].split(",")
-                    configuration.add_emails(new_emails)
-                    self.reply_to(message, f"Successfully added email(s): {', '.join(new_emails)}")
-                elif splt_msg[0].lower() == "remove":
-                    rm_emails = splt_msg[1].split(",")
-                    fails = configuration.remove_emails(rm_emails)
-                    if len(fails) > 0:
-                        self.reply_to(message, f"Failed to remove email(s): {', '.join(fails)}")
-
-                    self.reply_to(message, f"Successfully removed email(s): "
-                                           f"{', '.join([email for email in rm_emails if email not in fails])}")
-                else:
-                    emails = configuration.get_emails()
-                    if len(emails) == 0:
-                        self.reply_to(message, 'No emails registered. Use /emails ADD email@email.com,email@email.com')
-                        return
-
-                    msg = "Current Email Recipients:\n\n"
-                    for email in emails:
-                        msg += f"{email}\n"
-                    self.reply_to(message, msg)
-            except IndexError:
-                self.reply_to(message, "Invalid formatting - Use /emails VIEW/ADD/REMOVE email@email.com")
             except Exception as exc:
                 self.reply_to(message, f"An unexpected error occurred - {exc}")
 
@@ -442,24 +429,10 @@ class TelegramBot(TeleBot):
             except Exception as exc:
                 self.reply_to(message, f"An unexpected error occurred - {exc}")
 
-        # @self.message_handler(commands=['blacklist'])
-        # @self.is_admin
-        # def on_blacklist(message):
-        #     splt_msg = self.split_message(message.text)
-        #     try:
-        #         rm_users = splt_msg[0].split(",")
-        #         for user in rm_users:
-        #             UserConfiguration(user).blacklist_user()
-        #         self.reply_to(message, f"Blacklisted Users: {', '.join(rm_users)}")
-        #     except IndexError:
-        #         self.reply_to(message, "Invalid formatting - Use /blacklist TG_USER_ID,TG_USER_ID")
-        #     except Exception as exc:
-        #         self.reply_to(message, f"An unexpected error occurred - {exc}")
-
-        @self.message_handler(commands=['getlogs'])
+        @self.message_handler(commands=['get_logs'])
         @self.is_admin
-        def on_getlogs(message):
-            """Returns the progam's logs at logs/logs.txt"""
+        def on_get_logs(message):
+            """Returns the program's logs at logs/logs.txt"""
             try:
                 with open(get_logfile(), 'rb') as logfile:
                     if len(logfile.read()) > 0:
@@ -560,7 +533,8 @@ class TelegramBot(TeleBot):
                 return False
         return wrapper
 
-    def get_binance_price(self, pair):
+    @staticmethod
+    def get_binance_price(pair):
         try:
             return round(float(
                 requests.get(f'https://api.binance.com/api/v3/ticker/price?symbol={pair.replace("/", "")}').json()[
@@ -574,7 +548,7 @@ class TelegramBot(TeleBot):
             raise Exception(
                 f'An unexpected error has occurred when trying to fetch the price of {pair} on Binance - {exc}')
 
-    def get_technical_indicator(self, indicator: TechnicalIndicator) -> dict:
+    def get_technical_indicator(self, indicator: TechnicalAlert) -> dict:
         # Message should first be parsed, and have the technical indicator returned.
 
         # Prepare the params for the taapi.io single call GET request:
@@ -595,10 +569,10 @@ class TelegramBot(TeleBot):
                 err_msg += f" - {r['error']}"
             raise Exception(err_msg)
 
-    def parse_technical_indicator_message(self, message: str) -> Union[TechnicalIndicator, None]:
+    def parse_technical_indicator_message(self, message: str) -> Union[TechnicalAlert, None]:
         """
         Message should follow the following format:
-        /getindicator BASE/QUOTE INDICATOR TIMEFRAME kwarg,kwarg
+        /get_indicator BASE/QUOTE INDICATOR TIMEFRAME kwarg,kwarg
         The "kwarg" parameter guide:
             - For indicator parameters: param_name=value,param_name=value
             - For selection output values: output=output_value_name
@@ -650,9 +624,9 @@ class TelegramBot(TeleBot):
         # params["symbol"] = pair
         # params["interval"] = interval
 
-        return TechnicalIndicator(pair, indicator_id, interval, params, output, indicator['endpoint'], indicator['name'])
+        return TechnicalAlert(pair, indicator_id, interval, params, output, indicator['endpoint'], indicator['name'])
 
-    def parse_simple_indicator_message(self, message: str) -> SimpleIndicator:
+    def parse_simple_indicator_message(self, message: str) -> CEXAlert:
         msg = self.split_message(message)
         pair = msg[0].upper()
         indicator = msg[1].upper()
@@ -660,13 +634,13 @@ class TelegramBot(TeleBot):
         assert comparison in SIMPLE_INDICATOR_COMPARISONS, f'{comparison} is an invalid simple indicator comparison operator.\n' \
                                                            f'Options: {SIMPLE_INDICATOR_COMPARISONS}'
 
-        return SimpleIndicator(pair, indicator)
+        return CEXAlert(pair, indicator)
 
     def run(self):
         logger.warn(f'{self.get_me().username} started at {datetime.utcnow()} UTC+0')
         while True:
             try:
-                self.polling()
+                self.polling(non_stop=True)
             except KeyboardInterrupt:
                 break
             except ReadTimeout:

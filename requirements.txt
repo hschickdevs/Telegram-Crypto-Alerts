@@ -2,5 +2,7 @@ pyTelegramBotAPI
 requests
 python-dotenv
 ratelimit
+ratelimiter
 sendgrid
 pymongo
+pyyaml
