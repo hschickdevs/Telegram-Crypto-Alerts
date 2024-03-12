@@ -1,9 +1,12 @@
 <!-- ![made-with-python](https://img.shields.io/badge/Made%20with-Python3-yellow) -->
 <!-- ![version](https://img.shields.io/badge/Version-3.0.0-blue) -->
+> 📦 **NOTE:** Major version 3.0.0 has launched! See the **[🔗CHANGELOG](docs/CHANGELOG.md)** for more details.
+
+
 <p align="center">
   <img src="https://img.shields.io/badge/Made%20with-Python3-yellow?style=for-the-badge" alt="Made with Python3" />
-  <a href="https://github.com/hschickdevs/Telegram-Crypto-Alerts/stargazers"><img src="https://img.shields.io/github/stars/hschickdevs/Telegram-Crypto-Alerts.svg?style=for-the-badge&color=219ED9" alt="Stargazers" /></a>
-  <a href="https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/main/LICENSE"><img src="https://img.shields.io/github/license/hschickdevs/Telegram-Crypto-Alerts.svg?style=for-the-badge&color=E81E61" alt="GPLv3 License" /></a>
+  <a href="https://github.com/hschickdevs/Telegram-Crypto-Alerts/stargazers"><img src="https://img.shields.io/github/stars/hschickdevs/Telegram-Crypto-Alerts.svg?style=for-the-badge&color=E81E61" alt="Stargazers" /></a>
+  <a href="https://github.com/hschickdevs/Telegram-Crypto-Alerts/commits/main"><img src="https://img.shields.io/github/last-commit/hschickdevs/Telegram-Crypto-Alerts?style=for-the-badge&color=219ED9" alt="Last Commit" /></a>
 </p>
 
 <!-- TODO: ADD STARS BADGE -->
@@ -20,7 +23,7 @@
     <i>The most popular open-source cryptocurrency alerting tool for Telegram!</i>
    </p>
   <p align="center">
-    This Python software facilitates alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/"><b>Telegram</b></a> using their open-source API.
+    This lightweight software facilitates alerts on cryptocurrency price movements and technical indicators through <a href="https://telegram.org/"><b>Telegram</b></a> using their open-source API.
     <br />
    </p>
    <p align="center">
@@ -41,8 +44,6 @@
 </div>
 <br>
 
-> ⚠️**Disclaimer**⚠️ Due to recent changes with the Binance regulations, some IPs may be blocked from accessing the Binance API. If you are experiencing issues with the bot, please try using a VPN or proxy service (e.g. NordVPN, IPVN, CyberGhost). 
-
 ## About the Project
 
 <p>
@@ -58,31 +59,28 @@ The bot utilizes Telegram's simple chat interface to provide users the following
 * Get live crypto pair prices from Binance, and receive alerts on price movements like **_above_**, **_below_**, **_% change_**, and **_24 hour % change_**
 * Receive alerts on crypto technical indicators like **_RSI_**, **_MACD_**, **_Bollinger Bands_**, _**MA**_, **_SMA_**, and **_EMA_**.
    - The bot has the capacity to support any technical indicator that is available on [Taapi.io](https://taapi.io/), but only these are shipped from the start. See [How to Add Technical Indicators](#how-to-add-technical-indicators) for more information.
-* Optionally receive dynamic HTML-styled email alerts using the SendGrid API
 * Configure bot access with a full suite of administrator commands
    - _Invite your friends to use the bot!_
    - Add additional users with their own unique alerts and configuration.
 * Optional state and configuration data - Use a local JSON database or configure a MongoDB server!
 
-> 🛈 For a detailed list of changes and updates, please see our **[🔗CHANGELOG](docs/CHANGELOG.md)**.
-
 ## Deployment Options
 
 This bot is designed to be easily extensible and deployable on a variety of platforms. The following are the available deployment options.:
 
-### Managed Hosting (Recommended)
+### Managed Deployment (Recommended)
 
 I will choose the most cost-efficient and performant platform and deploy the bot for you. I will then manage the bot for a small fee. Please go to and fill out the form below to request a quote:
 
 > Click Here: [🔗**Managed Hosting Request Form**](https://forms.gle/hCVQsYDjRWx5CZJh7)
 
-### Self Hosting
+### Self Deployment
 
 If you are confident in your technical abilities and would like to self host the bot, you can follow the steps below to set it up on your own machine or cloud server. Click the link corresponding to your setup preference:
 
-> Click Here: [🔗**Cloud Deployment**](./docs/linode_setup_guide.md)
+> Click Here: [🔗**Deploy from Docker**](./docs/docker_setup.md)
 
-> Click Here: [🔗**Local Deployment**](./docs/local_setup.md)
+> Click Here: [🔗**Deploy from Source**](./docs/source_setup.md)
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -91,7 +89,7 @@ If you are confident in your technical abilities and would like to self host the
 
 - ### Alert Commands:
 
-   #### `/viewalerts`
+   #### `/view_alerts`
    
    Returns all active alerts
 
@@ -103,7 +101,7 @@ If you are confident in your technical abilities and would like to self host the
 
    ___
 
-   #### `/newalert <BASE/QUOTE> <INDICATOR> <COMPARISON> <TARGET> <optional_ENTRY_PRICE>`
+   #### `/new_alert <BASE/QUOTE> <INDICATOR> <COMPARISON> <TARGET> <optional_ENTRY_PRICE>`
 
    > ⚠️ Create new alert for **simple indicators** ONLY (see [/indicators](https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/pancakeswap-integration/README%20copy.md#indicators))
 
@@ -119,11 +117,11 @@ If you are confident in your technical abilities and would like to self host the
 
    _For example, the following command sets an alert for when the price of BTC/USDT changes by 10% relative to an entry price of 1200:_
 
-   `/newalert BTC/USDT PRICE PCTCHG 10.0 1200`
+   `/new_alert BTC/USDT PRICE PCTCHG 10.0 1200`
 
    ___
 
-   #### `/newalert <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS> <OUTPUT_VALUE> <COMPARISON> <TARGET>`
+   #### `/new_alert <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS> <OUTPUT_VALUE> <COMPARISON> <TARGET>`
 
    > ⚠️ Create new alert for **technical indicators** ONLY (see [/indicators](https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/pancakeswap-integration/README%20copy.md#indicators))
 
@@ -141,26 +139,26 @@ If you are confident in your technical abilities and would like to self host the
 
    _For example, the following command sets an alert for the ETH/USDT pair that triggers when the value of the upper Bollinger Band (calculated on the 1d timeframe) is above 1500:_
 
-   `/newalert ETH/USDT BBANDS 1d default valueUpperBand ABOVE 1500`
+   `/new_alert ETH/USDT BBANDS 1d default valueUpperBand ABOVE 1500`
 
    ___
 
-   #### `/cancelalert <BASE/QUOTE> <INDEX>`
+   #### `/cancel_alert <BASE/QUOTE> <INDEX>`
    
    Cancels the pair alert at the given index
 
    | Parameter  | Description                                                                                                       |
    |------------|-------------------------------------------------------------------------------------------------------------------|
    | BASE/QUOTE | The base and quote currencies for the alert (e.g. BTC/USDT)                                                       |
-   | INDEX      | The index of the alert you want to cancel. You can see the indexes by using the `/viewalerts BASE/QUOTE` command. |
+   | INDEX      | The index of the alert you want to cancel. You can see the indexes by using the `/view_alerts BASE/QUOTE` command. |
 
    _For example, if you want to cancel the first alert of the BTC/USDT pair, you would use:_
    
-   `/cancelalert BTC/USDT 1`
+   `/cancel_alert BTC/USDT 1`
 
 - ### Pricing/Data Commands:
 
-   #### `/getprice <BASE/QUOTE>`
+   #### `/get_price <BASE/QUOTE>`
 
    | Parameter | Description |
    |-------------------|-------------|
@@ -168,18 +166,18 @@ If you are confident in your technical abilities and would like to self host the
 
    _For example, if you want to get the current price of the BTC/USDT pair, you would use:_
 
-   `/getprice BTC/USDT`
+   `/get_price BTC/USDT`
 
    ___
 
 
-   #### `/priceall`
+   #### `/price_all`
 
    This command does not take any parameters. It gets the current pair price for all pairs with active alerts.
 
    ___
 
-   #### `/getindicator <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS>`
+   #### `/get_indicator <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS>`
 
    | Parameter  | Description                                                                                                                                              |
    |------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -190,25 +188,25 @@ If you are confident in your technical abilities and would like to self host the
 
    _For example, the following command gets the current value(s) of the Bollinger Bands indicator for the ETH/USDT pair on the 1d timeframe using the default parameters:_
 
-   `/getindicator ETH/USDT BBANDS 1d default`
+   `/get_indicator ETH/USDT BBANDS 1d default`
 
    ___
 
 - ### Configuration Commands:
 
-   #### `/viewconfig`
+   #### `/view_config`
    
    Returns the current general configuration for the bot
 
    ___
 
-   #### `/setconfig <key>=<value> <key>=<value>`
+   #### `/set_config <key>=<value> <key>=<value>`
 
    Modify individual configuration settings. You can change multiple settings by separating them with a space.
    
    _For example, the following command sets the `send_email_alerts` config key to True:_
 
-   `/setconfig send_email_alerts=True`
+   `/set_config send_email_alerts=True`
 
    ___
 
@@ -287,7 +285,7 @@ If you are confident in your technical abilities and would like to self host the
 
    ___
 
-   #### `/getlogs`
+   #### `/get_logs`
 
    Returns the current process logs
 
@@ -305,7 +303,7 @@ As stated previously, the bot is designed to be easily extensible. View the curr
 
 3. Make a new cell, and use the `db.add_indicator` function to add the indicator to the database:
 
-   View the previous **examples** of how the existing indicators were added to the database using the `db.add_indicator` function (see `TADatabaseClient.add_indicator` in [`/bot/indicators.py`](/bot/indicators.py))
+   View the previous **examples** of how the existing indicators were added to the database using the `db.add_indicator` function (see `TADatabaseClient.add_indicator` in [`/src/indicators.py`](./src/indicators.py))
 
    The usage of the `db.add_indicator` function is as follows:
 

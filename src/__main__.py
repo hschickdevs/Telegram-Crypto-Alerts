@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # Do the setup process if the bot is not set up
     if len(get_whitelist()) == 0:
         do_setup()
-        logger.info("Waiting for initialization ..."); sleep(2)
+        logger.info("Waiting for initialization ..."); sleep(5)
 
     taapiio_process = None
     if getenv('TAAPIIO_APIKEY'):
