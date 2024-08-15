@@ -1,10 +1,11 @@
 import time
 from datetime import datetime
 from typing import Union
+from os import getenv
 
 from .logger import logger
 from .user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
-from .utils import get_logfile, get_help_command, get_commands
+from .utils import get_logfile, get_help_command, get_commands, get_binance_price_url
 from .config import *
 from .indicators import TADatabaseClient, TaapiioProcess
 from .models import TechnicalAlert, CEXAlert
@@ -19,6 +20,7 @@ BaseConfig = LocalUserConfiguration if not USE_MONGO_DB else MongoDBUserConfigur
 class TelegramBot(TeleBot):
     def __init__(self, bot_token: str, taapiio_process: TaapiioProcess = None):
         super().__init__(token=bot_token)
+        self.binance_price_endpoint = get_binance_price_url()
         self.taapiio_cli = None
         self.indicators_ref_cli = TADatabaseClient()
         self.indicators_db = self.indicators_ref_cli.fetch_ref()
@@ -47,7 +49,7 @@ class TelegramBot(TeleBot):
         @self.is_whitelisted
         def on_new_alert(message):
             """/new_alert PAIR/PAIR INDICATOR TARGET optional_ENTRY_PRICE"""
-            simple_indicators = ["PRICE"]
+            simple_indicators = ["PRICE", "24HRCHG"]
             technical_indicators = list(self.indicators_db.keys())
             try:
                 msg = self.split_message(message.text)
@@ -126,7 +128,7 @@ class TelegramBot(TeleBot):
                         entry_price = float(msg[4])
                     else:
                         try:
-                            entry_price = self.get_binance_price(pair)
+                            entry_price = self.get_latest_binance_price(pair)
                         except Exception as exc:
                             self.reply_to(message, f"{str(exc)}\n"
                                                    "Please verify that your pair is listed on binance and follows the "
@@ -233,7 +235,7 @@ class TelegramBot(TeleBot):
                                        f'/get_price TOKEN1/TOKEN2')
                 return
             try:
-                self.reply_to(message, f'{pair}: {self.get_binance_price(pair.replace("/", "").upper())}')
+                self.reply_to(message, f'{pair}: {self.get_latest_binance_price(pair.replace("/", "").upper())}')
             except Exception as exc:
                 self.reply_to(message, str(exc))
 
@@ -272,7 +274,7 @@ class TelegramBot(TeleBot):
         def on_price_all(message):
             """/price_all - Gets the price of all tokens with alerts set"""
             configuration = BaseConfig(str(message.from_user.id))
-            tokens = [f'{key}: {self.get_binance_price(key.replace("/", "").upper())}' for key
+            tokens = [f'{key}: {self.get_latest_binance_price(key.replace("/", "").upper())}' for key
                       in configuration.load_alerts().keys()]
             try:
                 self.reply_to(message, "\n".join(tokens))
@@ -533,12 +535,15 @@ class TelegramBot(TeleBot):
                 return False
         return wrapper
 
-    @staticmethod
-    def get_binance_price(pair):
+    def get_latest_binance_price(self, pair):
         try:
-            return round(float(
-                requests.get(f'https://api.binance.com/api/v3/ticker/price?symbol={pair.replace("/", "")}').json()[
-                    'price']), 3)
+            response = requests.get(self.binance_price_endpoint.format(pair.replace("/", ""), BINANCE_TIMEFRAMES[0]))
+            # response = requests.get(f'https://api.binance.com/api/v3/ticker/price?symbol={pair.replace("/", "")}')
+            try:
+                return round(float(response.json()['lastPrice']), 3)
+            except KeyError:
+                raise ValueError(f'{pair} is not a valid pair.\n'
+                                 f'API Response: {response.json()}')
         except KeyError:
             raise ValueError(f'{pair} is not a valid pair.\n'
                              f'Please make sure to use this formatting: TOKEN1/TOKEN2')

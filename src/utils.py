@@ -4,7 +4,7 @@ from dotenv import find_dotenv, load_dotenv
 from functools import wraps
 from ratelimit import limits, sleep_and_retry
 
-from .config import SUBSCRIPTION_TIERS
+from .config import *
 
 """ -------------- UTILITIES -------------- """
 
@@ -56,3 +56,14 @@ def get_commands() -> dict:
             commands[command.strip()] = description.strip()
 
     return commands
+
+
+def get_binance_price_url() -> str:
+    """Get the binance price url for the location"""
+    location = getenv('LOCATION')
+    assert location in BINANCE_LOCATIONS, f"Location must be in {BINANCE_LOCATIONS} for the Binance exchange."
+    
+    if location.lower() == 'us':
+        return BINANCE_PRICE_URL_US
+    else:
+        return BINANCE_PRICE_URL_GLOBAL

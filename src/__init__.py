@@ -1,5 +1,5 @@
-# Version 3.0.0 of the bot includes a reversion to the basics, and some new features (see changelog)
-__version__ = "3.0.0"
+# Version 3.0.0 of the bot included a reversion to the basics, and some new features (see changelog)
+__version__ = "3.1.0"
 
 # Assert that Python version >= 3.9, or else they receive the subscription error for type hints
 import sys

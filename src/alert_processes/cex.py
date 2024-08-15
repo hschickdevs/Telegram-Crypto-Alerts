@@ -5,6 +5,7 @@ import os
 from ..user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
 from ..logger import logger
 from ..config import *
+from ..utils import get_binance_price_url
 from .base import BaseAlertProcess
 from ..telegram import TelegramBot
 from ..models import BinancePriceResponse
@@ -21,10 +22,7 @@ class CEXAlertProcess(BaseAlertProcess):
         super().__init__(telegram_bot)
         self.polling = False  # Temporary variable to manage alerts
 
-        self.location = os.getenv('LOCATION').lower()
-        assert self.location in ['us', 'global'], "Location must be 'us' or 'global' for the Binance exchange."
-
-        self.endpoint = BINANCE_PRICE_URL_US if self.location.lower() == 'us' else BINANCE_PRICE_URL_GLOBAL
+        self.endpoint = get_binance_price_url()
 
     def poll_user_alerts(self, tg_user_id: str) -> None:
         """
@@ -116,7 +114,7 @@ class CEXAlertProcess(BaseAlertProcess):
                 pct_chg = ((entry - pair_price) / entry) * 100
                 return True, pct_chg, f"{pair} DOWN {pct_chg:.1f}% FROM {entry} AT {pair_price}"
         elif comparison == '24HRCHG':
-            pct_change = self.get_pct_change(pair.replace("/", ""))
+            pct_change = self.get_pct_change(pair.replace("/", ""), window="1d")
             if abs(pct_change) >= alert['target']:
                 return True, pct_change, f"{pair} 24HR CHANGE {pct_change:.1f}% AT {pair_price}"
         elif comparison == 'ABOVE':

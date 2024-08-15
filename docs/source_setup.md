@@ -52,7 +52,7 @@ Alternatively, follow the steps below to set it up on your local machine.
 
     - `TELEGRAM_BOT_TOKEN`: Your Telegram bot token (Use [BotFather](https://t.me/botfather))
 
-    - `LOCATION` (_Optional_): Either `US` or `global` (defaults to `global` if not provided)
+    - `LOCATION` (_Optional_): Either `US` or `global`, determines which Binance market to use based on IP restrictions.
 
     - `TAAPIIO_APIKEY` (_Optional_): Your Taapi.io API key. If not provided, technical alerts will be unavailable. (Create an account on the [Taapi.io website](https://taapi.io/))
 
