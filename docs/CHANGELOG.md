@@ -4,7 +4,22 @@ All significant modifications to the project are recorded here.
 
 ## Table of Contents
 
+- [v3.1.0 - Released 2024-08-14](#310)
 - [v3.0.0 - Released 2024-03-11](#300)
+
+## v3.1.0 - Released 2024-08-14 <a name="310"></a>
+
+### 💎 Release Summary
+
+Release includes minor bugfixes and improvements
+
+### 🛠️ Bugfixes/Improvements
+
+- `LOCATION` environment variable is now documented as mandatory, as to handle Binance's IP restrictions for US-based users.
+
+- Fixed a bug with the new `24HRCHG` indicator that was causing the bot to crash when an alert was present using this indicator.
+
+- Fixed inconsistencies with the binance API endpoints that were causing the bot to crash when fetching data.
 
 ## v3.0.0 - Released 2024-03-11 <a name="300"></a>
 
