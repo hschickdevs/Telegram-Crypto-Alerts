@@ -42,7 +42,7 @@
 
 </div>
 
-> 📦 **NOTE:** Major version 3.0.0 has launched! See the **[🔗CHANGELOG](docs/CHANGELOG.md)** for more details.
+> 📦 **NOTE:** [2.15.2025] Version 3.2.0 has launched! See the **[🔗CHANGELOG](docs/CHANGELOG.md)** for more details.
 
 
 ## About the Project
@@ -102,7 +102,7 @@ If you have advanced technical abilities and would like to self host the bot, yo
 
    ___
 
-   #### `/new_alert <BASE/QUOTE> <INDICATOR> <COMPARISON> <TARGET> <optional_ENTRY_PRICE>`
+   #### `/new_alert <BASE/QUOTE> <INDICATOR> <COMPARISON> <TARGET> <optional_COOLDOWN>`
 
    > ⚠️ Create new alert for **simple indicators** ONLY (see [/indicators](https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/pancakeswap-integration/README%20copy.md#indicators))
 
@@ -114,11 +114,11 @@ If you have advanced technical abilities and would like to self host the bot, yo
    | INDICATOR            | The indicator for which you want to set an alert. In the current context, the only available simple indicator is "PRICE".                            |
    | COMPARISON           | The comparison operator for the alert. Options are "ABOVE", "BELOW", "PCTCHG", or "24HRCHG".                                                         |
    | TARGET               | The target % change or price value for the alert, depending on comparison type. (Use percentage pts for %, e.g. 10.5 for 10.5%).                     |
-   | optional_ENTRY_PRICE | If using the "PCTCHG" comparison operator, you can specify this as an alternate entry price to the current price for calculating percentage changes. |
+   | optional_COOLDOWN    | The alert cooldown in (e.g., 30s, 5m, 1h). Default behavior is a _one-time trigger_ (no cooldown). |
 
-   _For example, the following command sets an alert for when the price of BTC/USDT changes by 10% relative to an entry price of 1200:_
+   _For example, the following command sets an alert for when the price of BTC/USDT changes by 10% relative to an entry price of 1200, and keeps triggering every 1 hour until deleted if it is above 1200:_
 
-   `/new_alert BTC/USDT PRICE PCTCHG 10.0 1200`
+   `/new_alert BTC/USDT PRICE PCTCHG 10.0 1200 1h`
 
    ___
 
@@ -137,10 +137,10 @@ If you have advanced technical abilities and would like to self host the bot, yo
    | OUTPUT_VALUE | The desired output value to monitor. See /indicators for available output values                                                                                                                 |
    | COMPARISON   | The comparison operator for the alert. Options: ABOVE or BELOW                                                                                                                                   |
    | TARGET       | The target value of OUTPUT_VALUE for the alert to trigger                                                                                                                                        |
+   | optional_COOLDOWN | The alert cooldown in (e.g., 30s, 5m, 1h). Default behavior is a _one-time trigger_ (no cooldown). |
+   _For example, the following command sets an alert for the ETH/USDT pair that triggers when the value of the upper Bollinger Band (calculated on the 1d timeframe) is above 1500, and keeps triggering every 1 hour until deleted if it is above 1500:_
 
-   _For example, the following command sets an alert for the ETH/USDT pair that triggers when the value of the upper Bollinger Band (calculated on the 1d timeframe) is above 1500:_
-
-   `/new_alert ETH/USDT BBANDS 1d default valueUpperBand ABOVE 1500`
+   `/new_alert ETH/USDT BBANDS 1d default valueUpperBand ABOVE 1500 1h`
 
    ___
 
@@ -378,7 +378,8 @@ To contribute to the project, please do the following:
 2. Fork the project
 3. Create a branch for your new edits (E.g. new-indicator)
 4. Implement and test your changes (test, test, test!)
-5. [Submit your pull request](https://makeapullrequest.com/)
+5. Format your code locally using black: `black .`
+6. [Submit your pull request](https://makeapullrequest.com/)
 
 I am actively maintaining this project, and I will respond to any issues or pull requests as soon as possible.
 

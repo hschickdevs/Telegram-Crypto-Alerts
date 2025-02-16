@@ -2,7 +2,7 @@ import logging
 
 from .utils import get_logfile
 
-formatter = logging.Formatter('%(module)s : %(levelname)s : %(asctime)s : %(message)s')
+formatter = logging.Formatter("%(module)s : %(levelname)s : %(asctime)s : %(message)s")
 
 # Get logger
 logger = logging.getLogger(__name__)

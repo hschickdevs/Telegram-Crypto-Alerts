@@ -6,3 +6,4 @@ ratelimiter
 sendgrid
 pymongo
 pyyaml
+black

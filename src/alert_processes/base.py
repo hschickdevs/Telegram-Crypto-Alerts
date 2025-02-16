@@ -6,11 +6,12 @@ from ..telegram import TelegramBot
 class BaseAlertProcess(ABC):
     """
     This base class is to be served as a template for creating alert handlers.
-    
+
     Each of these alert handlers is run in its own thread on the bot, and should represent its own asset/alert type.
-    
+
     This functionality allows standardized creation of new alert types/assets when needed by facilitating polymorphism.
     """
+
     def __init__(self, telegram_bot: TelegramBot):
         self.telegram_bot = telegram_bot
 
@@ -30,7 +31,7 @@ class BaseAlertProcess(ABC):
     def poll_all_alerts(self):
         """
         Polls the alerts for ALL users of the bot.
-        
+
         1. Aggregate assets across all users
         2. Fetch all asset prices/metrics
         3. Log individual user failures
@@ -41,7 +42,7 @@ class BaseAlertProcess(ABC):
     def tg_alert(self, post: str, channel_ids: list[str], pair: str):
         """
         Sends a Telegram alert to the user.
-        
+
         Each alert handler needs its own implementation of this method because the output
         will be different based on the asset/alert type.
         """
@@ -51,7 +52,7 @@ class BaseAlertProcess(ABC):
     def run(self):
         """
         Runs the alert handler in a loop.
-        
+
         Should be started in a new daemon thread.
         """
         pass
