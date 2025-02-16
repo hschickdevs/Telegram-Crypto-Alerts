@@ -42,7 +42,7 @@
 
 </div>
 
-> 📦 **NOTE:** [2.15.2025] Version 3.2.0 has launched! See the **[🔗CHANGELOG](docs/CHANGELOG.md)** for more details.
+> 📦 **NOTE:** [2.15.2025] Version 3.2.0 has launched! See the **[🔗CHANGELOG](https://github.com/hschickdevs/Telegram-Crypto-Alerts/blob/main/docs/CHANGELOG.md#v320---released-2024-02-16-)** for more details.
 
 
 ## About the Project
@@ -138,6 +138,7 @@ If you have advanced technical abilities and would like to self host the bot, yo
    | COMPARISON   | The comparison operator for the alert. Options: ABOVE or BELOW                                                                                                                                   |
    | TARGET       | The target value of OUTPUT_VALUE for the alert to trigger                                                                                                                                        |
    | optional_COOLDOWN | The alert cooldown in (e.g., 30s, 5m, 1h). Default behavior is a _one-time trigger_ (no cooldown). |
+   
    _For example, the following command sets an alert for the ETH/USDT pair that triggers when the value of the upper Bollinger Band (calculated on the 1d timeframe) is above 1500, and keeps triggering every 1 hour until deleted if it is above 1500:_
 
    `/new_alert ETH/USDT BBANDS 1d default valueUpperBand ABOVE 1500 1h`
