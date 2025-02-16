@@ -2,7 +2,11 @@ import time
 from datetime import datetime
 import os
 
-from ..user_configuration import LocalUserConfiguration, MongoDBUserConfiguration, get_whitelist
+from ..user_configuration import (
+    LocalUserConfiguration,
+    MongoDBUserConfiguration,
+    get_whitelist,
+)
 from ..logger import logger
 from ..config import *
 from ..utils import get_binance_price_url
@@ -33,7 +37,11 @@ class CEXAlertProcess(BaseAlertProcess):
 
         :param tg_user_id: The Telegram user ID from the database
         """
-        configuration = LocalUserConfiguration(tg_user_id) if not USE_MONGO_DB else MongoDBUserConfiguration(tg_user_id)
+        configuration = (
+            LocalUserConfiguration(tg_user_id)
+            if not USE_MONGO_DB
+            else MongoDBUserConfiguration(tg_user_id)
+        )
         alerts_database = configuration.load_alerts()
         config = configuration.load_config()
 
@@ -43,17 +51,26 @@ class CEXAlertProcess(BaseAlertProcess):
 
             remove_queue = []
             for alert in alerts_database[pair]:
-                if alert['alerted']:
-                    remove_queue.append(alert)
-                    do_update = True  # Since the alert needs to be removed from the database, signal do_update
-                    continue
+                if alert["type"] == "s":
+                    condition, value, post_string = self.get_simple_indicator(
+                        pair, alert
+                    )
 
-                if alert['type'] == "s":
-                    condition, value, post_string = self.get_simple_indicator(pair, alert)
+                    if condition:  # If there is a simple alert condition satisfied
+                        cooldown = alert.get("trigger", {}).get("cooldown_seconds")
+                        last_trigger = alert.get("trigger", {}).get("last_triggered", 0)
+                        if int(time.time()) > last_trigger + (cooldown or 0):
+                            post_queue.append((post_string, pair))
 
-                    if condition:  # If there is a condition satisfied
-                        post_queue.append((post_string, pair))
-                        alert['alerted'] = True
+                        current_time = int(time.time())
+                        alert["trigger"] = {
+                            "cooldown_seconds": cooldown,
+                            "last_triggered": current_time,
+                        }
+                        if not alert["trigger"]["cooldown_seconds"]:
+                            # If the alert has no cooldown setting, remove it
+                            remove_queue.append(alert)
+
                         do_update = True  # Since the alert needs to be updated in the database, signal do_update
 
             for item in remove_queue:
@@ -68,13 +85,17 @@ class CEXAlertProcess(BaseAlertProcess):
             self.polling = False
             for post, pair in post_queue:
                 logger.info(post)
-                status = self.tg_alert(post=post, channel_ids=config['channels'], pair=pair)
+                status = self.tg_alert(
+                    post=post, channel_ids=config["channels"], pair=pair
+                )
                 if len(status[1]) > 0:
-                    logger.warn(f"Failed to send Telegram alert ({post}) to the following IDs: {status[1]}")
+                    logger.warn(
+                        f"Failed to send Telegram alert ({post}) to the following IDs: {status[1]}"
+                    )
 
         if not self.polling:
             self.polling = True
-            logger.info(f'Bot polling for next alert...')
+            logger.info(f"Bot polling for next alert...")
 
     @sleep_and_retry
     @limits(calls=1, period=CEX_POLLING_PERIOD)
@@ -82,7 +103,9 @@ class CEXAlertProcess(BaseAlertProcess):
         for user in get_whitelist():
             self.poll_user_alerts(tg_user_id=user)
 
-    def get_simple_indicator(self, pair: str, alert: dict, pair_price: float = None) -> tuple[bool, float, str]:
+    def get_simple_indicator(
+        self, pair: str, alert: dict, pair_price: float = None
+    ) -> tuple[bool, float, str]:
         """
         Accounts for the 3 following simple price movement indicators:
         PCTCHG - Percent change in the price
@@ -99,34 +122,52 @@ class CEXAlertProcess(BaseAlertProcess):
                   (Float) The current value of the indicator
                   (String) The formatted string to send with alerts
         """
-        target = alert['target']
+        target = alert["target"]
         # indicator = alert["indicator"]
-        comparison = alert['comparison']
+        comparison = alert["comparison"]
         if pair_price is None:
             pair_price = self.get_latest_price(token_pair=pair.replace("/", ""))
 
-        if comparison == 'PCTCHG':
-            entry = alert['entry']
+        if comparison == "PCTCHG":
+            entry = alert["entry"]
             if pair_price > (entry * (1 + target)):
                 pct_chg = ((pair_price - entry) / entry) * 100
-                return True, pct_chg, f"{pair} UP {pct_chg:.1f}% FROM {entry} AT {pair_price}"
+                return (
+                    True,
+                    pct_chg,
+                    f"{pair} UP {pct_chg:.1f}% FROM {entry} AT {pair_price}",
+                )
             elif pair_price < (entry * (1 - target)):
                 pct_chg = ((entry - pair_price) / entry) * 100
-                return True, pct_chg, f"{pair} DOWN {pct_chg:.1f}% FROM {entry} AT {pair_price}"
-        elif comparison == '24HRCHG':
+                return (
+                    True,
+                    pct_chg,
+                    f"{pair} DOWN {pct_chg:.1f}% FROM {entry} AT {pair_price}",
+                )
+        elif comparison == "24HRCHG":
             pct_change = self.get_pct_change(pair.replace("/", ""), window="1d")
-            if abs(pct_change) >= alert['target']:
-                return True, pct_change, f"{pair} 24HR CHANGE {pct_change:.1f}% AT {pair_price}"
-        elif comparison == 'ABOVE':
+            if abs(pct_change) >= alert["target"]:
+                return (
+                    True,
+                    pct_change,
+                    f"{pair} 24HR CHANGE {pct_change:.1f}% AT {pair_price}",
+                )
+        elif comparison == "ABOVE":
             if pair_price > target:
                 return True, pair_price, f"{pair} ABOVE {target} TARGET AT {pair_price}"
-        elif comparison == 'BELOW':
+        elif comparison == "BELOW":
             if pair_price < target:
                 return True, pair_price, f"{pair} BELOW {target} TARGET AT {pair_price}"
 
         return False, pair_price, ""
 
-    def get_latest_price(self, token_pair: str, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
+    def get_latest_price(
+        self,
+        token_pair: str,
+        retry_delay: int = 2,
+        maximum_retries: int = 5,
+        _try: int = 1,
+    ) -> float:
         """
         Make a request to Binance API and return the response
 
@@ -146,12 +187,21 @@ class CEXAlertProcess(BaseAlertProcess):
             return BinancePriceResponse(response.json()).lastPrice
         except Exception as err:
             if _try == maximum_retries:
-                raise ConnectionAbortedError(f'Binance request ({url}) failed after {_try} retries - Error: {err}')
+                raise ConnectionAbortedError(
+                    f"Binance request ({url}) failed after {_try} retries - Error: {err}"
+                )
             else:
                 time.sleep(retry_delay)
                 return self.get_latest_price(token_pair, _try=_try + 1)
 
-    def get_pct_change(self, token_pair: str, window: str, retry_delay: int = 2, maximum_retries: int = 5, _try: int = 1) -> float:
+    def get_pct_change(
+        self,
+        token_pair: str,
+        window: str,
+        retry_delay: int = 2,
+        maximum_retries: int = 5,
+        _try: int = 1,
+    ) -> float:
         """
         Make a request to Binance API and return the 24 hour % change for a token pair
 
@@ -163,8 +213,10 @@ class CEXAlertProcess(BaseAlertProcess):
 
         :return float: The percent change of the token pair (expressed as a percentage, i.e. -3.8 for -3.8%)
         """
-        assert window in BINANCE_TIMEFRAMES, (f'Invalid window ({window}) for Binance API. '
-                                              f'Must be one of {BINANCE_TIMEFRAMES}')
+        assert window in BINANCE_TIMEFRAMES, (
+            f"Invalid window ({window}) for Binance API. "
+            f"Must be one of {BINANCE_TIMEFRAMES}"
+        )
         url = self.endpoint.format(token_pair, window)
         try:
             response = requests.get(url)
@@ -173,11 +225,13 @@ class CEXAlertProcess(BaseAlertProcess):
             return BinancePriceResponse(response.json()).priceChangePercent
         except Exception as err:
             if _try == maximum_retries:
-                raise ConnectionAbortedError(f'Binance request ({url}) failed after {_try} retries - Error: {err}')
+                raise ConnectionAbortedError(
+                    f"Binance request ({url}) failed after {_try} retries - Error: {err}"
+                )
             else:
                 time.sleep(retry_delay)
                 return self.get_pct_change(token_pair, window, _try=_try + 1)
-    
+
     def tg_alert(self, post: str, channel_ids: list[str], pair: str = None) -> tuple:
         """
         Sends the post (price alert) to each registered user of the Telegram bot
@@ -190,26 +244,31 @@ class CEXAlertProcess(BaseAlertProcess):
         """
         post = f"🔔 <b>CEX ALERT:</b> 🔔\n\n" + post
         if pair:
-            pair_fmt = pair.replace('/', '_')
+            pair_fmt = pair.replace("/", "_")
             post += f"\n\n<a href='https://www.binance.com/en/trade/{pair_fmt}?type=spot'><b>View {pair} Chart</b></a>"
         output = ([], [])
         for g_id in channel_ids:
             try:
                 # requests.post(url=f'https://api.telegram.org/bot{self.tg_bot_token}/sendMessage',
                 #               params={'chat_id': g_id, 'text': header_str + post, "parse_mode": "HTML"})
-                self.telegram_bot.send_message(chat_id=g_id, text=post, parse_mode="HTML", disable_web_page_preview=True)
+                self.telegram_bot.send_message(
+                    chat_id=g_id,
+                    text=post,
+                    parse_mode="HTML",
+                    disable_web_page_preview=True,
+                )
                 output[0].append(g_id)
             except:
                 output[1].append(g_id)
 
         return output
-    
+
     def run(self):
         """
         Start the CEX alert process and run in an infinite loop
         """
         try:
-            logger.warn(f'{type(self).__name__} started at {datetime.utcnow()} UTC+0')
+            logger.warn(f"{type(self).__name__} started at {datetime.utcnow()} UTC+0")
             while True:
                 self.poll_all_alerts()
         except NotImplementedError as exc:
@@ -219,5 +278,8 @@ class CEXAlertProcess(BaseAlertProcess):
             logger.critical("KeyboardInterrupt detected. Exiting...")
             exit(0)
         except Exception as exc:
-            logger.critical("An error has occurred in the CEX alert process. Trying again in 15 seconds...", exc_info=exc)
+            logger.critical(
+                "An error has occurred in the CEX alert process. Trying again in 15 seconds...",
+                exc_info=exc,
+            )
             time.sleep(15)

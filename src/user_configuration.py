@@ -17,13 +17,13 @@ class LocalUserConfiguration:
         :param tg_user_id: The Telegram user ID of the bot user to locate their configuration
         """
         self.user_id = tg_user_id
-        self.user_config_root = join(WHITELIST_ROOT, f'{self.user_id}')
-        self.config_path = join(WHITELIST_ROOT, f'{self.user_id}', 'config.json')
-        self.alerts_path = join(WHITELIST_ROOT, f'{self.user_id}', 'alerts.json')
+        self.user_config_root = join(WHITELIST_ROOT, f"{self.user_id}")
+        self.config_path = join(WHITELIST_ROOT, f"{self.user_id}", "config.json")
+        self.alerts_path = join(WHITELIST_ROOT, f"{self.user_id}", "alerts.json")
 
         # Utility Paths:
-        self.default_alerts_path = join(RESOURCES_ROOT, 'default_alerts.json')
-        self.default_config_path = join(RESOURCES_ROOT, 'default_config.json')
+        self.default_alerts_path = join(RESOURCES_ROOT, "default_alerts.json")
+        self.default_config_path = join(RESOURCES_ROOT, "default_config.json")
 
     def whitelist_user(self, is_admin: bool = False):
         """Add necessary files and directories to database for TG user ID"""
@@ -37,12 +37,12 @@ class LocalUserConfiguration:
 
         try:
             # Make default configuration:
-            with open(self.default_config_path, 'r') as _in:
+            with open(self.default_config_path, "r") as _in:
                 default_config = json.loads(_in.read())
             default_config["channels"].append(self.user_id)
             if is_admin:
                 default_config["is_admin"] = True
-            with open(self.config_path, 'w') as _out:
+            with open(self.config_path, "w") as _out:
                 _out.write(json.dumps(default_config, indent=2))
 
             # Make default alerts configuration
@@ -59,38 +59,38 @@ class LocalUserConfiguration:
 
     def load_alerts(self) -> dict:
         """Load the database contents and return it in JSON format"""
-        with open(self.alerts_path, 'r') as infile:
+        with open(self.alerts_path, "r") as infile:
             contents = infile.read()
             return json.loads(contents)
 
     def update_alerts(self, data: dict) -> None:
-        with open(self.alerts_path, 'w') as outfile:
+        with open(self.alerts_path, "w") as outfile:
             outfile.write(json.dumps(data, indent=2))
 
     def load_config(self) -> dict:
-        with open(self.config_path, 'r') as infile:
+        with open(self.config_path, "r") as infile:
             contents = infile.read()
             return json.loads(contents)
 
     def update_config(self, data: dict) -> None:
-        with open(self.config_path, 'w') as outfile:
+        with open(self.config_path, "w") as outfile:
             outfile.write(json.dumps(data, indent=2))
 
     def admin_status(self, new_value: bool = None) -> bool:
         config = self.load_config()
         if new_value is not None:
-            config['is_admin'] = new_value
+            config["is_admin"] = new_value
             self.update_config(config)
-        return config['is_admin']
+        return config["is_admin"]
 
     def get_channels(self) -> list[str]:
-        return self.load_config()['channels']
+        return self.load_config()["channels"]
 
     def add_channels(self, channels: list[str]) -> None:
         config = self.load_config()
         for channel in channels:
-            if channel not in config['channels']:
-                config['channels'].append(channel)
+            if channel not in config["channels"]:
+                config["channels"].append(channel)
         self.update_config(config)
 
     def remove_channels(self, channels: list[str]) -> list[str]:
@@ -98,8 +98,8 @@ class LocalUserConfiguration:
         config = self.load_config()
         fail = []
         for channel in channels:
-            if channel in config['channels']:
-                config['channels'].remove(channel)
+            if channel in config["channels"]:
+                config["channels"].remove(channel)
             else:
                 fail.append(channel)
         self.update_config(config)
@@ -130,16 +130,16 @@ class MongoDBUserConfiguration(LocalUserConfiguration):
         user_document = {"user_id": self.user_id}
         try:
             # Make default configuration:
-            with open(self.default_config_path, 'r') as _in:
+            with open(self.default_config_path, "r") as _in:
                 default_config = json.loads(_in.read())
             default_config["channels"].append(self.user_id)
             if is_admin:
                 default_config["is_admin"] = True
-            user_document['config'] = default_config
+            user_document["config"] = default_config
 
             # Make default alerts
-            with open(self.default_alerts_path, 'r') as _in:
-                user_document['alerts'] = json.loads(_in.read())
+            with open(self.default_alerts_path, "r") as _in:
+                user_document["alerts"] = json.loads(_in.read())
         except Exception as exc:
             self.blacklist_user()
             raise Exception(f"Could not prepare user document for MongoDB - {exc}")
@@ -153,31 +153,41 @@ class MongoDBUserConfiguration(LocalUserConfiguration):
 
     def _load_document(self) -> dict:
         if self.user_id not in get_whitelist():
-            raise Exception(f"Cannot load document - user {self.user_id} is not yet whitelisted")
+            raise Exception(
+                f"Cannot load document - user {self.user_id} is not yet whitelisted"
+            )
 
         return db_connection.collection.find_one(self.filter)
 
     def load_alerts(self) -> dict:
         """OVERRIDES SUPER - Load the database alert contents and return it in JSON format"""
         if self.user_id not in get_whitelist():
-            raise Exception(f"Cannot load alerts - user {self.user_id} is not yet whitelisted")
+            raise Exception(
+                f"Cannot load alerts - user {self.user_id} is not yet whitelisted"
+            )
 
-        return db_connection.collection.find_one(self.filter)['alerts']
+        return db_connection.collection.find_one(self.filter)["alerts"]
 
     def update_alerts(self, data: dict) -> None:
         """OVERRIDES SUPER - Update the contents of the 'alerts' section of the user document"""
-        db_connection.collection.update_one(self.filter, {"$set": {"alerts": data}}, upsert=True)
+        db_connection.collection.update_one(
+            self.filter, {"$set": {"alerts": data}}, upsert=True
+        )
 
     def load_config(self) -> dict:
         """OVERRIDES SUPER - Load the config section of the user document"""
         if self.user_id not in get_whitelist():
-            raise Exception(f"Cannot load config - user {self.user_id} is not yet whitelisted")
+            raise Exception(
+                f"Cannot load config - user {self.user_id} is not yet whitelisted"
+            )
 
-        return db_connection.collection.find_one({"user_id": self.user_id})['config']
+        return db_connection.collection.find_one({"user_id": self.user_id})["config"]
 
     def update_config(self, data: dict) -> None:
         """OVERRIDES SUPER - Update the config section of the user document"""
-        db_connection.collection.update_one(self.filter, {"$set": {"config": data}}, upsert=True)
+        db_connection.collection.update_one(
+            self.filter, {"$set": {"config": data}}, upsert=True
+        )
 
 
 def get_whitelist() -> list:
@@ -185,6 +195,8 @@ def get_whitelist() -> list:
         if not isdir(WHITELIST_ROOT):
             mkdir(WHITELIST_ROOT)
 
-        return [_id for _id in listdir(WHITELIST_ROOT) if isdir(join(WHITELIST_ROOT, _id))]
+        return [
+            _id for _id in listdir(WHITELIST_ROOT) if isdir(join(WHITELIST_ROOT, _id))
+        ]
     else:
-        return [user['user_id'] for user in db_connection.collection.find()]
+        return [user["user_id"] for user in db_connection.collection.find()]
