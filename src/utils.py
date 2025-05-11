@@ -68,10 +68,11 @@ def get_binance_price_url() -> str:
         location in BINANCE_LOCATIONS
     ), f"Location must be in {BINANCE_LOCATIONS} for the Binance exchange."
 
-    if location.lower() == "us":
-        return BINANCE_PRICE_URL_US
-    else:
-        return
+    return (
+        BINANCE_PRICE_URL_US
+        if location.lower() == "us"
+        else BINANCE_PRICE_URL_GLOBAL
+    )
 
 
 def parse_trigger_cooldown(cooldown_str: str = None) -> dict:
