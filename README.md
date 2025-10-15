@@ -179,6 +179,14 @@ If you have advanced technical abilities and would like to self host the bot, yo
 
    ___
 
+   #### `/indicator_all`
+
+   This command does not take any parameters. It gets the current values for all technical indicators with active alerts.
+
+   _For example, if you have alerts set for RSI and MACD on different pairs, this command will fetch and display the current values for all of those indicators._
+
+   ___
+
    #### `/get_indicator <BASE/QUOTE> <INDICATOR> <TIMEFRAME> <PARAMS>`
 
    | Parameter  | Description                                                                                                                                              |
@@ -393,6 +401,14 @@ If you have any questions, feel free to reach out to me on [**Telegram**](https:
 ## Roadmap
 
 See the future plans for the project [**🔗 Here**](docs/TODO.md)
+
+For detailed implementation guides on open feature requests, see:
+- [**Suggested Improvements Summary**](docs/suggested_improvements.md) - Complete analysis of all open issues
+- [**Docker Persistence Guide**](docs/docker_persistence.md) - How to persist data across container restarts
+- [**Perpetual Contracts Implementation**](docs/perpetual_contracts_implementation.md) - Adding futures trading support
+- [**Webhook Feature Guide**](docs/webhook_feature_implementation.md) - Integration with external systems
+- [**Bulk Alert Import System**](docs/bulk_alert_import_implementation.md) - Import/export multiple alerts
+- [**Linked Alerts Guide**](docs/linked_alerts_implementation.md) - Conditional alerts with multiple criteria
 
 ## License
 

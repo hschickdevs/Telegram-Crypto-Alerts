@@ -7,6 +7,7 @@ view_alerts - Usage: /view_alerts TOKEN/TOKEN (or leave blank for all)
 get_price - Usage: /get_price TOKEN/TOKEN
 get_indicator - Usage: /get_indicator BASE/QUOTE INDICATOR TIMEFRAME PARAMS
 price_all - Usage: /price_all
+indicator_all - Usage: /indicator_all
 view_config - Usage: /view_config
 set_config - Usage: /setconfig SETTING=VALUE SETTING=VALUE
 emails - Usage: /emails VIEW/ADD/REMOVE email@email.com,email@email.com
