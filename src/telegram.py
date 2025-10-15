@@ -370,6 +370,89 @@ class TelegramBot(TeleBot):
             except Exception as exc:
                 self.reply_to(message, f"Error: {str(exc)}")
 
+        @self.message_handler(commands=["indicator_all", "indicatorall"])
+        @self.is_whitelisted
+        def on_indicator_all(message):
+            """/indicator_all - Gets the value of all technical indicators with active alerts"""
+            if self.taapiio_cli is None:
+                self.reply_to(
+                    message,
+                    "Technical indicators are currently unavailable. Set the environment variable `TAAPIIO_APIKEY` to enable.",
+                    parse_mode="Markdown",
+                )
+                return
+
+            configuration = BaseConfig(str(message.from_user.id))
+            alerts_data = configuration.load_alerts()
+
+            # Collect all unique technical indicator alerts
+            technical_alerts = {}
+            for pair, alerts in alerts_data.items():
+                for alert in alerts:
+                    if alert.get("type") == "t":  # Technical indicator
+                        # Create a unique key for this indicator configuration
+                        key = (
+                            pair,
+                            alert["indicator"],
+                            alert["interval"],
+                            tuple(sorted(alert["params"].items())),
+                        )
+                        if key not in technical_alerts:
+                            technical_alerts[key] = {
+                                "pair": pair,
+                                "indicator": alert["indicator"],
+                                "interval": alert["interval"],
+                                "params": alert["params"],
+                                "output_value": alert["output_value"],
+                            }
+
+            if not technical_alerts:
+                self.reply_to(message, "No technical indicator alerts found.")
+                return
+
+            self.reply_to(
+                message,
+                f"Fetching {len(technical_alerts)} indicator(s), please wait...",
+            )
+
+            # Fetch and format results
+            results = []
+            for key, alert_info in technical_alerts.items():
+                try:
+                    # Create a TechnicalAlert object
+                    indicator_ref = self.indicators_db[alert_info["indicator"]]
+                    technical_alert = TechnicalAlert(
+                        pair=alert_info["pair"].replace("/", ""),
+                        indicator=alert_info["indicator"],
+                        interval=alert_info["interval"],
+                        params=alert_info["params"],
+                        output_vals=indicator_ref["output"],
+                        endpoint=indicator_ref["endpoint"],
+                        name=indicator_ref["name"],
+                    )
+
+                    # Fetch the indicator value
+                    indicator_values = self.get_technical_indicator(technical_alert)
+
+                    # Format the result
+                    output_str = f"<b>{alert_info['pair']} - {alert_info['indicator']} ({alert_info['interval']})</b>\n"
+                    for k, v in indicator_values.items():
+                        if type(v) is float:
+                            v = round(v, OUTPUT_VALUE_PRECISION)
+                        output_str += f"  • {k}: {v}\n"
+                    results.append(output_str)
+
+                except Exception as exc:
+                    results.append(
+                        f"<b>{alert_info['pair']} - {alert_info['indicator']} ({alert_info['interval']})</b>\n"
+                        f"  • Error: {str(exc)}\n"
+                    )
+
+            try:
+                self.reply_to(message, "\n".join(results), parse_mode="HTML")
+            except Exception as exc:
+                self.reply_to(message, f"Error: {str(exc)}")
+
         @self.message_handler(commands=["indicators"])
         @self.is_whitelisted
         def on_indicators(message):
